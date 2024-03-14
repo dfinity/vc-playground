@@ -124,6 +124,10 @@ type GetGroupRequest = record {
     group_name : text;
 };
 
+type AddGroupRequest = record {
+    group_name : text;
+};
+
 type JoinGroupRequest = record {
     group_name : text;
     note : text
