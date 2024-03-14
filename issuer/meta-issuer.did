@@ -143,13 +143,13 @@ type UpdateMembershipRequest = record {
 type GroupStats = record {
     member_count: nat32;
     created_timestamp_ns : TimestampNs;
-}
+};
 
 type MembershipStatus = variant {
     PendingReview;
     Accepted;
     Rejected;
-}
+};
 
 type PublicGroupData = record {
    group_name : text;
@@ -163,7 +163,7 @@ type MemberData = record {
     note: text;
     joined_timestamp_ns : TimestampNs;
     membership_status: MembershipStatus;
-}
+};
 
 type FullGroupData = record {
     group_name : text;

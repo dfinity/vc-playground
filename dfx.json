@@ -1,6 +1,14 @@
 {
   "dfx": "0.18.0",
   "canisters": {
+    "meta_issuer": {
+      "type": "custom",
+      "candid": "issuer/meta-issuer.did",
+      "wasm": "issuer/meta-issuer.wasm.gz",
+      "output": "issuer/frontend/src/declarations",
+      "build": "./issuer/build.sh",
+      "shrink": false
+    },
     "internet_identity": {
       "type": "custom",
       "wasm": "internet_identity_dev.wasm.gz",
