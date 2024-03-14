@@ -4,7 +4,7 @@
 	import MainWrapper from '$lib/ui-components/elements/MainWrapper.svelte';
 	import { onMount } from 'svelte';
 	import '../../app.postcss';
-	import { AppShell, AppBar, LightSwitch } from '@skeletonlabs/skeleton';
+	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
 	import { logout, syncAuth } from '$lib/services/auth.services';
 
 	onMount(() => {
@@ -23,7 +23,6 @@
 				</svelte:fragment>
 				<svelte:fragment slot="trail">
 					<Button variant="ghost" on:click={logout}>Logout</Button>
-					<LightSwitch />
 				</svelte:fragment>
 			</AppBar>
 		</svelte:fragment>
