@@ -1,14 +1,26 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { login } from '$lib/services/login.services';
+	import { login, syncAuth } from '$lib/services/auth.services';
 	import Button from '$lib/ui-components/elements/Button.svelte';
+	import { onMount } from 'svelte';
 	import '../../app.postcss';
 	import { AppShell } from '@skeletonlabs/skeleton';
+	import { authStore } from '$lib/stores/auth.store';
 
 	const loginUser = async () => {
 		await login();
 		goto('/home');
 	};
+
+	onMount(() => {
+		syncAuth();
+	});
+
+	$: {
+		if ($authStore.identity !== null && $authStore.identity !== undefined) {
+			goto('/home');
+		}
+	}
 </script>
 
 <AppShell>
