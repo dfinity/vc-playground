@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { login } from '$lib/services/login.services';
+	import Button from '$lib/ui-components/elements/Button.svelte';
 	import '../../app.postcss';
 	import { AppShell } from '@skeletonlabs/skeleton';
 
@@ -18,8 +19,8 @@
 			<div class="text-center">
 				<h1 class="text-4xl font-bold tracking-tight sm:text-6xl">Welcome to VC Playground</h1>
 			</div>
-			<button type="button" class="btn variant-filled" data-tid="login-button" on:click={loginUser}
-				>Connect With Internet Identity</button
+			<Button variant="primary" testId="login-button" on:click={loginUser}
+				>Connect With Internet Identity</Button
 			>
 		</div>
 	</div>
