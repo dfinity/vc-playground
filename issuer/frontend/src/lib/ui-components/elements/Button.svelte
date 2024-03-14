@@ -12,4 +12,6 @@
 	};
 </script>
 
-<button type="button" class={`btn ${variantClasses[variant]}`} data-tid={testId}><slot /></button>
+<button on:click type="button" class={`btn ${variantClasses[variant]}`} data-tid={testId}
+	><slot /></button
+>
