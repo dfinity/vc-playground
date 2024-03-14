@@ -6,7 +6,11 @@ import { AuthClient } from '@dfinity/auth-client';
 let cachedClient: AuthClient | undefined = undefined;
 const getAuthClient = async () => {
 	if (!cachedClient) {
-		cachedClient = await AuthClient.create();
+		cachedClient = await AuthClient.create({
+			idleOptions: {
+				disableIdle: true,
+			},
+		});
 	}
 	return cachedClient;
 };
@@ -30,6 +34,8 @@ export const login = async () => {
 				},
 				identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
 				windowOpenerFeatures: popupCenter(),
+				// One week
+				maxTimeToLive: 7n * 24n * 3_600_000_000_000n,
 			});
 		});
 	} catch (err) {
