@@ -10,4 +10,4 @@ dfx generate meta_issuer
 # We need to remove the code because it uses process.env which is not available in the browser.
 # We use a custom `createActor` from "src/utils/actor" to create the actor.
 # We still need to export the idlFactory from the generated file.
-echo 'export { idlFactory } from "./meta_issuer.did.js";' > "./issuer/frontend/src/declarations/meta_issuer/index.js"
+echo 'export { idlFactory } from "./meta_issuer.did.js";' > "./issuer/frontend/src/declarations/index.js"

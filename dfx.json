@@ -5,7 +5,9 @@
       "type": "custom",
       "candid": "issuer/meta-issuer.did",
       "wasm": "issuer/meta-issuer.wasm.gz",
-      "output": "issuer/frontend/src/declarations",
+      "declarations": {
+        "output": "issuer/frontend/src/declarations"
+      },
       "build": "./issuer/build.sh",
       "shrink": false
     },
