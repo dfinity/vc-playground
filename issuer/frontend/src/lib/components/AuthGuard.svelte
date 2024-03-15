@@ -10,7 +10,7 @@
 </script>
 
 {#if $authStore.identity === undefined}
-  <div class="placeholder" />
+  <slot name="skeleton" />
 {:else if $authStore.identity !== null}
   <slot />
 {/if}

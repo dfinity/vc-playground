@@ -5,6 +5,7 @@
   import { Tab, TabGroup, localStorageStore } from '@skeletonlabs/skeleton';
   import type { PublicGroupData } from '../../../declarations/meta_issuer.did';
   import type { Writable } from 'svelte/store';
+  import AuthGuard from '$lib/components/AuthGuard.svelte';
 
   // Persist the selected tab in the local storage.
   const tabStore: Writable<number> = localStorageStore('groupsTab', 0);
@@ -72,13 +73,18 @@
   <Tab bind:group={tabSet} name="my-groups" value={1}>My Groups</Tab>
   <!-- Tab Panels --->
   <svelte:fragment slot="panel">
-    {#if tabSet === 0}
-      <GroupsList {groups} />
-    {:else if tabSet === 1}
-      <FooterActionsWrapper>
-        <GroupsList groups={myGroups} noGroupsMessage={noMyGroupsMessage} />
-        <Button variant="primary" slot="actions">Create Group</Button>
-      </FooterActionsWrapper>
-    {/if}
+    <AuthGuard>
+      {#if tabSet === 0}
+        <GroupsList {groups} />
+      {:else if tabSet === 1}
+        <FooterActionsWrapper>
+          <GroupsList groups={myGroups} noGroupsMessage={noMyGroupsMessage} />
+          <Button variant="primary" slot="actions">Create Group</Button>
+        </FooterActionsWrapper>
+      {/if}
+      <svelte:fragment slot="skeleton">
+        <GroupsList groups={undefined} />
+      </svelte:fragment>
+    </AuthGuard>
   </svelte:fragment>
 </TabGroup>
