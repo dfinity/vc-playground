@@ -2,160 +2,156 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
-export interface AddGroupRequest { 'group_name' : string }
-export type ArgumentValue = { 'Int' : number } |
-  { 'String' : string };
-export interface CredentialSpec {
-  'arguments' : [] | [Array<[string, ArgumentValue]>],
-  'credential_type' : string,
+export interface AddGroupRequest {
+  group_name: string;
 }
-export interface DerivationOriginData { 'origin' : string }
-export type DerivationOriginError = { 'Internal' : string } |
-  { 'UnsupportedOrigin' : string };
-export interface DerivationOriginRequest { 'frontend_hostname' : string }
+export type ArgumentValue = { Int: number } | { String: string };
+export interface CredentialSpec {
+  arguments: [] | [Array<[string, ArgumentValue]>];
+  credential_type: string;
+}
+export interface DerivationOriginData {
+  origin: string;
+}
+export type DerivationOriginError = { Internal: string } | { UnsupportedOrigin: string };
+export interface DerivationOriginRequest {
+  frontend_hostname: string;
+}
 export interface FullGroupData {
-  'members' : Array<MemberData>,
-  'stats' : GroupStats,
-  'group_name' : string,
+  members: Array<MemberData>;
+  stats: GroupStats;
+  group_name: string;
 }
 export interface GetCredentialRequest {
-  'signed_id_alias' : SignedIdAlias,
-  'prepared_context' : [] | [Uint8Array | number[]],
-  'credential_spec' : CredentialSpec,
+  signed_id_alias: SignedIdAlias;
+  prepared_context: [] | [Uint8Array | number[]];
+  credential_spec: CredentialSpec;
 }
-export interface GetGroupRequest { 'group_name' : string }
+export interface GetGroupRequest {
+  group_name: string;
+}
 export interface GroupStats {
-  'created_timestamp_ns' : TimestampNs,
-  'member_count' : number,
+  created_timestamp_ns: TimestampNs;
+  member_count: number;
 }
-export type GroupsError = { 'Internal' : string } |
-  { 'NotFound' : string } |
-  { 'NotAuthorized' : string } |
-  { 'AlreadyExists' : string };
+export type GroupsError =
+  | { Internal: string }
+  | { NotFound: string }
+  | { NotAuthorized: string }
+  | { AlreadyExists: string };
 export type HeaderField = [string, string];
 export interface HttpRequest {
-  'url' : string,
-  'method' : string,
-  'body' : Uint8Array | number[],
-  'headers' : Array<HeaderField>,
-  'certificate_version' : [] | [number],
+  url: string;
+  method: string;
+  body: Uint8Array | number[];
+  headers: Array<HeaderField>;
+  certificate_version: [] | [number];
 }
 export interface HttpResponse {
-  'body' : Uint8Array | number[],
-  'headers' : Array<HeaderField>,
-  'status_code' : number,
+  body: Uint8Array | number[];
+  headers: Array<HeaderField>;
+  status_code: number;
 }
 export interface Icrc21ConsentInfo {
-  'consent_message' : string,
-  'language' : string,
+  consent_message: string;
+  language: string;
 }
-export interface Icrc21ConsentPreferences { 'language' : string }
-export type Icrc21Error = {
-    'GenericError' : { 'description' : string, 'error_code' : bigint }
-  } |
-  { 'UnsupportedCanisterCall' : Icrc21ErrorInfo } |
-  { 'ConsentMessageUnavailable' : Icrc21ErrorInfo };
-export interface Icrc21ErrorInfo { 'description' : string }
+export interface Icrc21ConsentPreferences {
+  language: string;
+}
+export type Icrc21Error =
+  | {
+      GenericError: { description: string; error_code: bigint };
+    }
+  | { UnsupportedCanisterCall: Icrc21ErrorInfo }
+  | { ConsentMessageUnavailable: Icrc21ErrorInfo };
+export interface Icrc21ErrorInfo {
+  description: string;
+}
 export interface Icrc21VcConsentMessageRequest {
-  'preferences' : Icrc21ConsentPreferences,
-  'credential_spec' : CredentialSpec,
+  preferences: Icrc21ConsentPreferences;
+  credential_spec: CredentialSpec;
 }
-export type IssueCredentialError = { 'Internal' : string } |
-  { 'SignatureNotFound' : string } |
-  { 'InvalidIdAlias' : string } |
-  { 'UnauthorizedSubject' : string } |
-  { 'UnknownSubject' : string } |
-  { 'UnsupportedCredentialSpec' : string };
-export interface IssuedCredentialData { 'vc_jws' : string }
+export type IssueCredentialError =
+  | { Internal: string }
+  | { SignatureNotFound: string }
+  | { InvalidIdAlias: string }
+  | { UnauthorizedSubject: string }
+  | { UnknownSubject: string }
+  | { UnsupportedCredentialSpec: string };
+export interface IssuedCredentialData {
+  vc_jws: string;
+}
 export interface IssuerConfig {
-  'derivation_origin' : string,
-  'idp_canister_ids' : Array<Principal>,
-  'ic_root_key_der' : Uint8Array | number[],
-  'frontend_hostname' : string,
+  derivation_origin: string;
+  idp_canister_ids: Array<Principal>;
+  ic_root_key_der: Uint8Array | number[];
+  frontend_hostname: string;
 }
-export interface JoinGroupRequest { 'note' : string, 'group_name' : string }
+export interface JoinGroupRequest {
+  note: string;
+  group_name: string;
+}
 export interface ListGroupsRequest {
-  'only_owned' : [] | [boolean],
-  'group_name_substring' : [] | [string],
+  only_owned: [] | [boolean];
+  group_name_substring: [] | [string];
 }
 export interface MemberData {
-  'member' : Principal,
-  'membership_status' : MembershipStatus,
-  'joined_timestamp_ns' : TimestampNs,
-  'note' : string,
+  member: Principal;
+  membership_status: MembershipStatus;
+  joined_timestamp_ns: TimestampNs;
+  note: string;
 }
-export type MembershipStatus = { 'PendingReview' : null } |
-  { 'Rejected' : null } |
-  { 'Accepted' : null };
+export type MembershipStatus = { PendingReview: null } | { Rejected: null } | { Accepted: null };
 export interface PrepareCredentialRequest {
-  'signed_id_alias' : SignedIdAlias,
-  'credential_spec' : CredentialSpec,
+  signed_id_alias: SignedIdAlias;
+  credential_spec: CredentialSpec;
 }
 export interface PreparedCredentialData {
-  'prepared_context' : [] | [Uint8Array | number[]],
+  prepared_context: [] | [Uint8Array | number[]];
 }
 export interface PublicGroupData {
-  'membership_status' : [] | [MembershipStatus],
-  'is_owner' : [] | [boolean],
-  'stats' : GroupStats,
-  'group_name' : string,
+  membership_status: [] | [MembershipStatus];
+  is_owner: [] | [boolean];
+  stats: GroupStats;
+  group_name: string;
 }
-export interface PublicGroupsData { 'groups' : Array<PublicGroupData> }
-export interface SignedIdAlias { 'credential_jws' : string }
+export interface PublicGroupsData {
+  groups: Array<PublicGroupData>;
+}
+export interface SignedIdAlias {
+  credential_jws: string;
+}
 export type TimestampNs = bigint;
 export interface UpdateMembershipRequest {
-  'member' : Principal,
-  'group_name' : string,
-  'new_status' : MembershipStatus,
+  member: Principal;
+  group_name: string;
+  new_status: MembershipStatus;
 }
 export interface _SERVICE {
-  'add_group' : ActorMethod<
-    [AddGroupRequest],
-    { 'Ok' : FullGroupData } |
-      { 'Err' : GroupsError }
-  >,
-  'configure' : ActorMethod<[IssuerConfig], undefined>,
-  'derivation_origin' : ActorMethod<
+  add_group: ActorMethod<[AddGroupRequest], { Ok: FullGroupData } | { Err: GroupsError }>;
+  configure: ActorMethod<[IssuerConfig], undefined>;
+  derivation_origin: ActorMethod<
     [DerivationOriginRequest],
-    { 'Ok' : DerivationOriginData } |
-      { 'Err' : DerivationOriginError }
-  >,
-  'get_credential' : ActorMethod<
+    { Ok: DerivationOriginData } | { Err: DerivationOriginError }
+  >;
+  get_credential: ActorMethod<
     [GetCredentialRequest],
-    { 'Ok' : IssuedCredentialData } |
-      { 'Err' : IssueCredentialError }
-  >,
-  'get_group' : ActorMethod<
-    [GetGroupRequest],
-    { 'Ok' : FullGroupData } |
-      { 'Err' : GroupsError }
-  >,
-  'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
-  'join_group' : ActorMethod<
-    [JoinGroupRequest],
-    { 'Ok' : null } |
-      { 'Err' : GroupsError }
-  >,
-  'list_groups' : ActorMethod<
-    [ListGroupsRequest],
-    { 'Ok' : PublicGroupsData } |
-      { 'Err' : GroupsError }
-  >,
-  'prepare_credential' : ActorMethod<
+    { Ok: IssuedCredentialData } | { Err: IssueCredentialError }
+  >;
+  get_group: ActorMethod<[GetGroupRequest], { Ok: FullGroupData } | { Err: GroupsError }>;
+  http_request: ActorMethod<[HttpRequest], HttpResponse>;
+  join_group: ActorMethod<[JoinGroupRequest], { Ok: null } | { Err: GroupsError }>;
+  list_groups: ActorMethod<[ListGroupsRequest], { Ok: PublicGroupsData } | { Err: GroupsError }>;
+  prepare_credential: ActorMethod<
     [PrepareCredentialRequest],
-    { 'Ok' : PreparedCredentialData } |
-      { 'Err' : IssueCredentialError }
-  >,
-  'update_membership' : ActorMethod<
-    [UpdateMembershipRequest],
-    { 'Ok' : null } |
-      { 'Err' : GroupsError }
-  >,
-  'vc_consent_message' : ActorMethod<
+    { Ok: PreparedCredentialData } | { Err: IssueCredentialError }
+  >;
+  update_membership: ActorMethod<[UpdateMembershipRequest], { Ok: null } | { Err: GroupsError }>;
+  vc_consent_message: ActorMethod<
     [Icrc21VcConsentMessageRequest],
-    { 'Ok' : Icrc21ConsentInfo } |
-      { 'Err' : Icrc21Error }
-  >,
+    { Ok: Icrc21ConsentInfo } | { Err: Icrc21Error }
+  >;
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];
