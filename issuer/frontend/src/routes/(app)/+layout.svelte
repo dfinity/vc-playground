@@ -4,13 +4,19 @@
   import MainWrapper from '$lib/ui-components/elements/MainWrapper.svelte';
   import { onMount } from 'svelte';
   import '../../app.postcss';
-  import { AppShell, AppBar } from '@skeletonlabs/skeleton';
+  import { AppShell, AppBar, Modal } from '@skeletonlabs/skeleton';
   import { logout, syncAuth } from '$lib/services/auth.services';
+  import { initializeStores } from '@skeletonlabs/skeleton';
+  import { modalRegistry } from '$lib/modals/registry.modals';
+
+  initializeStores();
 
   onMount(() => {
     syncAuth();
   });
 </script>
+
+<Modal components={modalRegistry} />
 
 <AuthGuard>
   <!-- App Shell -->

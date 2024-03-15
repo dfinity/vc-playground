@@ -3,6 +3,7 @@
   export let variant: Variant;
   export let testId: string | undefined = undefined;
   export let size: 'sm' | 'md' | 'lg' = 'md';
+  export let href: string | undefined = undefined;
 
   let variantClasses: Record<Variant, string> = {
     success: 'variant-filled-success',
@@ -14,9 +15,13 @@
   };
 </script>
 
-<button
-  on:click
-  type="button"
-  class={`btn btn-${size} ${variantClasses[variant]}`}
-  data-tid={testId}><slot /></button
->
+{#if href}
+  <a {href} target="_blank" class={`btn btn-${size} ${variantClasses[variant]}`}><slot /></a>
+{:else}
+  <button
+    on:click
+    type="button"
+    class={`btn btn-${size} ${variantClasses[variant]}`}
+    data-tid={testId}><slot /></button
+  >
+{/if}
