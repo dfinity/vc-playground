@@ -1,3 +1,3 @@
-<ul class="flex flex-col gap-4">
+<ul role="table" class="flex flex-col">
   <slot />
 </ul>
