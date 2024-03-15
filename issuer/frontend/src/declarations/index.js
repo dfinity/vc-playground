@@ -1,1 +1,1 @@
-export { idlFactory } from "./meta_issuer.did.js";
+export { idlFactory } from './meta_issuer.did.js';

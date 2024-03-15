@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/stores/auth.store';
+  import { goto } from '$app/navigation';
+  import { authStore } from '$lib/stores/auth.store';
 
-	$: {
-		if ($authStore.identity === null) {
-			goto('/');
-		}
-	}
+  $: {
+    if ($authStore.identity === null) {
+      goto('/');
+    }
+  }
 </script>
 
 {#if $authStore.identity === undefined}
-	<div class="placeholder" />
+  <div class="placeholder" />
 {:else if $authStore.identity !== null}
-	<slot />
+  <slot />
 {/if}
