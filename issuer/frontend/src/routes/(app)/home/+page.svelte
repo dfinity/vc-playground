@@ -17,17 +17,6 @@
 
   // TODO: Replace with data from the backend.
   const yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
-  const myGroups: PublicGroupData[] = [
-    {
-      membership_status: [{ Accepted: null }],
-      is_owner: [true],
-      stats: {
-        created_timestamp_ns: BigInt(yesterday.getTime()) * 1000000n,
-        member_count: 11,
-      },
-      group_name: 'Group Z',
-    },
-  ];
   const groups: PublicGroupData[] = [
     {
       membership_status: [{ Accepted: null }],
@@ -65,20 +54,42 @@
       },
       group_name: 'Group D',
     },
+    {
+      membership_status: [{ Accepted: null }],
+      is_owner: [true],
+      stats: {
+        created_timestamp_ns: BigInt(yesterday.getTime()) * 1000000n,
+        member_count: 11,
+      },
+      group_name: 'Group Z',
+    },
   ];
 </script>
 
 <TabGroup justify="justify-center">
   <Tab bind:group={tabSet} name="all-groups" value={0}>All Groups</Tab>
-  <Tab bind:group={tabSet} name="my-groups" value={1}>My Groups</Tab>
+  <Tab bind:group={tabSet} name="all-groups" value={1}>My memberships</Tab>
+  <Tab bind:group={tabSet} name="my-groups" value={2}>My Groups</Tab>
   <!-- Tab Panels --->
   <svelte:fragment slot="panel">
     <AuthGuard>
       {#if tabSet === 0}
         <GroupsList {groups} />
       {:else if tabSet === 1}
+        <GroupsList
+          groups={groups.filter(
+            ({ membership_status, is_owner }) =>
+              membership_status[0] !== undefined &&
+              ('Accepted' in membership_status[0] || 'PendingReview' in membership_status[0]) &&
+              !is_owner[0]
+          )}
+        />
+      {:else if tabSet === 2}
         <FooterActionsWrapper>
-          <GroupsList groups={myGroups} noGroupsMessage={noMyGroupsMessage} />
+          <GroupsList
+            groups={groups.filter(({ is_owner }) => is_owner[0])}
+            noGroupsMessage={noMyGroupsMessage}
+          />
           <Button variant="primary" slot="actions">Create Group</Button>
         </FooterActionsWrapper>
       {/if}
