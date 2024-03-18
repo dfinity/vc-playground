@@ -65,7 +65,7 @@
 
   const getOnClick = (issuer: PublicGroupData): (() => void) | undefined => {
     if (issuer.is_owner[0]) {
-      return () => goto(`/issuers/${encodeURIComponent(issuer.group_name)}`);
+      return () => goto(`/issuers/?issuer=${encodeURIComponent(issuer.group_name)}`);
     }
     const status = issuer.membership_status[0];
     if (status === undefined || 'Rejected' in status) {
