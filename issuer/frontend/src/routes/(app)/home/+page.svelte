@@ -8,6 +8,8 @@
   import AuthGuard from '$lib/components/AuthGuard.svelte';
   import Tabs from '$lib/ui-components/elements/Tabs.svelte';
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import { createIssuer } from '$lib/services/create-issuer.services';
+  import { authStore } from '$lib/stores/auth.store';
 
   const modalStore = getModalStore();
 
@@ -28,10 +30,11 @@
       valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
       body: 'Create a credential type so that yuo can issue a verifiable credential. Credentials give access to exclusive images on the relying party dapp.',
       buttonTextSubmit: 'Create Issuer',
-      response: (submit: boolean) => {
-        if (submit) {
-          console.log('Create issuer');
-        }
+      response: (issuerName: string) => {
+        createIssuer({
+          identity: $authStore.identity,
+          issuerName,
+        });
       },
     };
     modalStore.trigger(settings);
