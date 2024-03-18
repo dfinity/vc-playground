@@ -3,13 +3,17 @@
   import Button from '$lib/ui-components/elements/Button.svelte';
   import FooterActionsWrapper from '$lib/ui-components/elements/FooterActionsWrapper.svelte';
   import { localStorageStore } from '@skeletonlabs/skeleton';
-  import type { PublicGroupData } from '../../../declarations/meta_issuer.did';
   import type { Writable } from 'svelte/store';
   import AuthGuard from '$lib/components/AuthGuard.svelte';
   import Tabs from '$lib/ui-components/elements/Tabs.svelte';
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { createIssuer } from '$lib/services/create-issuer.services';
   import { authStore } from '$lib/stores/auth.store';
+  import {
+    getAllIssuersStore,
+    getCredentialsStore,
+    getIdentityIssuersStore,
+  } from '$lib/stores/issuers.store';
 
   const modalStore = getModalStore();
 
@@ -17,6 +21,13 @@
   const tabStore: Writable<number> = localStorageStore('groupsTab', 0);
   let tabSet = $tabStore;
   $: tabStore.set(tabSet);
+
+  let allIssuersStore;
+  $: allIssuersStore = getAllIssuersStore($authStore.identity);
+  let myCredentialsStore;
+  $: myCredentialsStore = getCredentialsStore($authStore.identity);
+  let myIssuersStore;
+  $: myIssuersStore = getIdentityIssuersStore($authStore.identity);
 
   const noMyGroupsMessage =
     'Create a group to issue Verifiable Credentials that grant people access to funny images on the Relying Party app.';
@@ -39,56 +50,6 @@
     };
     modalStore.trigger(settings);
   };
-
-  // TODO: Replace with data from the backend.
-  const yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
-  const groups: PublicGroupData[] = [
-    {
-      membership_status: [{ Accepted: null }],
-      is_owner: [false],
-      stats: {
-        created_timestamp_ns: BigInt(yesterday.getTime()) * 1000000n,
-        member_count: 32,
-      },
-      group_name: 'Group A',
-    },
-    {
-      membership_status: [],
-      is_owner: [false],
-      stats: {
-        created_timestamp_ns: BigInt(yesterday.getTime()) * 1000000n,
-        member_count: 705,
-      },
-      group_name: 'Group B',
-    },
-    {
-      membership_status: [{ PendingReview: null }],
-      is_owner: [false],
-      stats: {
-        created_timestamp_ns: BigInt(yesterday.getTime()) * 1000000n,
-        member_count: 0,
-      },
-      group_name: 'Group C',
-    },
-    {
-      membership_status: [{ Rejected: null }],
-      is_owner: [false],
-      stats: {
-        created_timestamp_ns: BigInt(yesterday.getTime()) * 1000000n,
-        member_count: 2100,
-      },
-      group_name: 'Group D',
-    },
-    {
-      membership_status: [{ Accepted: null }],
-      is_owner: [true],
-      stats: {
-        created_timestamp_ns: BigInt(yesterday.getTime()) * 1000000n,
-        member_count: 11,
-      },
-      group_name: 'Group Z',
-    },
-  ];
 </script>
 
 <Tabs
@@ -101,12 +62,12 @@
 >
   <AuthGuard>
     {#if tabSet === 0}
-      <IssuersList issuers={groups} />
+      <IssuersList issuers={$allIssuersStore} />
     {:else if tabSet === 1}
-      <IssuersList issuers={groups} noGroupsMessage={noCredentialsMessage} />
+      <IssuersList issuers={$myCredentialsStore} noGroupsMessage={noCredentialsMessage} />
     {:else if tabSet === 2}
       <FooterActionsWrapper>
-        <IssuersList issuers={groups} noGroupsMessage={noMyGroupsMessage} />
+        <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage} />
         <Button on:click={openCreateModal} variant="primary" slot="actions">Become an Issuer</Button
         >
       </FooterActionsWrapper>
