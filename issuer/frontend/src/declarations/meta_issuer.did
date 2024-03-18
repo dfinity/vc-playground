@@ -117,7 +117,6 @@ type TimestampNs = nat64;
 
 type ListGroupsRequest = record {
     group_name_substring : opt text;
-    only_owned : opt bool;
 };
 
 type GetGroupRequest = record {
@@ -133,11 +132,15 @@ type JoinGroupRequest = record {
     note : text
 };
 
+type MembershipUpdate = record {
+  member : principal;
+  new_status : MembershipStatus;
+};
 
 type UpdateMembershipRequest = record {
     group_name : text;
-    member : principal;
-    new_status : MembershipStatus;
+    updates : vec MembershipUpdate;
+
 };
 
 type GroupStats = record {
@@ -195,7 +198,7 @@ service: (opt IssuerConfig) -> {
     /// API for obtaining information about groups and group membership.
     list_groups : (ListGroupsRequest) -> (variant { Ok : PublicGroupsData; Err : GroupsError;}) query;  /// public
     get_group : (GetGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;}) query;  /// authenticated, only for the owner
-    add_group : (AddGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;}) query;  /// authenticated
+    add_group : (AddGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;});  /// authenticated
     join_group : (JoinGroupRequest) -> (variant { Ok ; Err : GroupsError;});  /// authenticated
     update_membership : (UpdateMembershipRequest) -> (variant { Ok ; Err : GroupsError;});  /// authenticated, only for the owner
 
