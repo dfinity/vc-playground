@@ -636,11 +636,20 @@ fn prepare_credential_jwt(
 }
 
 fn verify_principal_is_member(
-    _user: Principal,
-    _group_name: String,
-    _groups: &GroupsMap,
+    user: Principal,
+    group_name: String,
+    groups: &GroupsMap,
 ) -> Result<(), IssueCredentialError> {
-    Ok(())
+    if let Some(group_record) = groups.get(&group_name) {
+        if let Some(member_record) = group_record.members.get(&user) {
+            if member_record.membership_status == MembershipStatus::Accepted {
+                return Ok(());
+            }
+        }
+    }
+    Err(IssueCredentialError::UnauthorizedSubject(
+        "not an accepted member".to_string(),
+    ))
 }
 
 fn internal_error(msg: &str) -> IssueCredentialError {

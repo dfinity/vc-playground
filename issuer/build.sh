@@ -9,7 +9,6 @@ cd frontend/
 npm run build
 cd ..
 
-
 # Build the canister
 cargo build --release --target wasm32-unknown-unknown --manifest-path ./Cargo.toml -j1
 ic-wasm "../target/wasm32-unknown-unknown/release/meta_issuer.wasm" -o "./meta_issuer.wasm" shrink
