@@ -7,6 +7,9 @@
   import type { Writable } from 'svelte/store';
   import AuthGuard from '$lib/components/AuthGuard.svelte';
   import Tabs from '$lib/ui-components/elements/Tabs.svelte';
+  import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+
+  const modalStore = getModalStore();
 
   // Persist the selected tab in the local storage.
   const tabStore: Writable<number> = localStorageStore('groupsTab', 0);
@@ -17,6 +20,22 @@
     'Create a group to issue Verifiable Credentials that grant people access to funny images on the Relying Party app.';
   const noCredentialsMessage =
     "You don't have any credentials yet. You can request them in 'All Credentials'.";
+
+  const openCreateModal = () => {
+    const settings: ModalSettings = {
+      type: 'prompt',
+      title: 'Name Your Credential',
+      valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
+      body: 'Create a credential type so that yuo can issue a verifiable credential. Credentials give access to exclusive images on the relying party dapp.',
+      buttonTextSubmit: 'Create Issuer',
+      response: (submit: boolean) => {
+        if (submit) {
+          console.log('Create issuer');
+        }
+      },
+    };
+    modalStore.trigger(settings);
+  };
 
   // TODO: Replace with data from the backend.
   const yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
@@ -84,11 +103,9 @@
       <IssuersList issuers={groups} noGroupsMessage={noCredentialsMessage} />
     {:else if tabSet === 2}
       <FooterActionsWrapper>
-        <IssuersList
-          issuers={groups.filter(({ is_owner }) => is_owner[0])}
-          noGroupsMessage={noMyGroupsMessage}
-        />
-        <Button variant="primary" slot="actions">Become an Issuer</Button>
+        <IssuersList issuers={groups} noGroupsMessage={noMyGroupsMessage} />
+        <Button on:click={openCreateModal} variant="primary" slot="actions">Become an Issuer</Button
+        >
       </FooterActionsWrapper>
     {/if}
     <svelte:fragment slot="skeleton">

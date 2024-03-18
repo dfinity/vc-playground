@@ -6,7 +6,6 @@
   import { AppShell, AppBar, Modal } from '@skeletonlabs/skeleton';
   import { logout, syncAuth } from '$lib/services/auth.services';
   import { initializeStores } from '@skeletonlabs/skeleton';
-  import { modalRegistry } from '$lib/modals/registry.modals';
 
   initializeStores();
 
@@ -15,7 +14,7 @@
   });
 </script>
 
-<Modal components={modalRegistry} />
+<Modal />
 
 <!-- App Shell -->
 <AppShell>
