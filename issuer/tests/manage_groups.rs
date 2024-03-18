@@ -2,17 +2,19 @@
 
 use assert_matches::assert_matches;
 use candid::{CandidType, Deserialize, Principal};
-use canister_tests::framework::{env, get_wasm_path, principal_1, principal_2};
+use canister_tests::framework::{env, get_wasm_path, principal_1, principal_2, test_principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
+use std::collections::HashMap;
 
 use ic_test_state_machine_client::StateMachine;
 use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
     AddGroupRequest, FullGroupData, GetGroupRequest, GroupsError, JoinGroupRequest,
-    ListGroupsRequest, MembershipStatus, PublicGroupData, PublicGroupsData,
+    ListGroupsRequest, MembershipStatus, MembershipUpdate, PublicGroupData, PublicGroupsData,
     UpdateMembershipRequest,
 };
 use std::path::PathBuf;
+use std::time::Duration;
 
 const DUMMY_ROOT_KEY: &str ="308182301d060d2b0601040182dc7c0503010201060c2b0601040182dc7c05030201036100adf65638a53056b2222c91bb2457b0274bca95198a5acbdadfe7fd72178f069bdea8d99e9479d8087a2686fc81bf3c4b11fe275570d481f1698f79d468afe0e57acc1e298f8b69798da7a891bbec197093ec5f475909923d48bfed6843dbed1f";
 const DUMMY_II_CANISTER_ID: &str = "rwlgt-iiaaa-aaaaa-aaaaa-cai";
@@ -195,8 +197,7 @@ fn join_group(
 
 fn update_membership(
     group_name: &str,
-    member: Principal,
-    new_status: MembershipStatus,
+    updates: Vec<MembershipUpdate>,
     caller: Principal,
     env: &StateMachine,
     canister_id: Principal,
@@ -207,8 +208,7 @@ fn update_membership(
         caller,
         UpdateMembershipRequest {
             group_name: group_name.to_string(),
-            member,
-            new_status,
+            updates,
         },
     )
     .expect("API call failed")
@@ -279,7 +279,6 @@ fn should_list_groups_anonymously() {
     }
     let req = ListGroupsRequest {
         group_name_substring: None,
-        only_owned: None,
     };
     let list = api::list_groups(&env, canister_id, None, req)
         .expect("API call failed")
@@ -324,7 +323,6 @@ fn should_list_groups_authenticated() {
 
     let req = ListGroupsRequest {
         group_name_substring: None,
-        only_owned: None,
     };
     let list = api::list_groups(&env, canister_id, Some(owner), req)
         .expect("API call failed")
@@ -383,7 +381,7 @@ fn should_join_group() {
 }
 
 #[test]
-fn should_update_membership() {
+fn should_update_membership_single_member() {
     let env = env();
     let canister_id = install_canister(&env, META_ISSUER_WASM.clone());
 
@@ -404,10 +402,13 @@ fn should_update_membership() {
         MembershipStatus::PendingReview
     );
 
+    env.advance_time(Duration::from_secs(2));
     update_membership(
         group_name,
-        alice_principal,
-        MembershipStatus::Accepted,
+        vec![MembershipUpdate {
+            member: alice_principal,
+            new_status: MembershipStatus::Accepted,
+        }],
         bob_principal,
         &env,
         canister_id,
@@ -428,6 +429,85 @@ fn should_update_membership() {
 }
 
 #[test]
+fn should_update_membership_multiple_members() {
+    let env = env();
+    let canister_id = install_canister(&env, META_ISSUER_WASM.clone());
+
+    let group_name = "Bob's Club";
+    let bob_note = "Bob";
+    let bob_principal = principal_1();
+    let _ = add_group(group_name, bob_principal, &env, canister_id);
+    join_group(group_name, bob_note, bob_principal, &env, canister_id);
+
+    env.advance_time(Duration::from_secs(2));
+    let alice_note = "Alice";
+    let alice_principal = principal_2();
+    join_group(group_name, alice_note, alice_principal, &env, canister_id);
+
+    env.advance_time(Duration::from_secs(2));
+    let eve_note = "Eve";
+    let eve_principal = test_principal(42);
+    join_group(group_name, eve_note, eve_principal, &env, canister_id);
+
+    let mut timestamps: HashMap<Principal, u64> = HashMap::new();
+
+    let group_data_before = get_group(group_name, principal_1(), &env, canister_id);
+    assert_eq!(group_data_before.members.len(), 3);
+    for m in group_data_before.members {
+        assert_eq!(m.membership_status, MembershipStatus::PendingReview);
+        timestamps.insert(m.member, m.joined_timestamp_ns);
+        if m.member == alice_principal {
+            assert_eq!(m.note, alice_note);
+        } else if m.member == bob_principal {
+            assert_eq!(m.note, bob_note);
+        } else if m.member == eve_principal {
+            assert_eq!(m.note, eve_note);
+        } else {
+            panic!("Unexpected member {}", m.member);
+        }
+    }
+
+    env.advance_time(Duration::from_secs(2));
+    update_membership(
+        group_name,
+        vec![
+            MembershipUpdate {
+                member: alice_principal,
+                new_status: MembershipStatus::Accepted,
+            },
+            MembershipUpdate {
+                member: bob_principal,
+                new_status: MembershipStatus::Rejected,
+            },
+        ],
+        bob_principal,
+        &env,
+        canister_id,
+    );
+
+    let group_data_after = get_group(group_name, principal_1(), &env, canister_id);
+    assert_eq!(group_data_after.members.len(), 3);
+    for m in group_data_after.members {
+        assert_eq!(
+            m.joined_timestamp_ns,
+            *timestamps.get(&m.member).expect("Missing member")
+        );
+        if m.member == alice_principal {
+            assert_eq!(m.note, alice_note);
+            assert_eq!(m.membership_status, MembershipStatus::Accepted);
+        } else if m.member == bob_principal {
+            assert_eq!(m.note, bob_note);
+            assert_eq!(m.membership_status, MembershipStatus::Rejected);
+        } else if m.member == eve_principal {
+            assert_eq!(m.note, eve_note);
+            assert_eq!(m.membership_status, MembershipStatus::PendingReview);
+        } else {
+            panic!("Unexpected member {}", m.member);
+        }
+    }
+}
+
+#[test]
 fn should_fail_update_membership_if_missing_group() {
     let env = env();
     let canister_id = install_canister(&env, META_ISSUER_WASM.clone());
@@ -441,8 +521,10 @@ fn should_fail_update_membership_if_missing_group() {
         bob_principal,
         UpdateMembershipRequest {
             group_name: group_name.to_string(),
-            member: principal_2(),
-            new_status: MembershipStatus::Accepted,
+            updates: vec![MembershipUpdate {
+                member: principal_2(),
+                new_status: MembershipStatus::Accepted,
+            }],
         },
     )
     .expect("API call failed");
@@ -465,8 +547,10 @@ fn should_fail_update_membership_if_missing_member() {
         bob_principal,
         UpdateMembershipRequest {
             group_name: group_name.to_string(),
-            member: principal_2(),
-            new_status: MembershipStatus::Accepted,
+            updates: vec![MembershipUpdate {
+                member: principal_2(),
+                new_status: MembershipStatus::Accepted,
+            }],
         },
     )
     .expect("API call failed");
@@ -489,8 +573,10 @@ fn should_fail_update_membership_if_not_owner() {
         principal_2(), // not the owner
         UpdateMembershipRequest {
             group_name: group_name.to_string(),
-            member: principal_2(),
-            new_status: MembershipStatus::Accepted,
+            updates: vec![MembershipUpdate {
+                member: principal_2(),
+                new_status: MembershipStatus::Accepted,
+            }],
         },
     )
     .expect("API call failed");
