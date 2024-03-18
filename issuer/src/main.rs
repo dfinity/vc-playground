@@ -323,20 +323,22 @@ fn update_membership(req: UpdateMembershipRequest) -> Result<(), GroupsError> {
                     req.group_name
                 )));
             }
-            if let Some(member_record) = group_record.members.get(&req.member) {
-                group_record.members.insert(
-                    req.member,
-                    MemberRecord {
-                        note: member_record.note.clone(),
-                        joined_timestamp_ns: member_record.joined_timestamp_ns,
-                        membership_status: req.new_status,
-                    },
-                );
-                groups.insert(req.group_name, group_record);
-                Ok(())
-            } else {
-                Err(GroupsError::NotFound(format!("member: {}", req.member)))
+            for update in req.updates {
+                if let Some(member_record) = group_record.members.get(&update.member) {
+                    group_record.members.insert(
+                        update.member,
+                        MemberRecord {
+                            note: member_record.note.clone(),
+                            joined_timestamp_ns: member_record.joined_timestamp_ns,
+                            membership_status: update.new_status,
+                        },
+                    );
+                } else {
+                    return Err(GroupsError::NotFound(format!("member: {}", update.member)));
+                }
             }
+            groups.insert(req.group_name, group_record);
+            Ok(())
         } else {
             Err(GroupsError::NotFound(format!("group: {}", req.group_name)))
         }

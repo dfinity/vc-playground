@@ -117,7 +117,6 @@ type TimestampNs = nat64;
 
 type ListGroupsRequest = record {
     group_name_substring : opt text;
-    only_owned : opt bool;
 };
 
 type GetGroupRequest = record {
@@ -133,11 +132,15 @@ type JoinGroupRequest = record {
     note : text
 };
 
+type MembershipUpdate = record {
+  member : principal;
+  new_status : MembershipStatus;
+};
 
 type UpdateMembershipRequest = record {
     group_name : text;
-    member : principal;
-    new_status : MembershipStatus;
+    updates : vec MembershipUpdate;
+
 };
 
 type GroupStats = record {

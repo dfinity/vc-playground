@@ -3,7 +3,6 @@ use candid::{CandidType, Deserialize, Principal};
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub struct ListGroupsRequest {
     pub group_name_substring: Option<String>,
-    pub only_owned: Option<bool>,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -23,10 +22,15 @@ pub struct JoinGroupRequest {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
-pub struct UpdateMembershipRequest {
-    pub group_name: String,
+pub struct MembershipUpdate {
     pub member: Principal,
     pub new_status: MembershipStatus,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
+pub struct UpdateMembershipRequest {
+    pub group_name: String,
+    pub updates: Vec<MembershipUpdate>,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
