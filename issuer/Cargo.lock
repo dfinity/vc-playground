@@ -844,6 +844,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "early_adopter_issuer"
+version = "0.1.0"
+dependencies = [
+ "assert_matches",
+ "asset_util",
+ "candid",
+ "candid_parser",
+ "canister_sig_util",
+ "canister_tests",
+ "hex",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-certification 2.2.0",
+ "ic-http-certification",
+ "ic-response-verification",
+ "ic-stable-structures 0.6.3",
+ "ic-test-state-machine-client",
+ "include_dir",
+ "internet_identity_interface",
+ "lazy_static",
+ "serde",
+ "serde_bytes",
+ "serde_cbor",
+ "serde_json",
+ "sha2 0.10.8",
+ "vc_util",
+]
+
+[[package]]
 name = "ecdsa"
 version = "0.16.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2234,35 +2263,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "meta_issuer"
-version = "0.1.0"
-dependencies = [
- "assert_matches",
- "asset_util",
- "candid",
- "candid_parser",
- "canister_sig_util",
- "canister_tests",
- "hex",
- "ic-cdk",
- "ic-cdk-macros",
- "ic-certification 2.2.0",
- "ic-http-certification",
- "ic-response-verification",
- "ic-stable-structures 0.6.3",
- "ic-test-state-machine-client",
- "include_dir",
- "internet_identity_interface",
- "lazy_static",
- "serde",
- "serde_bytes",
- "serde_cbor",
- "serde_json",
- "sha2 0.10.8",
- "vc_util",
 ]
 
 [[package]]
