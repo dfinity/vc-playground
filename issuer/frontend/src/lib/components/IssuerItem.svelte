@@ -37,7 +37,6 @@
       type: 'confirm',
       title: 'Test Your Credential On the Relying Party',
       body: `You have a credential for ${issuer.group_name}. Visit Xxxxx to view content that's only accessible to users with the credential of ${issuer.group_name}.`,
-
       buttonTextConfirm: 'Test on Relying Party',
       buttonTextCancel: 'Close',
       response: (go: boolean) => {
@@ -51,11 +50,9 @@
 
   const createPendingMemberModal = () => {
     const settings: ModalSettings = {
-      type: 'confirm',
+      type: 'alert',
       title: `The ${issuer.group_name} credential was not yet issued.`,
       body: 'Wait for the issuer to issue your credential.',
-
-      buttonTextConfirm: 'Test on Relying Party',
       buttonTextCancel: 'Close',
       response: (go: boolean) => {
         if (go) {
