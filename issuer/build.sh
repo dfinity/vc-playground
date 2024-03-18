@@ -5,7 +5,9 @@ set -euo pipefail
 META_ISSUER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$META_ISSUER_DIR"
 
-
+cd frontend/
+npm run build
+cd ..
 
 # Build the canister
 cargo build --release --target wasm32-unknown-unknown --manifest-path ./Cargo.toml -j1
