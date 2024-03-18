@@ -22,9 +22,9 @@
   <svelte:fragment slot="header">
     <!-- App Bar -->
     <AppBar>
-      <svelte:fragment slot="lead">
-        <strong class="text-xl uppercase">VC Playground</strong>
-      </svelte:fragment>
+      <a href="/home" class="text-xl uppercase font-bold" aria-label="Go to Home" slot="lead"
+        >VC Playground
+      </a>
       <svelte:fragment slot="trail">
         <Button variant="ghost" on:click={logout}>Logout</Button>
       </svelte:fragment>

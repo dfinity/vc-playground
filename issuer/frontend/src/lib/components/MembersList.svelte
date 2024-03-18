@@ -8,6 +8,7 @@
   import MemberItemSkeleton from './MemberItemSkeleton.svelte';
 
   export let members: MemberData[] | undefined;
+  export let title: string | undefined = undefined;
 </script>
 
 {#if members === undefined}
@@ -21,7 +22,7 @@
   </ArticleWrapper>
 {:else}
   <ArticleWrapper>
-    <svelte:fragment slot="title">Members in your group</svelte:fragment>
+    <svelte:fragment slot="title">{title}</svelte:fragment>
     <List>
       <ListItem>
         <svelte:fragment slot="main">Name 1</svelte:fragment>
