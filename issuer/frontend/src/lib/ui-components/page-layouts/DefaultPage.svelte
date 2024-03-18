@@ -3,6 +3,7 @@
 </script>
 
 <section class="flex flex-col gap-8">
+  <slot name="callout" />
   <Heading level="1">
     <slot name="title" />
   </Heading>
