@@ -28,15 +28,17 @@ export const createActor = async ({
   });
 };
 
-let metaIssuerCaniter: ActorSubclass<_SERVICE> | undefined = undefined;
+// Record of identity principals to meta issuer canister actors
+const metaIssuerCaniter: Record<string, ActorSubclass<_SERVICE>> = {};
 export const getMetaIssuerCanister = async (identity?: Identity) => {
-  if (!metaIssuerCaniter) {
+  const identityPrincipal = identity?.getPrincipal().toText() ?? 'no-authenticated-identity';
+  if (!metaIssuerCaniter[identityPrincipal]) {
     const agent = new HttpAgent({ host: import.meta.env.VITE_HOST, identity });
-    metaIssuerCaniter = await createActor({
+    metaIssuerCaniter[identityPrincipal] = await createActor({
       canisterId: import.meta.env.VITE_ISSUER_CANISTER_ID,
       agent,
       fetchRootKey: import.meta.env.VITE_FETCH_ROOT_KEY === 'true',
     });
   }
-  return metaIssuerCaniter;
+  return metaIssuerCaniter[identityPrincipal];
 };
