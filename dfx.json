@@ -3,8 +3,8 @@
   "canisters": {
     "meta_issuer": {
       "type": "custom",
-      "candid": "issuer/meta-issuer.did",
-      "wasm": "issuer/meta-issuer.wasm.gz",
+      "candid": "issuer/meta_issuer.did",
+      "wasm": "meta_issuer.wasm.gz",
       "declarations": {
         "output": "issuer/frontend/src/declarations"
       },
