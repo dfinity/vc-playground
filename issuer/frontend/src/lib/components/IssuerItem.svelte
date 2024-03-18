@@ -32,9 +32,37 @@
     return '📤 Pending';
   };
 
-  const createOpenModal = (modal: 'memberModal' | 'pendingMemberModal') => () => {
-    const meta = { name: issuer.group_name };
-    const settings: ModalSettings = { type: 'component', component: modal, meta };
+  const createMemberModal = () => {
+    const settings: ModalSettings = {
+      type: 'confirm',
+      title: 'Test Your Credential On the Relying Party',
+      body: `You have a credential for ${issuer.group_name}. Visit Xxxxx to view content that's only accessible to users with the credential of ${issuer.group_name}.`,
+
+      buttonTextConfirm: 'Test on Relying Party',
+      buttonTextCancel: 'Close',
+      response: (go: boolean) => {
+        if (go) {
+          window.open('https://www.skeleton.dev/', '_blank');
+        }
+      },
+    };
+    modalStore.trigger(settings);
+  };
+
+  const createPendingMemberModal = () => {
+    const settings: ModalSettings = {
+      type: 'confirm',
+      title: `The ${issuer.group_name} credential was not yet issued.`,
+      body: 'Wait for the issuer to issue your credential.',
+
+      buttonTextConfirm: 'Test on Relying Party',
+      buttonTextCancel: 'Close',
+      response: (go: boolean) => {
+        if (go) {
+          window.open('https://www.skeleton.dev/', '_blank');
+        }
+      },
+    };
     modalStore.trigger(settings);
   };
 
@@ -46,9 +74,27 @@
     if (status === undefined || 'Rejected' in status) {
       return undefined;
     }
-    if ('Accepted' in status) return createOpenModal('memberModal');
+    if ('Accepted' in status) {
+      return () => createMemberModal();
+    }
     // Only missing 'PendingReview'
-    return createOpenModal('pendingMemberModal');
+    return () => createPendingMemberModal();
+  };
+
+  const openRequestCredentialModal = () => {
+    const settings: ModalSettings = {
+      type: 'prompt',
+      title: 'Request Credential',
+      valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
+      body: `Enter a nickname to request the ${issuer.group_name} credential.`,
+      buttonTextSubmit: 'Send Request',
+      response: (submit: boolean) => {
+        if (submit) {
+          console.log('Request credential');
+        }
+      },
+    };
+    modalStore.trigger(settings);
   };
 
   let onClick: (() => void) | undefined;
@@ -61,7 +107,9 @@
     {#if issuer.is_owner[0]}
       <Badge variant="primary">👑 Owner</Badge>
     {:else if canJoin}
-      <Button variant="primary" size="sm">Request Credential</Button>
+      <Button on:click={openRequestCredentialModal} variant="primary" size="sm"
+        >Request Credential</Button
+      >
     {:else}
       <Badge variant={statusVariant(issuer.membership_status[0])}
         >{badgeText(issuer.membership_status[0])}</Badge
