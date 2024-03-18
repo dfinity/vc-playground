@@ -1,11 +1,12 @@
 <script lang="ts">
-  import GroupsList from '$lib/components/GroupsList.svelte';
+  import IssuersList from '$lib/components/IssuersList.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import FooterActionsWrapper from '$lib/ui-components/elements/FooterActionsWrapper.svelte';
-  import { Tab, TabGroup, localStorageStore } from '@skeletonlabs/skeleton';
+  import { localStorageStore } from '@skeletonlabs/skeleton';
   import type { PublicGroupData } from '../../../declarations/meta_issuer.did';
   import type { Writable } from 'svelte/store';
   import AuthGuard from '$lib/components/AuthGuard.svelte';
+  import Tabs from '$lib/ui-components/elements/Tabs.svelte';
 
   // Persist the selected tab in the local storage.
   const tabStore: Writable<number> = localStorageStore('groupsTab', 0);
@@ -14,6 +15,8 @@
 
   const noMyGroupsMessage =
     'Create a group to issue Verifiable Credentials that grant people access to funny images on the Relying Party app.';
+  const noCredentialsMessage =
+    "You don't have any credentials yet. You can request them in 'All Credentials'.";
 
   // TODO: Replace with data from the backend.
   const yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
@@ -66,36 +69,30 @@
   ];
 </script>
 
-<TabGroup justify="justify-center">
-  <Tab bind:group={tabSet} name="all-groups" value={0}>All Groups</Tab>
-  <Tab bind:group={tabSet} name="all-groups" value={1}>My memberships</Tab>
-  <Tab bind:group={tabSet} name="my-groups" value={2}>My Groups</Tab>
-  <!-- Tab Panels --->
-  <svelte:fragment slot="panel">
-    <AuthGuard>
-      {#if tabSet === 0}
-        <GroupsList {groups} />
-      {:else if tabSet === 1}
-        <GroupsList
-          groups={groups.filter(
-            ({ membership_status, is_owner }) =>
-              membership_status[0] !== undefined &&
-              ('Accepted' in membership_status[0] || 'PendingReview' in membership_status[0]) &&
-              !is_owner[0]
-          )}
+<Tabs
+  bind:tabSet
+  tabs={[
+    { name: 'all-credentials', label: 'All Credentials', value: 0 },
+    { name: 'my-credentials', label: 'My Credentials', value: 1 },
+    { name: 'issuer-control-cernter', label: 'Issuer Control Center', value: 2 },
+  ]}
+>
+  <AuthGuard>
+    {#if tabSet === 0}
+      <IssuersList issuers={groups} />
+    {:else if tabSet === 1}
+      <IssuersList issuers={groups} noGroupsMessage={noCredentialsMessage} />
+    {:else if tabSet === 2}
+      <FooterActionsWrapper>
+        <IssuersList
+          issuers={groups.filter(({ is_owner }) => is_owner[0])}
+          noGroupsMessage={noMyGroupsMessage}
         />
-      {:else if tabSet === 2}
-        <FooterActionsWrapper>
-          <GroupsList
-            groups={groups.filter(({ is_owner }) => is_owner[0])}
-            noGroupsMessage={noMyGroupsMessage}
-          />
-          <Button variant="primary" slot="actions">Create Group</Button>
-        </FooterActionsWrapper>
-      {/if}
-      <svelte:fragment slot="skeleton">
-        <GroupsList groups={undefined} />
-      </svelte:fragment>
-    </AuthGuard>
-  </svelte:fragment>
-</TabGroup>
+        <Button variant="primary" slot="actions">Become an Issuer</Button>
+      </FooterActionsWrapper>
+    {/if}
+    <svelte:fragment slot="skeleton">
+      <IssuersList issuers={undefined} />
+    </svelte:fragment>
+  </AuthGuard>
+</Tabs>

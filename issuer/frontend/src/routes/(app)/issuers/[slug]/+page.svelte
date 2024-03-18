@@ -8,11 +8,12 @@
 
 <AuthGuard>
   <DefaultPage>
-    <svelte:fragment slot="title">My Fav Group</svelte:fragment>
+    <svelte:fragment slot="title">My Fav Credential</svelte:fragment>
     <Callout>
-      <p>🎉 You are the owner of this group.</p>
+      <p>🎉 You are the issuer of this credential type.</p>
     </Callout>
-    <MembersList members={[]} />
+    <MembersList members={[]} title="Pending Credentials" />
+    <MembersList members={[]} title="200 Approved Credentials" />
   </DefaultPage>
   <DefaultPage slot="skeleton">
     <svelte:fragment slot="title"><HeadingSkeleton size="lg" /></svelte:fragment>
