@@ -5,9 +5,6 @@ set -euo pipefail
 META_ISSUER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$META_ISSUER_DIR"
 
-cd frontend/
-npm run build
-cd ..
 
 
 # Build the canister
