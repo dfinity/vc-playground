@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { requestMembership } from '$lib/services/request-membership.services';
+  import { requestCredential } from '$lib/services/request-credential.services';
   import { authStore } from '$lib/stores/auth.store';
   import Badge from '$lib/ui-components/elements/Badge.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
@@ -88,7 +88,7 @@
       body: `Enter a nickname to request the ${issuer.group_name} credential.`,
       buttonTextSubmit: 'Send Request',
       response: (note: string) => {
-        requestMembership({
+        requestCredential({
           identity: $authStore.identity,
           issuerName: issuer.group_name,
           note,

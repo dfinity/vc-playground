@@ -3,7 +3,7 @@ import type { Identity } from '@dfinity/agent';
 import { loadIssuers } from './load-issuers.services';
 import { joinGroup } from '$lib/api/joinGroup.api';
 
-export const requestMembership = async ({
+export const requestCredential = async ({
   identity,
   issuerName,
   note,
