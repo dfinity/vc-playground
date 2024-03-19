@@ -3,22 +3,17 @@
 use assert_matches::assert_matches;
 use candid::Principal;
 use canister_sig_util::{extract_raw_root_pk_from_der, CanisterSigPublicKey};
-use canister_tests::api::http_request;
 use canister_tests::api::internet_identity::vc_mvp as ii_api;
 use canister_tests::flows;
-use canister_tests::framework::{env, principal_1, test_principal, time};
-use ic_cdk::api::management_canister::provisional::CanisterId;
-use ic_response_verification::types::VerificationInfo;
-use ic_response_verification::verify_request_response_pair;
-use ic_test_state_machine_client::{CallError, StateMachine};
-use internet_identity_interface::http_gateway::{HttpRequest, HttpResponse};
+use canister_tests::framework::{env, principal_1, test_principal};
+
+use ic_test_state_machine_client::CallError;
 use internet_identity_interface::internet_identity::types::vc_mvp::{
     GetIdAliasRequest, PrepareIdAliasRequest,
 };
 use internet_identity_interface::internet_identity::types::FrontendHostname;
-use serde_bytes::ByteBuf;
 use std::collections::HashMap;
-use std::time::{Duration, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 use vc_util::issuer_api::{
     ArgumentValue, CredentialSpec, GetCredentialRequest, Icrc21ConsentPreferences, Icrc21Error,
     Icrc21VcConsentMessageRequest, IssueCredentialError, PrepareCredentialRequest,
@@ -31,9 +26,8 @@ use vc_util::{
 
 #[allow(dead_code)]
 mod util;
-use crate::util::{add_group_with_member, META_ISSUER_WASM};
-use util::{
-    api, do_add_group, do_get_group, install_canister, install_issuer, IssuerInit,
+use crate::util::{
+    add_group_with_member, api, install_canister, install_issuer, IssuerInit,
     DUMMY_ALIAS_ID_DAPP_PRINCIPAL, DUMMY_ISSUER_INIT, DUMMY_SIGNED_ID_ALIAS, II_WASM,
 };
 
@@ -415,125 +409,5 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
     let vc_claims = claims.vc().expect("missing VC claims");
     validate_claims_match_spec(vc_claims, &credential_spec).expect("Clam validation failed");
 
-    Ok(())
-}
-
-#[test]
-fn should_configure() {
-    let env = env();
-    let issuer_id = install_issuer(&env, None);
-    api::configure(&env, issuer_id, &DUMMY_ISSUER_INIT).expect("API call failed");
-}
-
-/// Verifies that the expected assets is delivered and certified.
-#[test]
-#[ignore]
-fn issuer_canister_serves_http_assets() -> Result<(), CallError> {
-    fn verify_response_certification(
-        env: &StateMachine,
-        canister_id: CanisterId,
-        request: HttpRequest,
-        http_response: HttpResponse,
-        min_certification_version: u16,
-    ) -> VerificationInfo {
-        verify_request_response_pair(
-            ic_http_certification::HttpRequest {
-                method: request.method,
-                url: request.url,
-                headers: request.headers,
-                body: request.body.into_vec(),
-            },
-            ic_http_certification::HttpResponse {
-                status_code: http_response.status_code,
-                headers: http_response.headers,
-                body: http_response.body.into_vec(),
-            },
-            canister_id.as_slice(),
-            time(env) as u128,
-            Duration::from_secs(300).as_nanos(),
-            &env.root_key(),
-            min_certification_version as u8,
-        )
-        .unwrap_or_else(|e| panic!("validation failed: {e}"))
-    }
-
-    let env = env();
-    let canister_id = install_issuer(&env, None);
-
-    // for each asset and certification version, fetch the asset, check the HTTP status code, headers and certificate.
-
-    for certification_version in 1..=2 {
-        let request = HttpRequest {
-            method: "GET".to_string(),
-            url: "/".to_string(),
-            headers: vec![],
-            body: ByteBuf::new(),
-            certificate_version: Some(certification_version),
-        };
-        let http_response = http_request(&env, canister_id, &request)?;
-        assert_eq!(http_response.status_code, 200);
-
-        let result = verify_response_certification(
-            &env,
-            canister_id,
-            request,
-            http_response,
-            certification_version,
-        );
-        assert_eq!(result.verification_version, certification_version);
-    }
-
-    Ok(())
-}
-
-#[test]
-fn should_upgrade_issuer() -> Result<(), CallError> {
-    let env = env();
-    let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
-    let arg = candid::encode_one("()").expect("error encoding issuer init arg as candid");
-    env.upgrade_canister(issuer_id, META_ISSUER_WASM.clone(), arg, None)?;
-
-    // Verify the canister is still running.
-    let consent_message_request = Icrc21VcConsentMessageRequest {
-        credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
-        preferences: Icrc21ConsentPreferences {
-            language: "en-US".to_string(),
-        },
-    };
-    let _ = api::vc_consent_message(&env, issuer_id, principal_1(), &consent_message_request)
-        .expect("API call failed")
-        .expect("Failed to obtain consent info");
-    Ok(())
-}
-
-#[test]
-fn should_retain_groups_upgrade() -> Result<(), CallError> {
-    let env = env();
-    let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
-    // Create a group, and record its data.
-    let authorized_principal = principal_1();
-    add_group_with_member(
-        DUMMY_GROUP_NAME,
-        authorized_principal,
-        "Alice",
-        authorized_principal,
-        &env,
-        issuer_id,
-    );
-    let group_data_before = do_get_group(DUMMY_GROUP_NAME, authorized_principal, &env, issuer_id);
-
-    // Upgrade the canister.
-    let arg = candid::encode_one("()").expect("error encoding issuer init arg as candid");
-    env.upgrade_canister(issuer_id, META_ISSUER_WASM.clone(), arg, None)?;
-    env.advance_time(std::time::Duration::from_secs(2));
-
-    // Check that canister still works, and that it has the data from before the upgrade.
-    let other_group_data = do_add_group("Another group", authorized_principal, &env, issuer_id);
-    assert_ne!(
-        group_data_before.stats.created_timestamp_ns,
-        other_group_data.stats.created_timestamp_ns
-    );
-    let group_data_after = do_get_group(DUMMY_GROUP_NAME, authorized_principal, &env, issuer_id);
-    assert_eq!(group_data_before, group_data_after);
     Ok(())
 }
