@@ -51,7 +51,7 @@
         >Decline</Button
       >
     {:else if status === 'approved'}
-      <Button variant="tertiary" on:click={revoke} loading={loadingRevoke}>Revoke</Button>
+      <Button variant="secondary" on:click={revoke} loading={loadingRevoke}>Revoke</Button>
     {:else}
       <!-- Not used at the moment because we filter them out -->
       <Badge variant="error">Revoked</Badge>
