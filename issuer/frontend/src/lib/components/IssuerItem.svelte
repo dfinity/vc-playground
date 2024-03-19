@@ -1,5 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { requestMembership } from '$lib/services/request-membership.services';
+  import { authStore } from '$lib/stores/auth.store';
   import Badge from '$lib/ui-components/elements/Badge.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import ListItem from '$lib/ui-components/elements/ListItem.svelte';
@@ -32,7 +34,7 @@
     return '📤 Pending';
   };
 
-  const createMemberModal = () => {
+  const openMemberModal = () => {
     const settings: ModalSettings = {
       type: 'confirm',
       title: 'Test Your Credential On the Relying Party',
@@ -48,7 +50,7 @@
     modalStore.trigger(settings);
   };
 
-  const createPendingMemberModal = () => {
+  const openPendingMemberModal = () => {
     const settings: ModalSettings = {
       type: 'alert',
       title: `The ${issuer.group_name} credential was not yet issued.`,
@@ -72,10 +74,10 @@
       return undefined;
     }
     if ('Accepted' in status) {
-      return () => createMemberModal();
+      return () => openMemberModal();
     }
     // Only missing 'PendingReview'
-    return () => createPendingMemberModal();
+    return () => openPendingMemberModal();
   };
 
   const openRequestCredentialModal = () => {
@@ -85,10 +87,12 @@
       valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
       body: `Enter a nickname to request the ${issuer.group_name} credential.`,
       buttonTextSubmit: 'Send Request',
-      response: (submit: boolean) => {
-        if (submit) {
-          console.log('Request credential');
-        }
+      response: (note: string) => {
+        requestMembership({
+          identity: $authStore.identity,
+          issuerName: issuer.group_name,
+          note,
+        });
       },
     };
     modalStore.trigger(settings);
