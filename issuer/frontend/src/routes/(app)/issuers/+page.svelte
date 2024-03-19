@@ -2,7 +2,11 @@
   import AuthGuard from '$lib/components/AuthGuard.svelte';
   import MembersList from '$lib/components/MembersList.svelte';
   import { authStore } from '$lib/stores/auth.store';
-  import { getIssuerDetailStore, type IssuerDetailStore } from '$lib/stores/issuer-detail.store';
+  import {
+    getIssuerDetailStore,
+    getIssuerNonRevokedMembers,
+    type IssuerDetailStore,
+  } from '$lib/stores/issuer-detail.store';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import Callout from '$lib/ui-components/elements/Callout.svelte';
   import HeadingSkeleton from '$lib/ui-components/elements/HeadingSkeleton.svelte';
@@ -14,12 +18,15 @@
     countApprovedCredentials,
     countPendingCredentials,
   } from '$lib/utils/count-approved-credentials.utils';
+  import { browser } from '$app/environment';
+  import type { Readable } from 'svelte/store';
+  import type { MemberData } from '../../../declarations/meta_issuer.did';
 
   let issuerName: string | null;
-  $: issuerName = $page.url.searchParams.get(ISSUER_PARAM);
+  $: issuerName = browser ? $page.url.searchParams.get(ISSUER_PARAM) : null;
 
   $: {
-    if (issuerName === null) {
+    if (issuerName === null && browser) {
       goto('/');
     }
   }
@@ -29,9 +36,14 @@
     identity: $authStore.identity,
     issuerName: issuerName ?? '',
   });
+  let membersStore: Readable<MemberData[] | undefined>;
+  $: membersStore = getIssuerNonRevokedMembers({
+    identity: $authStore.identity,
+    issuerName: issuerName ?? '',
+  });
 
   $: {
-    if ($issuerStore === null) {
+    if ($issuerStore === null && browser) {
       goto('/');
     }
   }
@@ -52,12 +64,13 @@
       <Button variant="primary" href="https://www.skeleton.dev/">Test In relying party</Button>
     </div>
     <MembersList
-      members={$issuerStore?.members}
+      members={$membersStore}
+      issuerName={$issuerStore?.group_name}
       title={`Credentials: ${approvedCredentials} approved${pendingCredentials > 0 ? `, ${pendingCredentials} pending.` : '.'}`}
     />
   </DefaultPage>
   <DefaultPage slot="skeleton">
     <svelte:fragment slot="title"><HeadingSkeleton size="lg" /></svelte:fragment>
-    <MembersList members={undefined} />
+    <MembersList members={undefined} issuerName={undefined} />
   </DefaultPage>
 </AuthGuard>
