@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { requestCredential } from '$lib/services/request-credential.services';
   import { authStore } from '$lib/stores/auth.store';
+  import { ISSUER_PARAM } from '$lib/constants/url-params.constants';
   import Badge from '$lib/ui-components/elements/Badge.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import ListItem from '$lib/ui-components/elements/ListItem.svelte';
@@ -67,7 +68,7 @@
 
   const getOnClick = (issuer: PublicGroupData): (() => void) | undefined => {
     if (issuer.is_owner[0]) {
-      return () => goto(`/issuers/?issuer=${encodeURIComponent(issuer.group_name)}`);
+      return () => goto(`/issuers/?${ISSUER_PARAM}=${encodeURIComponent(issuer.group_name)}`);
     }
     const status = issuer.membership_status[0];
     if (status === undefined || 'Rejected' in status) {
