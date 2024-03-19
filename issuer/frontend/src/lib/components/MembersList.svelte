@@ -6,11 +6,12 @@
   import MemberItem from './MemberItem.svelte';
   import MemberItemSkeleton from './MemberItemSkeleton.svelte';
 
+  export let issuerName: string | undefined;
   export let members: MemberData[] | undefined;
   export let title: string | undefined = undefined;
 </script>
 
-{#if members === undefined}
+{#if members === undefined || issuerName === undefined}
   <ArticleWrapper>
     <HeadingSkeleton slot="title" size="sm" />
     <List>
@@ -26,7 +27,7 @@
     <svelte:fragment slot="title">{title}</svelte:fragment>
     <List>
       {#each members as member}
-        <MemberItem {member} />
+        <MemberItem {issuerName} {member} />
       {/each}
     </List>
   </ArticleWrapper>

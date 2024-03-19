@@ -45,6 +45,7 @@
   "type": "module",
   "dependencies": {
     "@dfinity/agent": "^1.0.1",
-    "@dfinity/auth-client": "^1.0.1"
+    "@dfinity/auth-client": "^1.0.1",
+    "@dfinity/principal": "^1.1.0"
   }
 }

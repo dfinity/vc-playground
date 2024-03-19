@@ -13,12 +13,7 @@ export const getIssuersStore = (
       undefined,
       (_set, update) => {
         queryGroups({ identity: identity ?? new AnonymousIdentity() }).then((groups) => {
-          update((currentData) => {
-            if (currentData === undefined) {
-              return groups;
-            }
-            return currentData;
-          });
+          update(() => groups);
         });
       }
     );

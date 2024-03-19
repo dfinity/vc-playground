@@ -1,7 +1,7 @@
-import { writable, type Writable } from 'svelte/store';
-import type { FullGroupData } from '../../declarations/meta_issuer.did';
+import { derived, writable, type Readable, type Writable } from 'svelte/store';
+import type { FullGroupData, MemberData } from '../../declarations/meta_issuer.did';
 import { AnonymousIdentity, type Identity } from '@dfinity/agent';
-import { queryGroup } from '$lib/api/getGroup.api';
+import { queryGroup } from '$lib/api/queryGroup.api';
 import { isNullish } from '$lib/utils/is-nullish.utils';
 
 export type IssuerDetailStore = Writable<FullGroupData | undefined | null>;
@@ -26,12 +26,7 @@ export const getIssuerDetailStore = ({
       }
       queryGroup({ identity: identity ?? new AnonymousIdentity(), groupName: issuerName })
         .then((group) => {
-          update((currentData) => {
-            if (currentData === undefined) {
-              return group;
-            }
-            return currentData;
-          });
+          update(() => group);
         })
         .catch((error) => {
           console.error('Error fetching issuer detail', error);
@@ -46,3 +41,17 @@ export const getIssuerDetailStore = ({
   }
   return issuers[key];
 };
+
+export const getIssuerNonRevokedMembers = ({
+  identity,
+  issuerName,
+}: {
+  identity: Identity | undefined | null;
+  issuerName: string;
+}): Readable<MemberData[] | undefined> =>
+  derived(getIssuerDetailStore({ identity, issuerName }), (issuerFullData) => {
+    if (isNullish(issuerFullData)) {
+      return undefined;
+    }
+    return issuerFullData?.members.filter((member) => !('Rejected' in member.membership_status));
+  });
