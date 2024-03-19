@@ -11,8 +11,9 @@ use std::time::Duration;
 
 #[allow(dead_code)]
 mod util;
-
-use util::{api, do_add_group, do_get_group, do_join_group, do_update_membership, install_issuer};
+use crate::util::{
+    api, do_add_group, do_get_group, do_join_group, do_update_membership, install_issuer,
+};
 
 #[test]
 fn should_add_group() {
