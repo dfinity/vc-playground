@@ -17,19 +17,26 @@
         ? 'approved'
         : 'pending';
 
-  const accept = () => {
-    acceptCredential({
+  let loadingAccept = false;
+  const accept = async () => {
+    loadingAccept = true;
+    await acceptCredential({
       identity: $authStore.identity,
       issuerName,
       member: member.member,
     });
+    loadingAccept = false;
   };
-  const revoke = () => {
-    revokeCredential({
+
+  let loadingRevoke = false;
+  const revoke = async () => {
+    loadingRevoke = true;
+    await revokeCredential({
       identity: $authStore.identity,
       issuerName,
       member: member.member,
     });
+    loadingRevoke = false;
   };
 </script>
 
@@ -37,10 +44,14 @@
   <svelte:fragment slot="main">{member.note}</svelte:fragment>
   <svelte:fragment slot="end">
     {#if status === 'pending'}
-      <Button variant="success" on:click={accept}>Approve</Button>
-      <Button variant="error" on:click={revoke}>Decline</Button>
+      <Button variant="success" on:click={accept} loading={loadingAccept} disabled={loadingRevoke}
+        >Approve</Button
+      >
+      <Button variant="error" on:click={revoke} loading={loadingRevoke} disabled={loadingAccept}
+        >Decline</Button
+      >
     {:else if status === 'approved'}
-      <Button variant="tertiary" on:click={revoke}>Revoke</Button>
+      <Button variant="secondary" on:click={revoke} loading={loadingRevoke}>Revoke</Button>
     {:else}
       <!-- Not used at the moment because we filter them out -->
       <Badge variant="error">Revoked</Badge>

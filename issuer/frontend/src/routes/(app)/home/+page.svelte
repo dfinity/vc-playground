@@ -34,18 +34,21 @@
   const noCredentialsMessage =
     "You don't have any credentials yet. You can request them in 'All Credentials'.";
 
+  let loadingCreateIssuer = false;
   const openCreateModal = () => {
+    loadingCreateIssuer = true;
     const settings: ModalSettings = {
       type: 'prompt',
       title: 'Name Your Credential',
       valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
       body: 'Create a credential type so that yuo can issue a verifiable credential. Credentials give access to exclusive images on the relying party dapp.',
       buttonTextSubmit: 'Create Issuer',
-      response: (issuerName: string) => {
-        createIssuer({
+      response: async (issuerName: string) => {
+        await createIssuer({
           identity: $authStore.identity,
           issuerName,
         });
+        loadingCreateIssuer = false;
       },
     };
     modalStore.trigger(settings);
@@ -68,7 +71,11 @@
     {:else if tabSet === 2}
       <FooterActionsWrapper>
         <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage} />
-        <Button on:click={openCreateModal} variant="primary" slot="actions">Become an Issuer</Button
+        <Button
+          on:click={openCreateModal}
+          variant="primary"
+          slot="actions"
+          loading={loadingCreateIssuer}>Become an Issuer</Button
         >
       </FooterActionsWrapper>
     {/if}

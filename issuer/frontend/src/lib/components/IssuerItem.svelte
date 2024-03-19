@@ -81,19 +81,22 @@
     return () => openPendingMemberModal();
   };
 
+  let loadingRequestCredential = false;
   const openRequestCredentialModal = () => {
+    loadingRequestCredential = true;
     const settings: ModalSettings = {
       type: 'prompt',
       title: 'Request Credential',
       valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
       body: `Enter a nickname to request the ${issuer.group_name} credential.`,
       buttonTextSubmit: 'Send Request',
-      response: (note: string) => {
-        requestCredential({
+      response: async (note: string) => {
+        await requestCredential({
           identity: $authStore.identity,
           issuerName: issuer.group_name,
           note,
         });
+        loadingRequestCredential = false;
       },
     };
     modalStore.trigger(settings);
@@ -109,8 +112,11 @@
     {#if issuer.is_owner[0]}
       <Badge variant="primary">👑 Owner</Badge>
     {:else if canJoin}
-      <Button on:click={openRequestCredentialModal} variant="primary" size="sm"
-        >Request Credential</Button
+      <Button
+        on:click={openRequestCredentialModal}
+        variant="primary"
+        size="sm"
+        loading={loadingRequestCredential}>Request Credential</Button
       >
     {:else}
       <Badge variant={statusVariant(issuer.membership_status[0])}
