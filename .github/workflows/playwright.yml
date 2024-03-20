@@ -41,7 +41,7 @@ jobs:
       if: failure()
       with:
         name: playwright-report
-        path: frontend/playwright-report/
+        path: e2e-tests/playwright-report/
         retention-days: 3
     - name: Stop local replica
       run: dfx stop
