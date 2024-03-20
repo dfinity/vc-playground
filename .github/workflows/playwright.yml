@@ -16,6 +16,9 @@ jobs:
     - name: Install dependencies
       working-directory: issuer/frontend
       run: npm ci
+    - name: Install dependencies
+      working-directory: e2e-tests
+      run: npm ci
     - name: Install ic-wasm
       run: cargo install ic-wasm --version 0.3.5
     - name: Install Playwright Browsers
@@ -32,7 +35,7 @@ jobs:
     - name: Deploy canisters
       run: dfx deploy --no-wallet --network local
     - name: Run Playwright tests
-      working-directory: frontend
+      working-directory: e2e-tests
       run: PLAYWRIGHT_BASE_URL=http:/$(dfx canister id meta_issuer).localhost:$(dfx info webserver-port) npm run test:e2e
     - uses: actions/upload-artifact@v4
       if: failure()
