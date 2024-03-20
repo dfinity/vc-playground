@@ -700,8 +700,8 @@ fn fixup_html(html: &str) -> String {
 
     // the string we are replacing here is part of the astro main Layout
     html.replace(
-        r#"<div data-app>"#,
-        &format!(r#"<div data-app data-canister-id="{canister_id}">"#).to_string(),
+        r#"data-app"#,
+        &format!(r#"data-app data-canister-id="{canister_id}""#).to_string(),
     )
 }
 

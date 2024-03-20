@@ -5,7 +5,9 @@ set -euo pipefail
 META_ISSUER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$META_ISSUER_DIR"
 
+ENV_OUTPUT_FILE="$META_ISSUER_DIR/frontend/.env" ../scripts/create-env-vars.sh
 cd frontend/
+npm ci
 npm run build
 cd ..
 

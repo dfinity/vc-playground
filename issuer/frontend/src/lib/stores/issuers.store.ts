@@ -2,6 +2,7 @@ import { derived, writable, type Readable, type Writable } from 'svelte/store';
 import type { PublicGroupData } from '../../declarations/meta_issuer.did';
 import { AnonymousIdentity, type Identity } from '@dfinity/agent';
 import { queryGroups } from '$lib/api/queryGroups.api';
+import { browser } from '$app/environment';
 
 const issuers: Record<string, Writable<PublicGroupData[] | undefined>> = {};
 export const getIssuersStore = (
@@ -12,9 +13,11 @@ export const getIssuersStore = (
     issuers[identityPrincipal] = writable<PublicGroupData[] | undefined>(
       undefined,
       (_set, update) => {
-        queryGroups({ identity: identity ?? new AnonymousIdentity() }).then((groups) => {
-          update(() => groups);
-        });
+        if (browser) {
+          queryGroups({ identity: identity ?? new AnonymousIdentity() }).then((groups) => {
+            update(() => groups);
+          });
+        }
       }
     );
   }

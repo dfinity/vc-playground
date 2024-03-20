@@ -9,7 +9,10 @@
         "output": "issuer/frontend/src/declarations"
       },
       "build": "./issuer/build.sh",
-      "shrink": false
+      "shrink": false,
+      "dependencies": [
+        "internet_identity"
+      ]
     },
     "internet_identity": {
       "type": "custom",
