@@ -3,6 +3,7 @@ import type { FullGroupData, MemberData } from '../../declarations/meta_issuer.d
 import { AnonymousIdentity, type Identity } from '@dfinity/agent';
 import { queryGroup } from '$lib/api/queryGroup.api';
 import { isNullish } from '$lib/utils/is-nullish.utils';
+import { browser } from '$app/environment';
 
 export type IssuerDetailStore = Writable<FullGroupData | undefined | null>;
 /**
@@ -21,7 +22,7 @@ export const getIssuerDetailStore = ({
   if (!issuers[key]) {
     issuers[key] = writable<FullGroupData | undefined | null>(undefined, (_set, update) => {
       // No need to query if we don't have the identity
-      if (isNullish(identity)) {
+      if (isNullish(identity) || !browser) {
         return;
       }
       queryGroup({ identity: identity ?? new AnonymousIdentity(), groupName: issuerName })

@@ -1,6 +1,7 @@
 import { Actor, HttpAgent, type ActorSubclass, type Identity } from '@dfinity/agent';
 import { idlFactory } from '../../declarations';
 import type { _SERVICE } from '../../declarations/meta_issuer.did';
+import { getOwnCanisterId } from './canister-id.utils';
 
 export const createActor = async ({
   canisterId,
@@ -35,7 +36,7 @@ export const getMetaIssuerCanister = async (identity?: Identity) => {
   if (!metaIssuerCaniter[identityPrincipal]) {
     const agent = new HttpAgent({ host: import.meta.env.VITE_HOST, identity });
     metaIssuerCaniter[identityPrincipal] = await createActor({
-      canisterId: import.meta.env.VITE_ISSUER_CANISTER_ID,
+      canisterId: getOwnCanisterId(),
       agent,
       fetchRootKey: import.meta.env.VITE_FETCH_ROOT_KEY === 'true',
     });
