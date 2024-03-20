@@ -2,7 +2,7 @@
   import IssuersList from '$lib/components/IssuersList.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import FooterActionsWrapper from '$lib/ui-components/elements/FooterActionsWrapper.svelte';
-  import { localStorageStore } from '@skeletonlabs/skeleton';
+  import { getToastStore, localStorageStore } from '@skeletonlabs/skeleton';
   import type { Writable } from 'svelte/store';
   import AuthGuard from '$lib/components/AuthGuard.svelte';
   import Tabs from '$lib/ui-components/elements/Tabs.svelte';
@@ -16,6 +16,7 @@
   } from '$lib/stores/issuers.store';
 
   const modalStore = getModalStore();
+  const toastStore = getToastStore();
 
   // Persist the selected tab in the local storage.
   const tabStore: Writable<number> = localStorageStore('groupsTab', 0);
@@ -47,6 +48,7 @@
         await createIssuer({
           identity: $authStore.identity,
           issuerName,
+          toastStore,
         });
         loadingCreateIssuer = false;
       },

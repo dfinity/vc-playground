@@ -3,6 +3,7 @@ import type { Identity } from '@dfinity/agent';
 import type { Principal } from '@dfinity/principal';
 import { loadIssuerDetail } from './load-issuer-detail.services';
 import type { MembershipStatus } from '../../declarations/meta_issuer.did';
+import { NO_IDENTITY_MESSAGE } from '$lib/constants/messages';
 
 const updaterFactory =
   (newStatus: MembershipStatus) =>
@@ -17,7 +18,7 @@ const updaterFactory =
   }) => {
     try {
       if (!identity) {
-        throw new Error('No identity');
+        throw new Error(NO_IDENTITY_MESSAGE);
       }
       await updateMembership({
         identity,

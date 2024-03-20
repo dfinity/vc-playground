@@ -3,7 +3,7 @@
   import MainWrapper from '$lib/ui-components/elements/MainWrapper.svelte';
   import { onMount } from 'svelte';
   import '../../app.postcss';
-  import { AppShell, AppBar, Modal } from '@skeletonlabs/skeleton';
+  import { AppShell, AppBar, Modal, Toast } from '@skeletonlabs/skeleton';
   import { logout, syncAuth } from '$lib/services/auth.services';
   import { initializeStores } from '@skeletonlabs/skeleton';
 
@@ -15,6 +15,7 @@
 </script>
 
 <Modal />
+<Toast />
 
 <!-- App Shell -->
 <AppShell>
