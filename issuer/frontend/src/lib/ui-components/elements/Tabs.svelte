@@ -23,13 +23,7 @@
 <div class="sm:hidden flex flex-col gap-2">
   <div>
     <label for="tabs" class="sr-only">Select a tab</label>
-    <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
-    <select
-      bind:value={tabSet}
-      id="tabs"
-      name="tabs"
-      class="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-    >
+    <select bind:value={tabSet} id="tabs" name="tabs" class="select">
       {#each tabs as tab}
         <option value={tab.value} id={tab.name}>
           {tab.label}
