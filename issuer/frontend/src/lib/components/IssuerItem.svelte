@@ -7,11 +7,12 @@
   import Button from '$lib/ui-components/elements/Button.svelte';
   import ListItem from '$lib/ui-components/elements/ListItem.svelte';
   import type { MembershipStatus, PublicGroupData } from '../../declarations/meta_issuer.did';
-  import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
 
   export let issuer: PublicGroupData;
   // Must be invoked at the top level: https://www.skeleton.dev/utilities/modals
   const modalStore = getModalStore();
+  const toastStore = getToastStore();
 
   let canJoin: boolean;
   $: canJoin = issuer.membership_status.length === 0 || 'Rejected' in issuer.membership_status[0];
@@ -95,6 +96,7 @@
           identity: $authStore.identity,
           issuerName: issuer.group_name,
           note,
+          toastStore,
         });
         loadingRequestCredential = false;
       },
