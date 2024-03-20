@@ -1,0 +1,44 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Install dependencies
+      working-directory: issuer/frontend
+      run: npm ci
+    - name: Install ic-wasm
+      run: cargo install ic-wasm --version 0.3.5
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Install dfx
+      uses: dfinity/setup-dfx@main
+    - name: Start local replica
+      run: dfx start --background
+    - name: Create canistres
+      # We create the canisters first to have the ids when we build the frontend env vars
+      run: |
+        dfx canister create internet_identity
+        dfx canister create meta_issuer
+    - name: Deploy canisters
+      run: dfx deploy --no-wallet --network local
+    - name: Run Playwright tests
+      working-directory: frontend
+      run: PLAYWRIGHT_BASE_URL=http:/$(dfx canister id meta_issuer).localhost:$(dfx info webserver-port) npm run test:e2e
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-report
+        path: frontend/playwright-report/
+        retention-days: 3
+    - name: Stop local replica
+      run: dfx stop
