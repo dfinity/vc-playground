@@ -7,9 +7,9 @@ test('use registers with Internet Identity and is redirected to the home page', 
 }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/VC Playground/);
-  expect(await page.getByTestId('home-route')).not.toBeInViewport();
+  expect(page.getByTestId('home-route')).not.toBeVisible();
 
   await signInWithNewUser({ page, context });
 
-  expect(await page.getByTestId('home-route')).toBeInViewport();
+  expect(page.getByTestId('home-route')).toBeVisible();
 });

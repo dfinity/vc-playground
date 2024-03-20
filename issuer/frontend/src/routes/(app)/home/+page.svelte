@@ -14,6 +14,7 @@
     getCredentialsStore,
     getIdentityIssuersStore,
   } from '$lib/stores/issuers.store';
+  import TestIdWrapper from '$lib/ui-components/elements/TestIdWrapper.svelte';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
@@ -57,32 +58,34 @@
   };
 </script>
 
-<Tabs
-  bind:tabSet
-  tabs={[
-    { name: 'all-credentials', label: 'All Credentials', value: 0 },
-    { name: 'my-credentials', label: 'My Credentials', value: 1 },
-    { name: 'issuer-control-cernter', label: 'Issuer Control Center', value: 2 },
-  ]}
->
-  <AuthGuard>
-    {#if tabSet === 0}
-      <IssuersList issuers={$allIssuersStore} />
-    {:else if tabSet === 1}
-      <IssuersList issuers={$myCredentialsStore} noGroupsMessage={noCredentialsMessage} />
-    {:else if tabSet === 2}
-      <FooterActionsWrapper>
-        <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage} />
-        <Button
-          on:click={openCreateModal}
-          variant="primary"
-          slot="actions"
-          loading={loadingCreateIssuer}>Become an Issuer</Button
-        >
-      </FooterActionsWrapper>
-    {/if}
-    <svelte:fragment slot="skeleton">
-      <IssuersList issuers={undefined} />
-    </svelte:fragment>
-  </AuthGuard>
-</Tabs>
+<TestIdWrapper testId="home-route">
+  <Tabs
+    bind:tabSet
+    tabs={[
+      { name: 'all-credentials', label: 'All Credentials', value: 0 },
+      { name: 'my-credentials', label: 'My Credentials', value: 1 },
+      { name: 'issuer-control-cernter', label: 'Issuer Control Center', value: 2 },
+    ]}
+  >
+    <AuthGuard>
+      {#if tabSet === 0}
+        <IssuersList issuers={$allIssuersStore} />
+      {:else if tabSet === 1}
+        <IssuersList issuers={$myCredentialsStore} noGroupsMessage={noCredentialsMessage} />
+      {:else if tabSet === 2}
+        <FooterActionsWrapper>
+          <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage} />
+          <Button
+            on:click={openCreateModal}
+            variant="primary"
+            slot="actions"
+            loading={loadingCreateIssuer}>Become an Issuer</Button
+          >
+        </FooterActionsWrapper>
+      {/if}
+      <svelte:fragment slot="skeleton">
+        <IssuersList issuers={undefined} />
+      </svelte:fragment>
+    </AuthGuard>
+  </Tabs>
+</TestIdWrapper>
