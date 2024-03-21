@@ -46,11 +46,13 @@
       body: 'Create a credential type so that yuo can issue a verifiable credential. Credentials give access to exclusive images on the relying party dapp.',
       buttonTextSubmit: 'Create Issuer',
       response: async (issuerName: string) => {
-        await createIssuer({
-          identity: $authStore.identity,
-          issuerName,
-          toastStore,
-        });
+        if (issuerName) {
+          await createIssuer({
+            identity: $authStore.identity,
+            issuerName,
+            toastStore,
+          });
+        }
         loadingCreateIssuer = false;
       },
     };
