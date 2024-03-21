@@ -7,11 +7,14 @@ export const signInWithNewUser = async ({
   page: Page;
   context: BrowserContext;
 }) => {
-  const button = page.locator('[data-tid=login-button]');
-  await expect(button).toBeVisible();
-  await button.click();
-  
   const iiPagePromise = context.waitForEvent('page');
+  
+  const button = page.locator('[data-tid=login-button]');
+  expect(await button.isVisible()).toBe(true);
+  // Button is disabled until the syncAuth finishes
+  expect(await button.isEnabled()).toBe(true);
+  await page.locator('[data-tid=login-button]').click();
+  
   const iiPage = await iiPagePromise;
   await expect(iiPage).toHaveTitle('Internet Identity');
 
