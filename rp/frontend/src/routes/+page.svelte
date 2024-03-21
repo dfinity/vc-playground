@@ -1,0 +1,1 @@
+<h1 class="h1 text-center">View and Share Content</h1>
