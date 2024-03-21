@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Principal } from '@dfinity/principal';
   import { acceptCredential, revokeCredential } from '$lib/services/manage-membership.services';
   import { authStore } from '$lib/stores/auth.store';
   import Badge from '$lib/ui-components/elements/Badge.svelte';
@@ -8,6 +9,9 @@
 
   export let issuerName: string;
   export let member: MemberData;
+
+  let currentUserPrincipal: Principal | undefined | null;
+  $: currentUserPrincipal = $authStore.identity?.getPrincipal();
 
   let status: 'pending' | 'approved' | 'revoked';
   $: status =
@@ -50,6 +54,8 @@
       <Button variant="error" on:click={revoke} loading={loadingRevoke} disabled={loadingAccept}
         >Decline</Button
       >
+    {:else if member.member.toText() === currentUserPrincipal?.toText()}
+      <Badge variant="primary">👑</Badge>
     {:else if status === 'approved'}
       <Button variant="secondary" on:click={revoke} loading={loadingRevoke}>Revoke</Button>
     {:else}

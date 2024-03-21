@@ -1,5 +1,9 @@
 import { derived, writable, type Readable, type Writable } from 'svelte/store';
-import type { FullGroupData, MemberData } from '../../declarations/meta_issuer.did';
+import type {
+  FullGroupData,
+  MemberData,
+  MembershipStatus,
+} from '../../declarations/meta_issuer.did';
 import { AnonymousIdentity, type Identity } from '@dfinity/agent';
 import { queryGroup } from '$lib/api/queryGroup.api';
 import { isNullish } from '$lib/utils/is-nullish.utils';
@@ -43,6 +47,38 @@ export const getIssuerDetailStore = ({
   return issuers[key];
 };
 
+type IssuerStatus = 'Accepted' | 'Rejected' | 'PendingReview';
+const getStatusKey = (status: MembershipStatus): 'Accepted' | 'Rejected' | 'PendingReview' => {
+  if ('Accepted' in status) {
+    return 'Accepted';
+  }
+  if ('Rejected' in status) {
+    return 'Rejected';
+  }
+  return 'PendingReview';
+};
+/**
+ * Sort members:
+ *
+ * 1. Status
+ *  a. PendingReview
+ *  b. Accepted
+ * 2 Joined date descending
+ * @param members
+ */
+const sortMembers = (a: MemberData, b: MemberData): number => {
+  const statusOrder: Record<IssuerStatus, number> = {
+    PendingReview: 0,
+    Accepted: 1,
+    Rejected: 2,
+  };
+  const aStatus = getStatusKey(a.membership_status);
+  const bStatus = getStatusKey(b.membership_status);
+  if (aStatus === bStatus) {
+    return Number(b.joined_timestamp_ns - a.joined_timestamp_ns);
+  }
+  return statusOrder[aStatus] - statusOrder[bStatus];
+};
 export const getIssuerNonRevokedMembers = ({
   identity,
   issuerName,
@@ -54,5 +90,8 @@ export const getIssuerNonRevokedMembers = ({
     if (isNullish(issuerFullData)) {
       return undefined;
     }
-    return issuerFullData?.members.filter((member) => !('Rejected' in member.membership_status));
+    console.log('issuerFullData', issuerFullData.members);
+    return issuerFullData?.members
+      .filter((member) => !('Rejected' in member.membership_status))
+      .sort(sortMembers);
   });
