@@ -1,0 +1,80 @@
+
+type TimestampNs = nat64;
+
+type ContentError = variant {
+    NotAuthorized : text;
+    AlreadyExists : text;
+    NotFound: text;
+    Internal : text;
+};
+
+/// Types for requesting a list of available images.
+type ListImagesRequest = record {
+}
+
+type ImageData = record {
+    url: text;
+}
+
+type ImagesList = record {
+    images: vec ImageData;
+}
+
+/// Types for requesting or adding exclusive content items.
+type ListExclusiveContentRequest = record {
+    owned_by: opt principal;
+}
+
+type ContentData = record {
+    owner: principal;
+    created_timestamp_ns: TimestampNs;
+    url: text;
+    credential_group_name: text;
+}
+
+type ExclusiveContentList = record {
+    content_items: vec ContentData;
+}
+
+
+type AddExclusiveContentRequest = record {
+    url: text;
+    credential_group_name: text;
+}
+
+/// Types related to HTTP handling
+
+type HeaderField = record {
+    text;
+    text;
+};
+
+type HttpRequest = record {
+    method: text;
+    url: text;
+    headers: vec HeaderField;
+    body: blob;
+    certificate_version: opt nat16;
+};
+
+type HttpResponse = record {
+    status_code: nat16;
+    headers: vec HeaderField;
+    body: blob;
+};
+
+
+service: (opt RpConfig) -> {
+    /// API for creating/accessing exclusive content.
+    list_images : (ListImagesRequest) -> (variant { Ok : ImagesList; Err : ContentError;}) query;  /// public
+    list_exclusive_content : (ListExclusiveContentRequest) -> (variant { Ok : ExclusiveContentList; Err : ContentError;}) query;  /// public
+    add_exclusive_content : (AddExclusiveContentRequest) -> (variant { Ok : ContentData; Err : ContentError;});  /// authenticated
+
+    /// API for configuring and initializing the RP.
+    /// authenticated, only for the controller
+    configure: (RpConfig) -> ();
+    upload_images : (UploadImagesRequest) -> (variant { Ok : ImagesList; Err : ContentError;});
+
+    /// Serve the app
+    http_request: (request: HttpRequest) -> (HttpResponse) query;
+}
