@@ -307,8 +307,19 @@ fn add_group(req: AddGroupRequest) -> Result<FullGroupData, GroupsError> {
 fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
     GROUPS.with_borrow_mut(|groups| {
         if let Some(mut group_record) = groups.get(&req.group_name) {
-            if group_record.members.get(&caller()).is_some() {
-                // Already a member, do nothing.
+            if let Some(member_record) = group_record.members.get(&caller()) {
+                // If a record exists and has `Rejected`-status,
+                // switch to `PendingReview` and update note & timestamp, otherwise do nothing.
+                if member_record.membership_status == MembershipStatus::Rejected {
+                    group_record.members.insert(
+                        caller(),
+                        MemberRecord {
+                            note: req.note,
+                            joined_timestamp_ns: time(),
+                            membership_status: MembershipStatus::PendingReview,
+                        },
+                    );
+                }
             } else {
                 group_record.members.insert(
                     caller(),
