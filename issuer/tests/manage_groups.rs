@@ -163,8 +163,6 @@ fn should_list_groups_authenticated() {
     }
 }
 
-// left:  [PublicGroupData { group_name: "first group", stats: GroupStats { member_count: 1, created_timestamp_ns: 1620328630000000000 }, is_owner: Some(true), membership_status: Some(PendingReview) }, PublicGroupData { group_name: "second group", stats: GroupStats { member_count: 1, created_timestamp_ns: 1620328630000000000 }, is_owner: Some(false), membership_status: Some(PendingReview) }, PublicGroupData { group_name: "third group", stats: GroupStats { member_count: 0, created_timestamp_ns: 1620328630000000000 }, is_owner: Some(true), membership_status: None }]
-// right: [PublicGroupData { group_name: "first group", stats: GroupStats { member_count: 0, created_timestamp_ns: 1620328630000000000 }, is_owner: None, membership_status: None }, PublicGroupData { group_name: "second group", stats: GroupStats { member_count: 0, created_timestamp_ns: 1620328630000000000 }, is_owner: None, membership_status: None }, PublicGroupData { group_name: "third group", stats: GroupStats { member_count: 0, created_timestamp_ns: 1620328630000000000 }, is_owner: None, membership_status: None }]
 #[test]
 fn should_join_group() {
     let env = env();
@@ -188,6 +186,157 @@ fn should_join_group() {
     assert_eq!(
         member_data.membership_status,
         MembershipStatus::PendingReview
+    );
+}
+
+#[test]
+fn should_join_group_again_when_rejected() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    let group_name = "Bob's Club";
+    let bob_principal = principal_1();
+    let _ = do_add_group(group_name, bob_principal, &env, canister_id);
+
+    let note = "Alice";
+    let alice_principal = principal_2();
+
+    // Join group for the first time as "Alice"
+    do_join_group(group_name, note, alice_principal, &env, canister_id);
+
+    let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
+
+    assert_eq!(group_data.group_name, group_name);
+    // member[0] is the owner, member[1] is the added member Alice
+    assert_eq!(group_data.members.len(), 2);
+    let member_data_before = &group_data.members[1];
+    assert_eq!(member_data_before.member, alice_principal);
+    assert_eq!(member_data_before.note, note);
+    assert_eq!(
+        member_data_before.membership_status,
+        MembershipStatus::PendingReview
+    );
+
+    // Reject the request, and check the status.
+    env.advance_time(Duration::from_secs(2));
+    do_update_membership(
+        group_name,
+        vec![MembershipUpdate {
+            member: alice_principal,
+            new_status: MembershipStatus::Rejected,
+        }],
+        bob_principal,
+        &env,
+        canister_id,
+    );
+    let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
+    let member_data = &group_data.members[1];
+    assert_eq!(member_data.member, alice_principal);
+    assert_eq!(member_data.membership_status, MembershipStatus::Rejected);
+
+    // Join group after rejection as "The real Alice".
+    let note = "The real Alice";
+    do_join_group(group_name, note, alice_principal, &env, canister_id);
+
+    let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
+    assert_eq!(group_data.group_name, group_name);
+    // member[0] is the owner, member[1] is the added member Alice
+    assert_eq!(group_data.members.len(), 2);
+    let member_data_after = &group_data.members[1];
+    assert_eq!(member_data_after.member, alice_principal);
+    assert!(member_data_before.joined_timestamp_ns < member_data_after.joined_timestamp_ns);
+    assert_eq!(member_data_after.note, note);
+    assert_eq!(
+        member_data_after.membership_status,
+        MembershipStatus::PendingReview
+    );
+}
+
+#[test]
+fn should_not_join_group_again_accepted_or_pending() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    let group_name = "Bob's Club";
+    let bob_principal = principal_1();
+    let _ = do_add_group(group_name, bob_principal, &env, canister_id);
+
+    let note = "Alice";
+    let alice_principal = principal_2();
+
+    // Join group for the first time as "Alice"
+    do_join_group(group_name, note, alice_principal, &env, canister_id);
+
+    let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
+
+    assert_eq!(group_data.group_name, group_name);
+    // member[0] is the owner, member[1] is the added member Alice
+    assert_eq!(group_data.members.len(), 2);
+    let member_data_before = &group_data.members[1];
+    assert_eq!(member_data_before.member, alice_principal);
+    assert_eq!(member_data_before.note, note);
+    assert_eq!(
+        member_data_before.membership_status,
+        MembershipStatus::PendingReview
+    );
+
+    // Try joining again while still pending  as "The real Alice", should make no change.
+    env.advance_time(Duration::from_secs(2));
+    let other_note = "The real Alice";
+    do_join_group(group_name, other_note, alice_principal, &env, canister_id);
+
+    let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
+    assert_eq!(group_data.group_name, group_name);
+    // member[0] is the owner, member[1] is the added member Alice
+    assert_eq!(group_data.members.len(), 2);
+    let member_data_after = &group_data.members[1];
+    assert_eq!(member_data_after.member, alice_principal);
+    assert_eq!(
+        member_data_after.joined_timestamp_ns,
+        member_data_before.joined_timestamp_ns
+    );
+    assert_eq!(member_data_after.note, note);
+    assert_eq!(
+        member_data_after.membership_status,
+        MembershipStatus::PendingReview
+    );
+
+    // Accept the request, and check the status.
+    env.advance_time(Duration::from_secs(2));
+    do_update_membership(
+        group_name,
+        vec![MembershipUpdate {
+            member: alice_principal,
+            new_status: MembershipStatus::Accepted,
+        }],
+        bob_principal,
+        &env,
+        canister_id,
+    );
+    let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
+    let member_data = &group_data.members[1];
+    assert_eq!(member_data.member, alice_principal);
+    assert_eq!(member_data.membership_status, MembershipStatus::Accepted);
+
+    // Try joining again when accepted as "The real Alice", should make no change.
+    env.advance_time(Duration::from_secs(2));
+    let other_note = "The real Alice";
+    do_join_group(group_name, other_note, alice_principal, &env, canister_id);
+
+    let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
+    assert_eq!(group_data.group_name, group_name);
+    // member[0] is the owner, member[1] is the added member Alice
+    assert_eq!(group_data.members.len(), 2);
+    let member_data_after = &group_data.members[1];
+    assert_eq!(member_data_after.member, alice_principal);
+    assert_eq!(
+        member_data_after.joined_timestamp_ns,
+        member_data_before.joined_timestamp_ns
+    );
+    assert_eq!(member_data_after.note, note);
+    assert_eq!(
+        member_data_after.membership_status,
+        MembershipStatus::Accepted
     );
 }
 
