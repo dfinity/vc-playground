@@ -1,3 +1,3 @@
-<main class="mx-auto max-w-2xl pt-10 px-4 md:px-0">
+<div class="mx-auto max-w-2xl pt-10 px-4 pb-10 md:px-0 flex flex-col gap-8">
   <slot />
-</main>
+</div>
