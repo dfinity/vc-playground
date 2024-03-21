@@ -24,10 +24,14 @@ export const getIssuersStore = (
   return issuers[identityPrincipal];
 };
 
+const sortCredentialsPerTimestampDescending = (a: PublicGroupData, b: PublicGroupData): number =>
+  Number(b.stats.created_timestamp_ns - a.stats.created_timestamp_ns);
 export const getAllIssuersStore = (
   identity: Identity | undefined | null
 ): Readable<PublicGroupData[] | undefined> =>
-  derived(getIssuersStore(identity), (issuers) => issuers);
+  derived(getIssuersStore(identity), (issuers) =>
+    issuers?.sort(sortCredentialsPerTimestampDescending)
+  );
 
 const isIdentityCredential = ({ is_owner, membership_status }: PublicGroupData): boolean => {
   if (is_owner[0]) {
