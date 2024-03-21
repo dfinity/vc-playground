@@ -7,11 +7,10 @@ export const signInWithNewUser = async ({
   page: Page;
   context: BrowserContext;
 }) => {
-  const button = page.locator('[data-tid=login-button]');
-  await expect(button).toBeVisible();
-  await button.click();
-  
   const iiPagePromise = context.waitForEvent('page');
+  
+  await page.locator('[data-tid=login-button]').click();
+  
   const iiPage = await iiPagePromise;
   await expect(iiPage).toHaveTitle('Internet Identity');
 

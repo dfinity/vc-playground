@@ -31,7 +31,7 @@
       <div class="text-center">
         <h1 class="text-4xl font-bold tracking-tight sm:text-6xl">Welcome to VC Playground</h1>
       </div>
-      <Button variant="primary" testId="login-button" on:click={loginUser}
+      <Button loading={$authStore.identity === undefined} variant="primary" testId="login-button" on:click={loginUser}
         >Connect With Internet Identity</Button
       >
     </div>
