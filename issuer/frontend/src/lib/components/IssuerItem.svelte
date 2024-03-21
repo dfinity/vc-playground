@@ -40,7 +40,7 @@
     const settings: ModalSettings = {
       type: 'confirm',
       title: 'Test Your Credential On the Relying Party',
-      body: `You have a credential for ${issuer.group_name}. Visit Xxxxx to view content that's only accessible to users with the credential of ${issuer.group_name}.`,
+      body: `You have a credential for <em>${issuer.group_name}</em>. Visit Xxxxx to view content that's only accessible to users with the credential of <em>${issuer.group_name}</em>.`,
       buttonTextConfirm: 'Test on Relying Party',
       buttonTextCancel: 'Close',
       response: (go: boolean) => {
@@ -55,7 +55,7 @@
   const openPendingMemberModal = () => {
     const settings: ModalSettings = {
       type: 'alert',
-      title: `The ${issuer.group_name} credential was not yet issued.`,
+      title: `The <em>${issuer.group_name}</em> credential was not yet issued.`,
       body: 'Wait for the issuer to issue your credential.',
       buttonTextCancel: 'Close',
       response: (go: boolean) => {
@@ -88,16 +88,18 @@
     const settings: ModalSettings = {
       type: 'prompt',
       title: 'Request Credential',
-      valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
-      body: `Enter a nickname to request the ${issuer.group_name} credential.`,
+      valueAttr: { type: 'text', required: true, placeholder: 'Nickname' },
+      body: `Enter a nickname to request the <em>${issuer.group_name}</em> credential.`,
       buttonTextSubmit: 'Send Request',
       response: async (note: string) => {
-        await requestCredential({
-          identity: $authStore.identity,
-          issuerName: issuer.group_name,
-          note,
-          toastStore,
-        });
+        if (note) {
+          await requestCredential({
+            identity: $authStore.identity,
+            issuerName: issuer.group_name,
+            note,
+            toastStore,
+          });
+        }
         loadingRequestCredential = false;
       },
     };

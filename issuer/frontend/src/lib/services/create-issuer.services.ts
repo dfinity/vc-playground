@@ -2,9 +2,9 @@ import { addGroup } from '$lib/api/addGroup.api';
 import { isNullish } from '$lib/utils/is-nullish.utils';
 import type { Identity } from '@dfinity/agent';
 import { loadIssuers } from './load-issuers.services';
-import { isProfane } from 'no-profanity';
 import type { ToastStore } from '@skeletonlabs/skeleton';
-import { NO_IDENTITY_MESSAGE, PROFANITY_MESSAGE } from '$lib/constants/messages';
+import { NO_IDENTITY_MESSAGE } from '$lib/constants/messages';
+import { validateText } from '$lib/utils/validate-text.utils';
 
 export const createIssuer = async ({
   identity,
@@ -19,9 +19,7 @@ export const createIssuer = async ({
     if (isNullish(identity)) {
       throw new Error(NO_IDENTITY_MESSAGE);
     }
-    if (isProfane(issuerName)) {
-      throw new Error(PROFANITY_MESSAGE);
-    }
+    validateText(issuerName);
     await addGroup({ identity, issuerName });
     await loadIssuers({ identity });
   } catch (err: unknown) {

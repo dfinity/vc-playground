@@ -2,9 +2,9 @@ import { isNullish } from '$lib/utils/is-nullish.utils';
 import type { Identity } from '@dfinity/agent';
 import { loadIssuers } from './load-issuers.services';
 import { joinGroup } from '$lib/api/joinGroup.api';
-import { isProfane } from 'no-profanity';
 import type { ToastStore } from '@skeletonlabs/skeleton';
-import { NO_IDENTITY_MESSAGE, PROFANITY_MESSAGE } from '$lib/constants/messages';
+import { NO_IDENTITY_MESSAGE } from '$lib/constants/messages';
+import { validateText } from '$lib/utils/validate-text.utils';
 
 export const requestCredential = async ({
   identity,
@@ -21,9 +21,7 @@ export const requestCredential = async ({
     if (isNullish(identity)) {
       throw new Error(NO_IDENTITY_MESSAGE);
     }
-    if (isProfane(note)) {
-      throw new Error(PROFANITY_MESSAGE);
-    }
+    validateText(note);
     await joinGroup({ identity, issuerName, note });
     await loadIssuers({ identity });
   } catch (err: unknown) {
