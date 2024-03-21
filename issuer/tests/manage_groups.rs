@@ -322,6 +322,127 @@ fn should_update_membership_multiple_members() {
 }
 
 #[test]
+fn should_update_membership_multiple_times() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    let group_name = "Bob's Club";
+    let bob_principal = principal_1();
+    let bob_note = "owner";
+    let _ = do_add_group(group_name, bob_principal, &env, canister_id);
+
+    let alice_note = "Alice";
+    let alice_principal = principal_2();
+    do_join_group(group_name, alice_note, alice_principal, &env, canister_id);
+
+    let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
+    // member[0] is the owner, member[1] is the added member Alice
+    let bob_data_before = group_data.members[0].clone();
+    assert_eq!(bob_data_before.member, bob_principal);
+    assert_eq!(bob_data_before.note, bob_note);
+    assert_eq!(
+        bob_data_before.membership_status,
+        MembershipStatus::Accepted
+    );
+    let alice_data_before = group_data.members[1].clone();
+    assert_eq!(alice_data_before.member, alice_principal);
+    assert_eq!(alice_data_before.note, alice_note);
+    assert_eq!(
+        alice_data_before.membership_status,
+        MembershipStatus::PendingReview
+    );
+
+    env.advance_time(Duration::from_secs(2));
+    // Update memberships for the first time.
+    do_update_membership(
+        group_name,
+        vec![MembershipUpdate {
+            member: bob_principal,
+            new_status: MembershipStatus::Rejected,
+        }],
+        bob_principal,
+        &env,
+        canister_id,
+    );
+    do_update_membership(
+        group_name,
+        vec![MembershipUpdate {
+            member: alice_principal,
+            new_status: MembershipStatus::Accepted,
+        }],
+        bob_principal,
+        &env,
+        canister_id,
+    );
+
+    let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
+    let bob_data_after = group_data.members[0].clone();
+    assert_eq!(bob_data_after.member, bob_principal);
+    assert_eq!(bob_data_after.note, bob_note);
+    assert_eq!(
+        bob_data_after.joined_timestamp_ns,
+        bob_data_before.joined_timestamp_ns
+    );
+    assert_eq!(bob_data_after.membership_status, MembershipStatus::Rejected);
+
+    let alice_data_after = group_data.members[1].clone();
+    assert_eq!(alice_data_after.member, alice_principal);
+    assert_eq!(alice_data_after.note, alice_note);
+    assert_eq!(
+        alice_data_after.joined_timestamp_ns,
+        alice_data_before.joined_timestamp_ns
+    );
+    assert_eq!(
+        alice_data_after.membership_status,
+        MembershipStatus::Accepted
+    );
+
+    // Update memberships another time.
+    do_update_membership(
+        group_name,
+        vec![MembershipUpdate {
+            member: bob_principal,
+            new_status: MembershipStatus::Accepted,
+        }],
+        bob_principal,
+        &env,
+        canister_id,
+    );
+    do_update_membership(
+        group_name,
+        vec![MembershipUpdate {
+            member: alice_principal,
+            new_status: MembershipStatus::Rejected,
+        }],
+        bob_principal,
+        &env,
+        canister_id,
+    );
+
+    let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
+    let bob_data_after = group_data.members[0].clone();
+    assert_eq!(bob_data_after.member, bob_principal);
+    assert_eq!(bob_data_after.note, bob_note);
+    assert_eq!(
+        bob_data_after.joined_timestamp_ns,
+        bob_data_before.joined_timestamp_ns
+    );
+    assert_eq!(bob_data_after.membership_status, MembershipStatus::Accepted);
+
+    let alice_data_after = group_data.members[1].clone();
+    assert_eq!(alice_data_after.member, alice_principal);
+    assert_eq!(alice_data_after.note, alice_note);
+    assert_eq!(
+        alice_data_after.joined_timestamp_ns,
+        alice_data_before.joined_timestamp_ns
+    );
+    assert_eq!(
+        alice_data_after.membership_status,
+        MembershipStatus::Rejected
+    );
+}
+
+#[test]
 fn should_fail_update_membership_if_missing_group() {
     let env = env();
     let canister_id = install_issuer(&env, None);
