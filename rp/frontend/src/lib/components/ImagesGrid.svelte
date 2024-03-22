@@ -1,18 +1,25 @@
 <script lang="ts">
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import Button from './Button.svelte';
+  import { authStore } from '$lib/stores/auth.store';
+  import { nonNullish } from '$lib/utils/non-nullish';
+  import { login } from '$lib/services/auth.services';
 
   export let images: { imageUrl: string; issuerName: string }[] = [];
 
   const modalStore = getModalStore();
 
   const openImageFactory = (image: { imageUrl: string; issuerName: string }) => () => {
-    const modal: ModalSettings = {
-      type: 'component',
-      component: 'viewExclusiveContentModal',
-      meta: { image },
-    };
-    modalStore.trigger(modal);
+    if (nonNullish($authStore.identity)) {
+      const modal: ModalSettings = {
+        type: 'component',
+        component: 'viewExclusiveContentModal',
+        meta: { image },
+      };
+      modalStore.trigger(modal);
+    } else {
+      login();
+    }
   };
 </script>
 
@@ -22,7 +29,7 @@
       <div class="absolute -top-0 -left-0 w-full flex flex-col items-center py-2 px-2 h-full">
         <h5 class="h5">{image.issuerName}</h5>
         <div class="flex-1 flex justify-center items-center">
-          <Button variant="ghost" on:click={openImageFactory(image)}>View</Button>
+          <Button variant="ghost-primary" on:click={openImageFactory(image)}>View</Button>
         </div>
         <p class="text-sm self-start">1 minute ago</p>
       </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import Spinner from './Spinner.svelte';
 
-  type Variant = 'success' | 'error' | 'ghost' | 'primary' | 'secondary';
+  type Variant = 'ghost-primary' | 'ghost-secondary' | 'primary' | 'secondary';
   export let variant: Variant;
   export let testId: string | undefined = undefined;
   type Size = 'sm' | 'md' | 'lg';
@@ -16,9 +16,8 @@
     lg: 'btn-lg',
   };
   let variantClasses: Record<Variant, string> = {
-    success: 'variant-filled-success',
-    error: 'variant-filled-error',
-    ghost: 'variant-ghost',
+    'ghost-primary': 'variant-ghost-primary',
+    'ghost-secondary': 'variant-ghost-secondary',
     primary: 'variant-filled-primary',
     secondary: 'variant-filled-secondary',
   };
