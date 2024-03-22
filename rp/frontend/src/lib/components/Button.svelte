@@ -25,7 +25,7 @@
 </script>
 
 {#if href}
-  <a {href} target="_blank" class={`btn ${sizeClass[size]} ${variantClasses[variant]}`}><slot /></a>
+  <a {href} target={href.includes("http") ? "_blank" : undefined} class={`btn ${sizeClass[size]} ${variantClasses[variant]}`}><slot /></a>
 {:else}
   <button
     disabled={loading || disabled}

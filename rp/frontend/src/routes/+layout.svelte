@@ -1,9 +1,19 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
+	import { page } from '$app/stores';
+  import Button from '$lib/components/Button.svelte';
+	import ChooseImageModal from '$lib/components/ChooseImageModal.svelte';
 	import MainWrapper from '$lib/components/MainWrapper.svelte';
 	import '../app.postcss';
-	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
+	import { AppShell, AppBar, Modal, type ModalComponent, initializeStores } from '@skeletonlabs/skeleton';
+
+  initializeStores();
+
+  const modalRegistry: Record<string, ModalComponent> = {
+    modalChooseImage: { ref: ChooseImageModal },
+  };
 </script>
+
+<Modal components={modalRegistry} />
 
 <!-- App Shell -->
 <AppShell>
@@ -14,7 +24,9 @@
         >Relying Party
       </a>
       <svelte:fragment slot="trail">
-        <Button variant="primary">Share Image</Button>
+        {#if $page.route.id !== "/share"}
+          <Button variant="primary" href="/share">Share Image</Button>
+        {/if}
         <Button variant="secondary">Login</Button>
       </svelte:fragment>
     </AppBar>
