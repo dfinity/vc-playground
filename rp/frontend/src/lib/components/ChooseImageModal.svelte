@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getModalStore } from '@skeletonlabs/skeleton';
+  import Modal from './Modal.svelte';
 
   /* eslint-disable-next-line */
   export let parent: any;
@@ -24,13 +25,8 @@
   };
 </script>
 
-<div
-  class="modal block overflow-y-auto bg-surface-100-800-token w-modal h-auto p-4 space-y-4 rounded-container-token shadow-xl"
-  role="dialog"
-  aria-modal="true"
-  aria-label="Choose Image"
->
-  <header class="modal-header text-2xl font-bold">Choose Image</header>
+<Modal>
+  <svelte:fragment slot="header">Choose Image</svelte:fragment>
   <article class="grid grid-cols-2 md:grid-cols-3 gap-4">
     {#each images as image}
       <a href={'#'} on:click={selectImageFactory(image)}>
@@ -38,4 +34,4 @@
       </a>
     {/each}
   </article>
-</div>
+</Modal>

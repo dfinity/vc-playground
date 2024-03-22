@@ -3,6 +3,7 @@
   import Button from '$lib/components/Button.svelte';
   import ChooseImageModal from '$lib/components/ChooseImageModal.svelte';
   import MainWrapper from '$lib/components/MainWrapper.svelte';
+  import ViewExclusiveContentModal from '$lib/components/ViewExclusiveContentModal.svelte';
   import '../app.postcss';
   import {
     AppShell,
@@ -15,7 +16,8 @@
   initializeStores();
 
   const modalRegistry: Record<string, ModalComponent> = {
-    modalChooseImage: { ref: ChooseImageModal },
+    chooseImageModal: { ref: ChooseImageModal },
+    viewExclusiveContentModal: { ref: ViewExclusiveContentModal },
   };
 </script>
 
