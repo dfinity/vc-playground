@@ -14,7 +14,7 @@
   const openChooseImageModal = () => {
     const modal: ModalSettings = {
       type: 'component',
-      component: 'modalChooseImage',
+      component: 'chooseImageModal',
       response: (r: unknown) => {
         if (r) {
           selectedImage = r as string;
