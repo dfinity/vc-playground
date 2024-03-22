@@ -22,7 +22,7 @@
       <div class="absolute -top-0 -left-0 w-full flex flex-col items-center py-2 px-2 h-full">
         <h5 class="h5">{image.issuerName}</h5>
         <div class="flex-1 flex justify-center items-center">
-          <Button variant="ghost" on:click={openImageFactory(image)}>View</Button>
+          <Button variant="ghost-primary" on:click={openImageFactory(image)}>View</Button>
         </div>
         <p class="text-sm self-start">1 minute ago</p>
       </div>
