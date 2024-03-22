@@ -1,23 +1,31 @@
 {
   "dfx": "0.18.0",
   "canisters": {
+    "rp": {
+      "type": "custom",
+      "candid": "rp/rp.did",
+      "wasm": "rp.wasm.gz",
+      "declarations": {
+        "output": "declarations/rp"
+      },
+      "build": "./rp/build.sh",
+      "shrink": false
+    },
     "meta_issuer": {
       "type": "custom",
       "candid": "issuer/meta_issuer.did",
       "wasm": "meta_issuer.wasm.gz",
       "declarations": {
-        "output": "issuer/frontend/src/declarations"
+        "output": "declarations/meta_issuer"
       },
       "build": "./issuer/build.sh",
-      "shrink": false,
-      "dependencies": [
-        "internet_identity"
-      ]
+      "shrink": false
     },
     "internet_identity": {
       "type": "custom",
       "wasm": "internet_identity_dev.wasm.gz",
       "candid": "internet_identity.did",
+
       "build": "curl --fail -sSL \"https://github.com/dfinity/internet-identity/releases/download/release-2024-03-08/internet_identity_dev.wasm.gz\" -o internet_identity_dev.wasm.gz",
       "url": {
         "mainnet": "https://identity.internetcomputer.org/",
