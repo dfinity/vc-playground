@@ -44,7 +44,6 @@ export const login = async () => {
 };
 
 export const syncAuth = async () => {
-  console.log('in da sync auth');
   try {
     const authClient = await getAuthClient();
     if (await authClient.isAuthenticated()) {
@@ -55,6 +54,8 @@ export const syncAuth = async () => {
     }
   } catch (err) {
     // TODO: Handle error
+    console.log('error syncAuth');
+    console.error(err);
   }
 };
 
