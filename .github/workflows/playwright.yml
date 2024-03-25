@@ -32,8 +32,11 @@ jobs:
       run: |
         dfx canister create internet_identity
         dfx canister create meta_issuer
-    - name: Deploy canisters
-      run: dfx deploy --no-wallet --network local
+    - name: Deploy internet identity canister
+      run: dfx deploy --no-wallet --network local internet_identity
+    - name: Deploy meta-issuer canister
+      run: dfx deploy --no-wallet --network local meta_issuer
+    # TODO: When we deploy RP we can use `dfx deploy` directly.
     - name: Run Playwright tests
       working-directory: e2e-tests
       run: PLAYWRIGHT_BASE_URL=http:/$(dfx canister id meta_issuer).localhost:$(dfx info webserver-port) npm run test:e2e
