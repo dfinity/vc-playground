@@ -4,4 +4,12 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [sveltekit(), purgeCss()],
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
+    },
+  },
 });

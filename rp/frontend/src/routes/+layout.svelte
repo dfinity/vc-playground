@@ -13,6 +13,7 @@
     Modal,
     type ModalComponent,
     initializeStores,
+    Toast,
   } from '@skeletonlabs/skeleton';
   import { syncAuth } from '$lib/services/auth.services';
   import { authStore } from '$lib/stores/auth.store';
@@ -31,6 +32,7 @@
 </script>
 
 <Modal components={modalRegistry} />
+<Toast />
 
 <!-- App Shell -->
 <AppShell>
