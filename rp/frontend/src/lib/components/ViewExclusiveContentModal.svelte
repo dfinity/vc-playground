@@ -9,8 +9,10 @@
 
   const modalStore = getModalStore();
 
-  const issuerName = 'Photo Gallery';
-  const imageUrl = $modalStore[0]?.meta.image.imageUrl;
+  let issuerName = '';
+  $: issuerName = $modalStore[0]?.meta.issuerName;
+  let imageUrl = '';
+  $: imageUrl = $modalStore[0]?.meta.content.url;
 
   const close = () => {
     parent.onClose();
@@ -31,5 +33,5 @@
       </p>
     {/if}
   </div>
-  <Button slot="footer" on:click={close} variant="ghost">Close</Button>
+  <Button slot="footer" on:click={close} variant="ghost-primary">Close</Button>
 </Modal>
