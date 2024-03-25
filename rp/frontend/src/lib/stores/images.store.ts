@@ -4,22 +4,18 @@ import { browser } from '$app/environment';
 import { queryImages } from '$lib/api/queryImages.api';
 import type { ImageData } from '../../declarations/rp/rp.did';
 
-const imagesStores: Record<string, Writable<ImageData[] | undefined>> = {};
+let imagesStore: Writable<ImageData[] | undefined> | undefined = undefined;
 export const getImagesStore = (
   identity: Identity | undefined | null
 ): Writable<ImageData[] | undefined> => {
-  const identityPrincipal = identity?.getPrincipal().toText() ?? 'no-authenticated-identity';
-  if (!imagesStores[identityPrincipal]) {
-    imagesStores[identityPrincipal] = writable<ImageData[] | undefined>(
-      undefined,
-      (_set, update) => {
-        if (browser) {
-          queryImages({ identity: identity ?? new AnonymousIdentity() }).then(({ images }) => {
-            update(() => images);
-          });
-        }
+  if (!imagesStore) {
+    imagesStore = writable<ImageData[] | undefined>(undefined, (_set, update) => {
+      if (browser) {
+        queryImages({ identity: identity ?? new AnonymousIdentity() }).then(({ images }) => {
+          update(() => images);
+        });
       }
-    );
+    });
   }
-  return imagesStores[identityPrincipal];
+  return imagesStore;
 };

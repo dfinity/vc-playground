@@ -4,22 +4,18 @@ import { queryGroups } from '$lib/api/queryGroups.api';
 import { browser } from '$app/environment';
 import type { PublicGroupData } from '../../declarations/meta_issuer/meta_issuer.did';
 
-const issuers: Record<string, Writable<PublicGroupData[] | undefined>> = {};
+let issuersStore: Writable<PublicGroupData[] | undefined> | undefined = undefined;
 export const getIssuersStore = (
   identity: Identity | undefined | null
 ): Writable<PublicGroupData[] | undefined> => {
-  const identityPrincipal = identity?.getPrincipal().toText() ?? 'no-authenticated-identity';
-  if (!issuers[identityPrincipal]) {
-    issuers[identityPrincipal] = writable<PublicGroupData[] | undefined>(
-      undefined,
-      (_set, update) => {
-        if (browser) {
-          queryGroups({ identity: identity ?? new AnonymousIdentity() }).then((groups) => {
-            update(() => groups);
-          });
-        }
+  if (!issuersStore) {
+    issuersStore = writable<PublicGroupData[] | undefined>(undefined, (_set, update) => {
+      if (browser) {
+        queryGroups({ identity: identity ?? new AnonymousIdentity() }).then((groups) => {
+          update(() => groups);
+        });
       }
-    );
+    });
   }
-  return issuers[identityPrincipal];
+  return issuersStore;
 };

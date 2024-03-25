@@ -73,7 +73,7 @@
     <label for="credentials">
       <h5 class="h5">With whom would you like to share this?</h5>
     </label>
-    <select bind:value={selectedIssuerName} id="credentials" class="select">
+    <select bind:value={selectedIssuerName} id="credentials" class="select px-4">
       <option value="" disabled selected>Select an issuer</option>
       {#each $issuersStore ?? [] as issuer}
         <option value={issuer.group_name} id={issuer.group_name}>
