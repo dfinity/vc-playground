@@ -14,6 +14,7 @@
     type ModalComponent,
     initializeStores,
     Toast,
+    LightSwitch,
   } from '@skeletonlabs/skeleton';
   import { syncAuth } from '$lib/services/auth.services';
   import { authStore } from '$lib/stores/auth.store';
@@ -54,4 +55,7 @@
     <!-- Page Route Content -->
     <slot />
   </MainWrapper>
+  <span class="fixed bottom-0 right-0 p-4">
+    <LightSwitch />
+  </span>
 </AppShell>
