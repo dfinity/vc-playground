@@ -1,6 +1,6 @@
 import { getMetaIssuerCanister } from '$lib/utils/actor.utils';
 import type { Identity } from '@dfinity/agent';
-import type { PublicGroupData } from '../../declarations/meta_issuer.did';
+import type { PublicGroupData } from '../../declarations/meta_issuer/meta_issuer.did';
 
 export const queryGroups = async ({
   identity,

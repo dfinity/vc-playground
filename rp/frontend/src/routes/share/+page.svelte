@@ -3,9 +3,15 @@
   import Button from '$lib/components/Button.svelte';
   import { authStore } from '$lib/stores/auth.store';
   import { nonNullish } from '$lib/utils/non-nullish';
-  import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import type { Writable } from 'svelte/store';
+  import type { PublicGroupData } from '../../declarations/meta_issuer/meta_issuer.did';
+  import { getIssuersStore } from '$lib/stores/issuers.store';
+  import type { ImageData } from '../../declarations/rp/rp.did';
+  import { shareContent } from '$lib/services/shareContent.services';
 
   const modalStore = getModalStore();
+  const toastStore = getToastStore();
 
   $: {
     if ($authStore.identity === null) {
@@ -13,24 +19,51 @@
     }
   }
 
-  const credentials: { value: string; label: string }[] = [
-    { value: '1', label: 'Option 1' },
-    { value: '2', label: 'Option 2' },
-    { value: '3', label: 'Option 3' },
-  ];
+  let issuersStore: Writable<PublicGroupData[] | undefined>;
+  $: issuersStore = getIssuersStore($authStore.identity);
 
-  let selectedImage: string | undefined = undefined;
+  let selectedIssuerName: string | undefined;
+
+  let selectedImage: ImageData | undefined = undefined;
   const openChooseImageModal = () => {
     const modal: ModalSettings = {
       type: 'component',
       component: 'chooseImageModal',
-      response: (r: unknown) => {
+      response: (r: undefined | false | ImageData) => {
         if (r) {
-          selectedImage = r as string;
+          selectedImage = r;
         }
       },
     };
     modalStore.trigger(modal);
+  };
+
+  let enableShareButton = false;
+  $: enableShareButton = (selectedIssuerName ?? '').length > 0 && selectedImage !== undefined;
+
+  const share = async () => {
+    // Edge case, should never happen because button is disabled.
+    if (!selectedIssuerName || !selectedImage) {
+      return;
+    }
+    try {
+      await shareContent({
+        issuerName: selectedIssuerName,
+        image: selectedImage,
+        identity: $authStore.identity,
+      });
+      toastStore.trigger({
+        message: 'Content shared successfully!',
+        background: 'variant-filled-success',
+      });
+      goto('/');
+    } catch (error) {
+      console.error('Error sharing content', error);
+      toastStore.trigger({
+        message: `Oops! There was an error sharing the content. Please try again. ${error}`,
+        background: 'variant-filled-error',
+      });
+    }
   };
 </script>
 
@@ -40,10 +73,11 @@
     <label for="credentials">
       <h5 class="h5">With whom would you like to share this?</h5>
     </label>
-    <select id="credentials" name="tabs" class="select">
-      {#each credentials as credential}
-        <option value={credential.value} id={credential.value}>
-          {credential.label}
+    <select bind:value={selectedIssuerName} id="credentials" class="select">
+      <option value="" disabled selected>Select an issuer</option>
+      {#each $issuersStore ?? [] as issuer}
+        <option value={issuer.group_name} id={issuer.group_name}>
+          {issuer.group_name}
         </option>
       {/each}
     </select>
@@ -53,7 +87,7 @@
     <h5 class="h5">Pick an image to share</h5>
     {#if selectedImage}
       <div class="sm:px-16">
-        <img src={selectedImage} alt="Selected" class="max-w-full h-auto rounded-lg" />
+        <img src={selectedImage.url} alt="Selected" class="max-w-full h-auto rounded-lg" />
       </div>
     {/if}
     <div class="flex justify-center">
@@ -62,7 +96,7 @@
   </div>
 
   <div class="flex justify-end">
-    <Button variant="primary">Share</Button>
+    <Button on:click={share} variant="primary" disabled={!enableShareButton}>Share</Button>
   </div>
 {:else}
   <div class="placeholder" />
