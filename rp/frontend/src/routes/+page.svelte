@@ -1,12 +1,14 @@
 <script lang="ts">
   import ImagesGrid from '$lib/components/ImagesGrid.svelte';
   import type { Readable } from 'svelte/store';
-  import type { ContentData } from '../declarations/rp/rp.did';
-  import { getExclusiveContentDataSortedByCreatedTimestamp } from '$lib/stores/content-data.store';
   import { authStore } from '$lib/stores/auth.store';
+  import {
+    getVisibleContentData,
+    type VisibleContentData,
+  } from '$lib/stores/content-data-visible.store';
 
-  let contentDataStore: Readable<ContentData[]>;
-  $: contentDataStore = getExclusiveContentDataSortedByCreatedTimestamp($authStore.identity);
+  let contentDataStore: Readable<VisibleContentData[]>;
+  $: contentDataStore = getVisibleContentData($authStore.identity);
 </script>
 
 <h1 class="h1 text-center">View and Share Content</h1>
