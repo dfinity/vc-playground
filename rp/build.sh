@@ -8,8 +8,7 @@ cd "$RP_DIR"
 cd frontend/
 npm ci
 npm run build
-mkdir -p ./frontend/dist
-cp -r ./frontend/static/images ./frontend/dist/
+cp -r ./static/images ./frontend/dist/
 cd ..
 
 # Build the canister
