@@ -90,8 +90,8 @@
   <div class="flex flex-col gap-4">
     <h5 class="h5">Pick an image to share</h5>
     {#if selectedImage}
-      <div class="sm:px-16">
-        <img src={selectedImage.url} alt="Selected" class="max-w-full h-auto rounded-lg" />
+      <div class="flex justify-center">
+        <img src={selectedImage.url} alt="Selected" class="max-w-72 h-auto rounded-lg" />
       </div>
     {/if}
     <div class="flex justify-center">

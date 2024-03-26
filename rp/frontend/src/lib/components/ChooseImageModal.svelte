@@ -5,6 +5,7 @@
   import { authStore } from '$lib/stores/auth.store';
   import type { Writable } from 'svelte/store';
   import type { ImageData } from '../../declarations/rp/rp.did';
+  import Button from './Button.svelte';
 
   /* eslint-disable-next-line */
   export let parent: any;
@@ -19,13 +20,17 @@
     parent.onClose();
   };
 
+  const close = () => {
+    parent.onClose();
+  };
+
   let isLoading = false;
   $: isLoading = $imagesStore === undefined;
 </script>
 
 <Modal>
   <svelte:fragment slot="header">Choose Image</svelte:fragment>
-  <article class="grid grid-cols-2 md:grid-cols-3 gap-4">
+  <article class="grid grid-cols-2 md:grid-cols-4 gap-4">
     {#if isLoading}
       <div class="placeholder h-auto max-w-full rounded-lg aspect-square" />
       <div class="placeholder h-auto max-w-full rounded-lg aspect-square" />
@@ -44,4 +49,5 @@
       {/each}
     {/if}
   </article>
+  <Button slot="footer" on:click={close} variant="ghost-primary">Close</Button>
 </Modal>
