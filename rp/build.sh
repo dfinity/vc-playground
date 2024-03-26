@@ -5,8 +5,11 @@ set -euo pipefail
 RP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$RP_DIR"
 
-mkdir -p ./frontend/dist
-cp -r ./frontend/static/images ./frontend/dist/
+cd frontend/
+npm ci
+npm run build
+cp -r ./static/images ./frontend/dist/
+cd ..
 
 # Build the canister
 cargo build --release --target wasm32-unknown-unknown --manifest-path ./Cargo.toml -j1

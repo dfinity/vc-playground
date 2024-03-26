@@ -4,7 +4,7 @@
     "rp": {
       "type": "custom",
       "candid": "rp/rp.did",
-      "wasm": "rp.wasm.gz",
+      "wasm": "relying_party.wasm.gz",
       "declarations": {
         "output": "declarations/rp"
       },
