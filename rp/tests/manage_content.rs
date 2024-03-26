@@ -1,11 +1,31 @@
 //! Tests related to group management API.
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
 use relying_party::rp_api::ContentData;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[allow(dead_code)]
 mod util;
-use crate::util::{do_add_exclusive_content, do_list_exclusive_content, install_rp};
+use crate::util::{
+    do_add_exclusive_content, do_list_exclusive_content, do_list_images, install_rp,
+};
+
+#[test]
+fn should_list_images() {
+    let env = env();
+    let canister_id = install_rp(&env, None);
+
+    let list = do_list_images(&env, canister_id);
+    assert_eq!(list.images.len(), 14);
+
+    let mut img_set = HashSet::new();
+    for img_data in &list.images {
+        img_set.insert(img_data.url.clone());
+    }
+    assert!(img_set.contains("/images/Rectangle05.png"));
+    assert!(img_set.contains("/images/Rectangle10.png"));
+    assert!(img_set.contains("/images/Rectangle12.png"));
+    assert_eq!(img_set.len(), 14);
+}
 
 #[test]
 fn should_add_exclusive_content() {
