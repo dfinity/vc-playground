@@ -29,6 +29,7 @@ type ListExclusiveContentRequest = record {
 };
 
 type ContentData = record {
+    content_name: text;
     owner: principal;
     created_timestamp_ns: TimestampNs;
     url: text;
@@ -41,6 +42,7 @@ type ExclusiveContentList = record {
 
 
 type AddExclusiveContentRequest = record {
+    content_name: text;
     url: text;
     credential_group_name: text;
 };
@@ -67,7 +69,6 @@ type HttpResponse = record {
 };
 
 type RpConfig = record {};
-
 
 service: (opt RpConfig) -> {
     /// API for creating/accessing exclusive content.
