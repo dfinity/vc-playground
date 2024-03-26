@@ -54,7 +54,6 @@ export const getCredential = async ({
         return;
       }
       const principal = identity.getPrincipal().toText();
-      console.log('Flow ready', groupName);
       const req = {
         id: '1',
         jsonrpc: '2.0',

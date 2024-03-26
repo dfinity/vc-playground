@@ -74,16 +74,16 @@ II_CANISTER_ID="${II_CANISTER_ID:-$(dfx canister id internet_identity)}"
 ISSUER_CANISTER_ID="${ISSUER_CANISTER_ID:-$(dfx canister id meta_issuer)}"
 if [ "$DFX_NETWORK" = "local" ]; then
   REPLICA_SERVER_PORT=$(dfx info webserver-port)
-  ISSUER_DERIVATION_ORIGIN="http://${ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}/"
-  ISSUER_FRONTEND_HOSTNAME="http://${ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}/"
+  ISSUER_DERIVATION_ORIGIN="http://${ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}"
+  ISSUER_FRONTEND_HOSTNAME="http://${ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}"
 fi
 if [ "$DFX_NETWORK" = "devenv_llorenc" ]; then
-  ISSUER_DERIVATION_ORIGIN="https://${ISSUER_CANISTER_ID}.llorenc-ingress.devenv.dfinity.network/"
-  ISSUER_FRONTEND_HOSTNAME="https://${ISSUER_CANISTER_ID}.llorenc-ingress.devenv.dfinity.network/"
+  ISSUER_DERIVATION_ORIGIN="https://${ISSUER_CANISTER_ID}.llorenc-ingress.devenv.dfinity.network"
+  ISSUER_FRONTEND_HOSTNAME="https://${ISSUER_CANISTER_ID}.llorenc-ingress.devenv.dfinity.network"
 fi
 if [ "$DFX_NETWORK" = "mainnet" ]; then
-  ISSUER_DERIVATION_ORIGIN="https://${ISSUER_CANISTER_ID}.ic0.app/"
-  ISSUER_FRONTEND_HOSTNAME="https://${ISSUER_CANISTER_ID}.ic0.app/"
+  ISSUER_DERIVATION_ORIGIN="https://${ISSUER_CANISTER_ID}.ic0.app"
+  ISSUER_FRONTEND_HOSTNAME="https://${ISSUER_CANISTER_ID}.ic0.app"
 fi
 
 echo "Using DFX network: $DFX_NETWORK" >&2
