@@ -2765,6 +2765,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 
 [[package]]
+name = "relying_party"
+version = "0.1.0"
+dependencies = [
+ "assert_matches",
+ "asset_util",
+ "candid",
+ "candid_parser",
+ "canister_sig_util",
+ "canister_tests",
+ "hex",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-certification 2.2.0",
+ "ic-http-certification",
+ "ic-response-verification",
+ "ic-stable-structures 0.6.3",
+ "ic-test-state-machine-client",
+ "include_dir",
+ "internet_identity_interface",
+ "lazy_static",
+ "serde",
+ "serde_bytes",
+ "serde_cbor",
+ "serde_json",
+ "sha2 0.10.8",
+ "vc_util",
+]
+
+[[package]]
 name = "rfc6979"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
