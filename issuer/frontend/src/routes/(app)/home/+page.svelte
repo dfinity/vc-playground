@@ -32,7 +32,7 @@
   $: myIssuersStore = getIdentityIssuersStore($authStore.identity);
 
   const noMyGroupsMessage =
-    'Create a group to issue Verifiable Credentials that grant people access to funny images on the Relying Party app.';
+    'Issue credentials to users so that they can access exclusive images on the relying party dapp.';
   const noCredentialsMessage =
     "You don't have any credentials yet. You can request them in 'All Credentials'.";
 
@@ -43,7 +43,7 @@
       type: 'prompt',
       title: 'Name Your Credential',
       valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
-      body: 'Create a credential type so that yuo can issue a verifiable credential. Credentials give access to exclusive images on the relying party dapp.',
+      body: 'Create a credential type so that you can issue a verifiable credential. Credentials give access to exclusive images on the relying party dapp.',
       buttonTextSubmit: 'Create Issuer',
       response: async (issuerName: string) => {
         if (issuerName) {
