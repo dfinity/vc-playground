@@ -1,0 +1,35 @@
+[package]
+name = "relying_party"
+description = "A relying party for VC playground"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# IC/II dependencies
+canister_sig_util = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
+internet_identity_interface = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
+vc_util = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
+asset_util = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
+candid = "0.10"
+ic-cdk = "0.12"
+ic-cdk-macros = "0.8"
+ic-certification = "2.2"
+ic-stable-structures = "0.6"
+
+# other dependencies
+hex = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11"
+serde_cbor = "0.11"
+serde_json = "1"
+sha2 = "^0.10" # set bound to match ic-certified-map bound
+lazy_static = "1.4"
+include_dir = "0.7"
+
+[dev-dependencies]
+assert_matches = "1.5.0"
+candid_parser = "0.1"
+ic-http-certification = "2.2"
+ic-test-state-machine-client = "3"
+ic-response-verification = "2.2"
+canister_tests = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
