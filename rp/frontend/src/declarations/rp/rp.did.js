@@ -2,12 +2,14 @@ export const idlFactory = ({ IDL }) => {
   const RpConfig = IDL.Record({});
   const AddExclusiveContentRequest = IDL.Record({
     'url' : IDL.Text,
+    'content_name' : IDL.Text,
     'credential_group_name' : IDL.Text,
   });
   const TimestampNs = IDL.Nat64;
   const ContentData = IDL.Record({
     'url' : IDL.Text,
     'owner' : IDL.Principal,
+    'content_name' : IDL.Text,
     'credential_group_name' : IDL.Text,
     'created_timestamp_ns' : TimestampNs,
   });

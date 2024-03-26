@@ -4,11 +4,13 @@ import type { IDL } from '@dfinity/candid';
 
 export interface AddExclusiveContentRequest {
   'url' : string,
+  'content_name' : string,
   'credential_group_name' : string,
 }
 export interface ContentData {
   'url' : string,
   'owner' : Principal,
+  'content_name' : string,
   'credential_group_name' : string,
   'created_timestamp_ns' : TimestampNs,
 }
