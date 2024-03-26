@@ -121,6 +121,7 @@ fn init(init_arg: Option<RpConfig>) {
         apply_config(config);
     };
     init_assets();
+    init_images_map();
 }
 
 #[post_upgrade]
@@ -129,7 +130,31 @@ fn post_upgrade(init_arg: Option<RpConfig>) {
 }
 
 fn image_name_to_url(image_name: &str) -> String {
-    format!("images/{}", image_name)
+    format!("/images/{}", image_name)
+}
+
+fn init_images_map() {
+    let img_names = [
+        "Rectangle10.png",
+        "Rectangle11.png",
+        "Rectangle12.png",
+        "Rectangle13.png",
+        "Rectangle14.png",
+        "Rectangle15.png",
+        "Rectangle16.png",
+        "Rectangle17.png",
+        "Rectangle18.png",
+        "Rectangle05.png",
+        "Rectangle06.png",
+        "Rectangle07.png",
+        "Rectangle08.png",
+        "Rectangle09.png",
+    ];
+    IMAGES.with_borrow_mut(|images| {
+        for img_name in img_names {
+            let _ = images.insert(img_name.to_string(), ImageRecord { bytes: vec![] });
+        }
+    });
 }
 
 /// API for obtaining info about images and exclusive content.
@@ -210,17 +235,7 @@ fn apply_config(config: RpConfig) {
 #[update]
 #[candid_method]
 async fn upload_images(_req: UploadImagesRequest) -> Result<ImagesList, ContentError> {
-    IMAGES.with_borrow_mut(|images| {
-        // TODO: upload the images and update the assets
-        let mut list = vec![];
-        for (image_name, _record) in images.iter() {
-            list.push(ImageData {
-                url: image_name_to_url(&image_name),
-            })
-        }
-        update_root_hash();
-        Ok(ImagesList { images: list })
-    })
+    panic!("Not implemented");
 }
 
 fn update_root_hash() {
