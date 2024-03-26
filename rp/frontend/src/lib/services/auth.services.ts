@@ -1,5 +1,6 @@
 import { goto } from '$app/navigation';
 import { authStore } from '$lib/stores/auth.store';
+import { credentialsStore } from '$lib/stores/credentials.store';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import { AuthClient } from '@dfinity/auth-client';
 
@@ -67,6 +68,7 @@ export const logout = async () => {
     // TODO: Handle error
   } finally {
     // Always clear the cached client and the identity store.
+    credentialsStore.reset();
     cachedClient = undefined;
     authStore.set({ identity: null });
     goto('/');
