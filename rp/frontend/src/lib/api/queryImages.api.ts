@@ -1,5 +1,6 @@
 import type { Identity } from '@dfinity/agent';
 import type { ImagesList, ImageData } from '../../declarations/rp/rp.did';
+import { getRpCanister } from '$lib/utils/actor.utils';
 
 const images: ImageData[] = [
   'https://images.unsplash.com/photo-1617296538902-887900d9b592?ixid=M3w0Njc5ODF8MHwxfGFsbHx8fHx8fHx8fDE2ODc5NzExMDB8&amp;ixlib=rb-4.0.3&amp;w=300&amp;h=300&amp;auto=format&amp;fit=crop',
@@ -13,16 +14,17 @@ const images: ImageData[] = [
   'https://images.unsplash.com/photo-1597077917598-97ca3922a317?ixid=M3w0Njc5ODF8MHwxfGFsbHx8fHx8fHx8fDE2ODc5NzY3MjF8&amp;ixlib=rb-4.0.3&amp;w=300&amp;h=300&amp;auto=format&amp;fit=crop',
 ].map((url) => ({ url }));
 
-// TODO: Use call to actor method to get images
-/* eslint-disable-next-line */
 export const queryImages = async ({ identity }: { identity: Identity }): Promise<ImagesList> => {
-  return {
-    images,
-  };
-  // const actor = await getRpCanister(identity);
-  // await actor.list_images({ group_name_substring: [] });
-  // if ('Ok' in response) {
-  //   return response.Ok;
-  // }
-  // throw response.Err;
+  const actor = await getRpCanister(identity);
+  const response = await actor.list_images({ group_name_substring: [] });
+  if ('Ok' in response) {
+    if (response.Ok.images.length === 0) {
+      console.log('No images uploded. Returning dummy images list');
+      return {
+        images,
+      };
+    }
+    return response.Ok;
+  }
+  throw response.Err;
 };

@@ -41,7 +41,9 @@
   let enableShareButton = false;
   $: enableShareButton = (selectedIssuerName ?? '').length > 0 && selectedImage !== undefined;
 
+  let isLoading = false;
   const share = async () => {
+    isLoading = true;
     // Edge case, should never happen because button is disabled.
     if (!selectedIssuerName || !selectedImage) {
       return;
@@ -63,6 +65,8 @@
         message: `Oops! There was an error sharing the content. Please try again. ${error}`,
         background: 'variant-filled-error',
       });
+    } finally {
+      isLoading = false;
     }
   };
 </script>
@@ -96,7 +100,9 @@
   </div>
 
   <div class="flex justify-end">
-    <Button on:click={share} variant="primary" disabled={!enableShareButton}>Share</Button>
+    <Button on:click={share} variant="primary" disabled={!enableShareButton} loading={isLoading}
+      >Share</Button
+    >
   </div>
 {:else}
   <div class="placeholder" />

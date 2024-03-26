@@ -16,8 +16,12 @@ export const shareContent = async ({
     if (isNullish(identity)) {
       throw new Error('No identity found');
     }
-    await addExclusiveContent({ identity, issuerName, url: image.url });
-    // TODO: Load exclusive content.
+    await addExclusiveContent({
+      identity,
+      issuerName,
+      url: image.url,
+      contentName: Date.now().toString(),
+    });
   } catch (err: unknown) {
     // TODO: Handle error
     console.error(err);
