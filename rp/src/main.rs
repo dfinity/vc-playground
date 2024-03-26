@@ -135,23 +135,17 @@ fn image_name_to_url(image_name: &str) -> String {
 
 fn init_images_map() {
     let img_names = [
-        "boundary-nodes.png",
-        "canisters.png",
-        "certified-variables.png",
-        "chain-key-cryptography.png",
-        "chain-key-signature.png",
         "consensus.png",
-        "execution.png",
-        "fault-tolerance.png",
-        "infinite-scalability.png",
-        "internet-identity.png",
-        "message-routing.png",
+        "faultTolerance.png",
+        "infiniteScalability.png",
+        "internetIdentity.png",
+        "messageRouting.png",
         "motoko.png",
-        "network-nervous-system.png",
-        "peer-to-peer.png",
-        "protocol-upgrade.png",
+        "networkNervousSystem.png",
+        "peerToPeer.png",
+        "protocolUpgrade.png",
         "sdk.png",
-        "service-nervous-system.png",
+        "serviceNervousSystem.png",
     ];
     IMAGES.with_borrow_mut(|images| {
         for img_name in img_names {
