@@ -5,6 +5,7 @@ set -euo pipefail
 RP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$RP_DIR"
 
+ENV_OUTPUT_FILE="$RP_DIR/frontend/.env" ../scripts/create-env-vars.sh
 cd frontend/
 npm ci
 npm run build
