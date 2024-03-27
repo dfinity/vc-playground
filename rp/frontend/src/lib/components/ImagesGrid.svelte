@@ -27,43 +27,36 @@
   const visibleImageGradient = `
     background-image: linear-gradient(
       to bottom, 
-      rgba(0,0,0,0.8) 0%, 
+      rgba(0,0,0,0.6) 0%, 
       rgba(0,0,0,0) 3rem,
       rgba(0,0,0,0) calc(100% - 3rem), /* Transparent middle */
-      rgba(0,0,0,0.8) 100%);
+      rgba(0,0,0,0.6) 100%);
   `;
 </script>
 
 <section class="grid grid-cols-2 md:grid-cols-3 gap-4 text-surface-50">
   {#each images as image}
-    {#if image.visible}
-      <div class="relative overflow-hidden">
-        <div
-          class="rounded-lg absolute -top-0 -left-0 w-full flex flex-col justify-between py-2 px-2 h-full"
-          style={visibleImageGradient}
-        >
-          <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
-          <p class="text-sm self-start">{nanoSecondsToDateTime(image.created_timestamp_ns)}</p>
-        </div>
-        <div
-          class="h-auto max-w-full rounded-lg aspect-square"
-          style="background-image: url({image.url}); background-size: cover; background-position: center;"
-        />
-      </div>
-    {:else}
-      <div class="relative">
-        <div class="absolute -top-0 -left-0 w-full flex flex-col items-center py-2 px-2 h-full">
-          <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
+    <div class="relative">
+      {#if !image.visible}
+        <div class="absolute -top-0 -left-0 w-full rounded-lg aspect-square backdrop-blur-xl"></div>
+      {/if}
+      <div
+        class="absolute -top-0 -left-0 w-full flex flex-col justify-between items-center py-2 px-2 h-full"
+        style={visibleImageGradient}
+      >
+        <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
+        {#if !image.visible}
           <div class="flex-1 flex justify-center items-center">
-            <Button variant="ghost-primary" on:click={openImageFactory(image)}>View</Button>
+            <Button variant="secondary" on:click={openImageFactory(image)}>View</Button>
           </div>
-          <p class="text-sm self-start">{nanoSecondsToDateTime(image.created_timestamp_ns)}</p>
-        </div>
-        <div
-          class="h-auto max-w-full rounded-lg aspect-square bg-gradient-to-b from-primary-500 to-secondary-500"
-        />
+        {/if}
+        <p class="text-sm self-start">{nanoSecondsToDateTime(image.created_timestamp_ns)}</p>
       </div>
-    {/if}
+      <div
+        class="h-auto max-w-full rounded-lg aspect-square"
+        style="background-image: url({image.url}); background-size: cover; background-position: center;"
+      />
+    </div>
   {/each}
 </section>
 
