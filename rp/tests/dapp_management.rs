@@ -55,7 +55,19 @@ fn issuer_canister_serves_http_assets() -> Result<(), CallError> {
 
     // for each asset and certification version, fetch the asset, check the HTTP status code, headers and certificate.
     for certification_version in 1..=2 {
-        for image_name in ["Rectangle07.png", "Rectangle10.png", "Rectangle12.png"] {
+        for image_name in [
+            "consensus.png",
+            "faultTolerance.png",
+            "infiniteScalability.png",
+            "internetIdentity.png",
+            "messageRouting.png",
+            "motoko.png",
+            "networkNervousSystem.png",
+            "peerToPeer.png",
+            "protocolUpgrade.png",
+            "sdk.png",
+            "serviceNervousSystem.png",
+        ] {
             let request = HttpRequest {
                 method: "GET".to_string(),
                 url: format!("/images/{}", image_name),
@@ -100,7 +112,7 @@ fn should_upgrade_relying_party() -> Result<(), CallError> {
 
     // Verify the canister is running.
     let list = do_list_images(&env, canister_id);
-    assert_eq!(list.images.len(), 14);
+    assert_eq!(list.images.len(), 11);
 
     // Upgrade the canister
     let arg = candid::encode_one("()").expect("error encoding issuer init arg as candid");
@@ -108,7 +120,7 @@ fn should_upgrade_relying_party() -> Result<(), CallError> {
 
     // Verify the canister is still running.
     let list = do_list_images(&env, canister_id);
-    assert_eq!(list.images.len(), 14);
+    assert_eq!(list.images.len(), 11);
     Ok(())
 }
 
@@ -144,6 +156,6 @@ fn should_retain_data_after_upgrade() -> Result<(), CallError> {
     assert_eq!(content_list.content_items[0], expected_content_data);
 
     let images_list = do_list_images(&env, canister_id);
-    assert_eq!(images_list.images.len(), 14);
+    assert_eq!(images_list.images.len(), 11);
     Ok(())
 }

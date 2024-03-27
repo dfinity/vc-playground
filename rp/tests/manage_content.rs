@@ -15,16 +15,28 @@ fn should_list_images() {
     let canister_id = install_rp(&env, None);
 
     let list = do_list_images(&env, canister_id);
-    assert_eq!(list.images.len(), 14);
+    assert_eq!(list.images.len(), 11);
 
     let mut img_set = HashSet::new();
     for img_data in &list.images {
         img_set.insert(img_data.url.clone());
     }
-    assert!(img_set.contains("/images/Rectangle05.png"));
-    assert!(img_set.contains("/images/Rectangle10.png"));
-    assert!(img_set.contains("/images/Rectangle12.png"));
-    assert_eq!(img_set.len(), 14);
+    for file_name in [
+        "consensus.png",
+        "faultTolerance.png",
+        "infiniteScalability.png",
+        "internetIdentity.png",
+        "messageRouting.png",
+        "motoko.png",
+        "networkNervousSystem.png",
+        "peerToPeer.png",
+        "protocolUpgrade.png",
+        "sdk.png",
+        "serviceNervousSystem.png",
+    ] {
+        assert!(img_set.contains(&format!("/images/{}", file_name)));
+    }
+    assert_eq!(img_set.len(), 11);
 }
 
 #[test]
