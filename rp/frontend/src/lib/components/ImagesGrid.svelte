@@ -41,7 +41,7 @@
         <div class="absolute -top-0 -left-0 w-full rounded-lg aspect-square backdrop-blur-xl"></div>
       {/if}
       <div
-        class="absolute -top-0 -left-0 w-full flex flex-col justify-between items-center py-2 px-2 h-full"
+        class="absolute -top-0 -left-0 w-full flex flex-col rounded-lg justify-between items-center py-2 px-2 h-full"
         style={visibleImageGradient}
       >
         <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
