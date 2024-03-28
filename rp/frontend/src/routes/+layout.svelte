@@ -43,12 +43,17 @@
       <a href="/" class="text-xl uppercase font-bold" aria-label="Go to Home" slot="lead"
         >Relying Party
       </a>
-      <svelte:fragment slot="trail">
-        {#if $page.route.id !== '/share' && nonNullish($authStore.identity)}
-          <Button variant="primary" href="/share">Share Image</Button>
+      <div slot="trail" class="flex flex-col gap-2 items-end">
+        <div class="flex gap-2">
+          {#if $page.route.id !== '/share' && nonNullish($authStore.identity)}
+            <Button variant="primary" href="/share">Share Image</Button>
+          {/if}
+          <AuthButton />
+        </div>
+        {#if nonNullish($authStore.identity)}
+          <p class="max-w-60 truncate">Principal: {$authStore.identity?.getPrincipal().toText()}</p>
         {/if}
-        <AuthButton />
-      </svelte:fragment>
+      </div>
     </AppBar>
   </svelte:fragment>
   <MainWrapper>
