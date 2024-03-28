@@ -9,6 +9,7 @@
   import type { MembershipStatus, PublicGroupData } from '../../declarations/meta_issuer.did';
   import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { nanoSecondsToDateTime } from '$lib/utils/date.utils';
+  import { RP_ORIGIN } from '$lib/constants/env-vars';
 
   export let issuer: PublicGroupData;
   // Must be invoked at the top level: https://www.skeleton.dev/utilities/modals
@@ -46,7 +47,7 @@
       buttonTextCancel: 'Close',
       response: (go: boolean) => {
         if (go) {
-          window.open('https://www.skeleton.dev/', '_blank');
+          window.open(RP_ORIGIN, '_blank');
         }
       },
     };
