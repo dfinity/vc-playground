@@ -44,8 +44,11 @@
   {:else if vcFlowLoading}
     <div class="placehoolder" />
   {:else}
-    <div class="flex flex-col">
+    <div class="flex flex-col gap-4">
       {#if hasCredential}
+        <p>
+          You've presented the credential <em>{issuerName}</em> so you can now view the exclusive content
+        </p>
         <div class="sm:px-36">
           <img class="h-auto max-w-full rounded-container-token" src={imageUrl} alt="Visible" />
         </div>

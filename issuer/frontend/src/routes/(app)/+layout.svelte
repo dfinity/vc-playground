@@ -6,6 +6,7 @@
   import { AppShell, AppBar, Modal, Toast } from '@skeletonlabs/skeleton';
   import { logout, syncAuth } from '$lib/services/auth.services';
   import { initializeStores } from '@skeletonlabs/skeleton';
+  import { authStore } from '$lib/stores/auth.store';
 
   initializeStores();
 
@@ -25,9 +26,12 @@
       <a href="/home" class="text-xl uppercase font-bold" aria-label="Go to Home" slot="lead"
         >VC Playground
       </a>
-      <svelte:fragment slot="trail">
+      <div slot="trail" class="flex flex-col sm:flex-row gap-4 sm:items-center items-end">
         <Button variant="ghost" on:click={logout}>Logout</Button>
-      </svelte:fragment>
+        <p class="max-w-36 truncate">
+          {`Principal: ${$authStore.identity?.getPrincipal().toText()}`}
+        </p>
+      </div>
     </AppBar>
   </svelte:fragment>
   <MainWrapper>
