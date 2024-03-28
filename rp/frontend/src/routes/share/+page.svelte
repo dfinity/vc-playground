@@ -91,7 +91,7 @@
     <h5 class="h5">Pick an image to share</h5>
     {#if selectedImage}
       <div class="flex justify-center">
-        <img src={selectedImage.url} alt="Selected" class="max-w-72 h-auto rounded-sm" />
+        <img src={selectedImage.url} alt="Selected" class="max-w-72 h-auto rounded-container-token" />
       </div>
     {/if}
     <div class="flex justify-center">
