@@ -43,6 +43,7 @@
     "@dfinity/agent": "^1.1.1",
     "@dfinity/auth-client": "^1.1.1",
     "@dfinity/principal": "^1.1.1",
+    "@floating-ui/dom": "^1.6.3",
     "jose": "^5.2.3"
   }
 }

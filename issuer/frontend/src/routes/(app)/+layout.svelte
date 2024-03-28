@@ -4,9 +4,13 @@
   import { onMount } from 'svelte';
   import '../../app.postcss';
   import { AppShell, AppBar, Modal, Toast } from '@skeletonlabs/skeleton';
-  import { logout, syncAuth } from '$lib/services/auth.services';
+  import { syncAuth } from '$lib/services/auth.services';
   import { initializeStores } from '@skeletonlabs/skeleton';
-  import { authStore } from '$lib/stores/auth.store';
+  import Dropdown from '$lib/components/Dropdown.svelte';
+  import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+  import { storePopup } from '@skeletonlabs/skeleton';
+
+  storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 
   initializeStores();
 
@@ -26,12 +30,9 @@
       <a href="/home" class="text-xl uppercase font-bold" aria-label="Go to Home" slot="lead"
         >VC Playground
       </a>
-      <div slot="trail" class="flex flex-col sm:flex-row gap-4 sm:items-center items-end">
-        <Button variant="ghost" on:click={logout}>Logout</Button>
-        <p class="max-w-36 truncate">
-          {`Principal: ${$authStore.identity?.getPrincipal().toText()}`}
-        </p>
-      </div>
+      <svelte:fragment slot="trail">
+        <Dropdown />
+      </svelte:fragment>
     </AppBar>
   </svelte:fragment>
   <MainWrapper>
