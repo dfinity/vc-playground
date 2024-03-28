@@ -21,6 +21,7 @@
   import { browser } from '$app/environment';
   import type { Readable } from 'svelte/store';
   import type { MemberData } from '../../../declarations/meta_issuer.did';
+  import { RP_ORIGIN } from '$lib/constants/env-vars';
 
   let issuerName: string | null;
   $: issuerName = browser ? $page.url.searchParams.get(ISSUER_PARAM) : null;
@@ -61,7 +62,7 @@
     </Callout>
     <svelte:fragment slot="title">{$issuerStore?.group_name}</svelte:fragment>
     <div>
-      <Button variant="primary" href="https://www.skeleton.dev/">Test In relying party</Button>
+      <Button variant="primary" href={RP_ORIGIN}>Test In relying party</Button>
     </div>
     <MembersList
       members={$membersStore}

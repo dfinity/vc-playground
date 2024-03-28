@@ -53,9 +53,6 @@
           {/if}
           <AuthButton />
         </div>
-        {#if nonNullish($authStore.identity)}
-          <p class="max-w-60 truncate">Principal: {$authStore.identity?.getPrincipal().toText()}</p>
-        {/if}
       </div>
     </AppBar>
   </svelte:fragment>
