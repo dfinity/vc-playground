@@ -47,7 +47,7 @@
     <div class="flex flex-col">
       {#if hasCredential}
         <div class="sm:px-36">
-          <img class="h-auto max-w-full rounded-lg" src={imageUrl} alt="Visible" />
+          <img class="h-auto max-w-full rounded-sm" src={imageUrl} alt="Visible" />
         </div>
       {:else}
         <p>You did not prove you hold the <em>{issuerName}</em> credential.</p>

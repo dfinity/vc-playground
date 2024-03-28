@@ -38,10 +38,10 @@
   {#each images as image}
     <div class="relative">
       {#if !image.visible}
-        <div class="absolute -top-0 -left-0 w-full rounded-lg aspect-square backdrop-blur-xl"></div>
+        <div class="absolute -top-0 -left-0 w-full rounded-sm aspect-square backdrop-blur-xl"></div>
       {/if}
       <div
-        class="absolute -top-0 -left-0 w-full flex flex-col rounded-lg justify-between items-center py-2 px-2 h-full"
+        class="absolute -top-0 -left-0 w-full flex flex-col rounded-sm justify-between items-center py-2 px-2 h-full"
         style={visibleImageGradient}
       >
         <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
@@ -53,7 +53,7 @@
         <p class="text-sm self-start">{nanoSecondsToDateTime(image.created_timestamp_ns)}</p>
       </div>
       <div
-        class="h-auto max-w-full rounded-lg aspect-square"
+        class="h-auto max-w-full rounded-sm aspect-square"
         style="background-image: url({image.url}); background-size: cover; background-position: center;"
       />
     </div>
