@@ -19,7 +19,10 @@
   import { syncAuth } from '$lib/services/auth.services';
   import { authStore } from '$lib/stores/auth.store';
   import { nonNullish } from '$lib/utils/non-nullish';
+  import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+  import { storePopup } from '@skeletonlabs/skeleton';
 
+  storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
   initializeStores();
 
   onMount(() => {
