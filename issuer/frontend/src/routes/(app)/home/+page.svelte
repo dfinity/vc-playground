@@ -15,6 +15,8 @@
     getIdentityIssuersStore,
   } from '$lib/stores/issuers.store';
   import TestIdWrapper from '$lib/ui-components/elements/TestIdWrapper.svelte';
+  import AdminIssuerItem from '$lib/components/AdminIssuerItem.svelte';
+  import MemberIssuerItem from '$lib/components/MemberIssuerItem.svelte';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
@@ -71,12 +73,24 @@
   >
     <AuthGuard>
       {#if tabSet === 0}
-        <IssuersList issuers={$allIssuersStore} />
+        <IssuersList issuers={$allIssuersStore}>
+          {#each $allIssuersStore ?? [] as issuer}
+            <MemberIssuerItem {issuer} />
+          {/each}
+        </IssuersList>
       {:else if tabSet === 1}
-        <IssuersList issuers={$myCredentialsStore} noGroupsMessage={noCredentialsMessage} />
+        <IssuersList issuers={$myCredentialsStore} noGroupsMessage={noCredentialsMessage}>
+          {#each $myCredentialsStore ?? [] as issuer}
+            <MemberIssuerItem {issuer} />
+          {/each}
+        </IssuersList>
       {:else if tabSet === 2}
         <FooterActionsWrapper>
-          <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage} />
+          <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage}>
+            {#each $myIssuersStore ?? [] as issuer}
+              <AdminIssuerItem {issuer} />
+            {/each}
+          </IssuersList>
           <Button
             on:click={openCreateModal}
             variant="primary"
