@@ -90,7 +90,6 @@ export const getIssuerNonRevokedMembers = ({
     if (isNullish(issuerFullData)) {
       return undefined;
     }
-    console.log('issuerFullData', issuerFullData.members);
     return issuerFullData?.members
       .filter((member) => !('Rejected' in member.membership_status))
       .sort(sortMembers);
