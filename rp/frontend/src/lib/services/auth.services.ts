@@ -27,7 +27,7 @@ export const login = async (cb?: () => void) => {
           const identity = authClient.getIdentity();
           authStore.set({ identity });
           resolve();
-          if (cb) {
+          if (cb !== undefined) {
             cb();
           }
         },
