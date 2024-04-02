@@ -3,7 +3,7 @@ use assert_matches::assert_matches;
 use candid::Principal;
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
 use meta_issuer::groups_api::{
-    AddGroupRequest, GetGroupRequest, GroupsError, ListGroupsRequest, MemberData, MembershipStatus,
+    AddGroupRequest, GetGroupRequest, GroupsError, ListGroupsRequest, MembershipStatus,
     MembershipUpdate, PublicGroupData, UpdateMembershipRequest,
 };
 use std::collections::HashMap;
@@ -24,15 +24,7 @@ fn should_add_group() {
     let group_name = "Some group name";
     let group_data = do_add_group(group_name, caller, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
-    assert_eq!(group_data.members.len(), 1);
-    let member_data = &group_data.members[0];
-    let expected_member_data = MemberData {
-        member: caller,
-        note: "owner".to_string(),
-        joined_timestamp_ns: member_data.joined_timestamp_ns,
-        membership_status: MembershipStatus::Accepted,
-    };
-    assert_eq!(*member_data, expected_member_data);
+    assert_eq!(group_data.members.len(), 0);
 }
 
 #[test]
@@ -128,7 +120,19 @@ fn should_list_groups_authenticated() {
 
     let note_1 = "first note";
     let note_2 = "second note";
+    let note_3 = "third note";
     do_join_group(group_1_owned, note_1, owner, &env, canister_id);
+    do_join_group(group_3_owned, note_3, owner, &env, canister_id);
+    do_update_membership(
+        group_3_owned,
+        vec![MembershipUpdate {
+            member: owner,
+            new_status: MembershipStatus::Accepted,
+        }],
+        owner,
+        &env,
+        canister_id,
+    );
     do_join_group(group_2, note_2, owner, &env, canister_id);
 
     let req = ListGroupsRequest {
@@ -149,7 +153,7 @@ fn should_list_groups_authenticated() {
     assert_eq!(retrieved_names, group_names);
     for g in &list.groups {
         if g.group_name == group_1_owned {
-            assert_matches!(g.membership_status, Some(MembershipStatus::Accepted));
+            assert_matches!(g.membership_status, Some(MembershipStatus::PendingReview));
             assert_matches!(g.is_owner, Some(true));
         } else if g.group_name == group_2 {
             assert_matches!(g.membership_status, Some(MembershipStatus::PendingReview));
@@ -178,9 +182,8 @@ fn should_join_group() {
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
 
     assert_eq!(group_data.group_name, group_name);
-    // member[0] is the owner, member[1] is the added member Alice
-    assert_eq!(group_data.members.len(), 2);
-    let member_data = &group_data.members[1];
+    assert_eq!(group_data.members.len(), 1);
+    let member_data = &group_data.members[0];
     assert_eq!(member_data.member, alice_principal);
     assert_eq!(member_data.note, note);
     assert_eq!(
@@ -207,9 +210,8 @@ fn should_join_group_again_when_rejected() {
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
 
     assert_eq!(group_data.group_name, group_name);
-    // member[0] is the owner, member[1] is the added member Alice
-    assert_eq!(group_data.members.len(), 2);
-    let member_data_before = &group_data.members[1];
+    assert_eq!(group_data.members.len(), 1);
+    let member_data_before = &group_data.members[0];
     assert_eq!(member_data_before.member, alice_principal);
     assert_eq!(member_data_before.note, note);
     assert_eq!(
@@ -230,7 +232,7 @@ fn should_join_group_again_when_rejected() {
         canister_id,
     );
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
-    let member_data = &group_data.members[1];
+    let member_data = &group_data.members[0];
     assert_eq!(member_data.member, alice_principal);
     assert_eq!(member_data.membership_status, MembershipStatus::Rejected);
 
@@ -240,9 +242,8 @@ fn should_join_group_again_when_rejected() {
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
-    // member[0] is the owner, member[1] is the added member Alice
-    assert_eq!(group_data.members.len(), 2);
-    let member_data_after = &group_data.members[1];
+    assert_eq!(group_data.members.len(), 1);
+    let member_data_after = &group_data.members[0];
     assert_eq!(member_data_after.member, alice_principal);
     assert!(member_data_before.joined_timestamp_ns < member_data_after.joined_timestamp_ns);
     assert_eq!(member_data_after.note, note);
@@ -270,9 +271,8 @@ fn should_not_join_group_again_accepted_or_pending() {
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
 
     assert_eq!(group_data.group_name, group_name);
-    // member[0] is the owner, member[1] is the added member Alice
-    assert_eq!(group_data.members.len(), 2);
-    let member_data_before = &group_data.members[1];
+    assert_eq!(group_data.members.len(), 1);
+    let member_data_before = &group_data.members[0];
     assert_eq!(member_data_before.member, alice_principal);
     assert_eq!(member_data_before.note, note);
     assert_eq!(
@@ -287,9 +287,8 @@ fn should_not_join_group_again_accepted_or_pending() {
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
-    // member[0] is the owner, member[1] is the added member Alice
-    assert_eq!(group_data.members.len(), 2);
-    let member_data_after = &group_data.members[1];
+    assert_eq!(group_data.members.len(), 1);
+    let member_data_after = &group_data.members[0];
     assert_eq!(member_data_after.member, alice_principal);
     assert_eq!(
         member_data_after.joined_timestamp_ns,
@@ -314,7 +313,7 @@ fn should_not_join_group_again_accepted_or_pending() {
         canister_id,
     );
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
-    let member_data = &group_data.members[1];
+    let member_data = &group_data.members[0];
     assert_eq!(member_data.member, alice_principal);
     assert_eq!(member_data.membership_status, MembershipStatus::Accepted);
 
@@ -325,9 +324,8 @@ fn should_not_join_group_again_accepted_or_pending() {
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
-    // member[0] is the owner, member[1] is the added member Alice
-    assert_eq!(group_data.members.len(), 2);
-    let member_data_after = &group_data.members[1];
+    assert_eq!(group_data.members.len(), 1);
+    let member_data_after = &group_data.members[0];
     assert_eq!(member_data_after.member, alice_principal);
     assert_eq!(
         member_data_after.joined_timestamp_ns,
@@ -354,8 +352,7 @@ fn should_update_membership_single_member() {
     do_join_group(group_name, note, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
-    // member[0] is the owner, member[1] is the added member Alice
-    let member_data_before = group_data.members[1].clone();
+    let member_data_before = group_data.members[0].clone();
     assert_eq!(member_data_before.member, alice_principal);
     assert_eq!(member_data_before.note, note);
     assert_eq!(
@@ -376,7 +373,7 @@ fn should_update_membership_single_member() {
     );
 
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
-    let member_data_after = group_data.members[1].clone();
+    let member_data_after = group_data.members[0].clone();
     assert_eq!(member_data_after.member, alice_principal);
     assert_eq!(member_data_after.note, note);
     assert_eq!(
@@ -395,10 +392,10 @@ fn should_update_membership_multiple_members() {
     let canister_id = install_issuer(&env, None);
 
     let group_name = "Bob's Club";
-    // creator automatically joins the group as "owner"
-    let bob_note = "owner";
+    let bob_note = "Bob, the owner";
     let bob_principal = principal_1();
     let _ = do_add_group(group_name, bob_principal, &env, canister_id);
+    do_join_group(group_name, bob_note, bob_principal, &env, canister_id);
 
     env.advance_time(Duration::from_secs(2));
     let alice_note = "Alice";
@@ -421,7 +418,7 @@ fn should_update_membership_multiple_members() {
             assert_eq!(m.membership_status, MembershipStatus::PendingReview);
         } else if m.member == bob_principal {
             assert_eq!(m.note, bob_note);
-            assert_eq!(m.membership_status, MembershipStatus::Accepted);
+            assert_eq!(m.membership_status, MembershipStatus::PendingReview);
         } else if m.member == eve_principal {
             assert_eq!(m.note, eve_note);
             assert_eq!(m.membership_status, MembershipStatus::PendingReview);
@@ -477,21 +474,21 @@ fn should_update_membership_multiple_times() {
 
     let group_name = "Bob's Club";
     let bob_principal = principal_1();
-    let bob_note = "owner";
+    let bob_note = "Bob";
     let _ = do_add_group(group_name, bob_principal, &env, canister_id);
+    do_join_group(group_name, bob_note, bob_principal, &env, canister_id);
 
     let alice_note = "Alice";
     let alice_principal = principal_2();
     do_join_group(group_name, alice_note, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
-    // member[0] is the owner, member[1] is the added member Alice
     let bob_data_before = group_data.members[0].clone();
     assert_eq!(bob_data_before.member, bob_principal);
     assert_eq!(bob_data_before.note, bob_note);
     assert_eq!(
         bob_data_before.membership_status,
-        MembershipStatus::Accepted
+        MembershipStatus::PendingReview
     );
     let alice_data_before = group_data.members[1].clone();
     assert_eq!(alice_data_before.member, alice_principal);

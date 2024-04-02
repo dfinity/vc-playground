@@ -265,38 +265,22 @@ fn add_group(req: AddGroupRequest) -> Result<FullGroupData, GroupsError> {
             )))
         } else {
             let created_timestamp_ns = time();
-            let note = "owner";
-            let mut members: BTreeMap<Principal, MemberRecord> = BTreeMap::new();
-            members.insert(
-                caller(),
-                MemberRecord {
-                    note: note.to_string(),
-                    joined_timestamp_ns: created_timestamp_ns,
-                    membership_status: MembershipStatus::Accepted,
-                },
-            );
-            let member_data = MemberData {
-                note: note.to_string(),
-                member: caller(),
-                joined_timestamp_ns: created_timestamp_ns,
-                membership_status: MembershipStatus::Accepted,
-            };
             let previous = groups.insert(
                 req.group_name.clone(),
                 GroupRecord {
                     created_timestamp_ns,
                     owner: caller(),
-                    members: members.clone(),
+                    members: BTreeMap::new(),
                 },
             );
             assert!(previous.is_none());
             Ok(FullGroupData {
                 group_name: req.group_name,
                 stats: GroupStats {
-                    member_count: 1,
+                    member_count: 0,
                     created_timestamp_ns,
                 },
-                members: vec![member_data],
+                members: vec![],
             })
         }
     })
