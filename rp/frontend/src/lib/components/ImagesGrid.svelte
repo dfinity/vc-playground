@@ -11,16 +11,26 @@
 
   const modalStore = getModalStore();
 
+  const openModal = ({
+    content,
+    startFlow,
+  }: {
+    content: VisibleContentData;
+    startFlow: boolean;
+  }) => {
+    const modal: ModalSettings = {
+      type: 'component',
+      component: 'viewExclusiveContentModal',
+      meta: { content, issuerName: content.credential_group_name, startFlow },
+    };
+    modalStore.trigger(modal);
+  };
+
   const openImageFactory = (content: VisibleContentData) => () => {
     if (nonNullish($authStore.identity)) {
-      const modal: ModalSettings = {
-        type: 'component',
-        component: 'viewExclusiveContentModal',
-        meta: { content, issuerName: content.credential_group_name },
-      };
-      modalStore.trigger(modal);
+      openModal({ content, startFlow: true });
     } else {
-      login();
+      login(() => openModal({ content, startFlow: false }));
     }
   };
 
@@ -38,7 +48,9 @@
   {#each images as image}
     <div class="relative">
       {#if !image.visible}
-        <div class="absolute -top-0 -left-0 w-full rounded-container-token aspect-square backdrop-blur-xl"></div>
+        <div
+          class="absolute -top-0 -left-0 w-full rounded-container-token aspect-square backdrop-blur-xl"
+        ></div>
       {/if}
       <div
         class="absolute -top-0 -left-0 w-full flex flex-col rounded-container-token justify-between items-center py-2 px-2 h-full"

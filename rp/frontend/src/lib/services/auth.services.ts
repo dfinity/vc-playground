@@ -16,7 +16,7 @@ const getAuthClient = async () => {
   return cachedClient;
 };
 
-export const login = async () => {
+export const login = async (cb?: () => void) => {
   // This service never fails. It will manage the error handling internally.
   try {
     // TODO: Set loading state
@@ -27,6 +27,9 @@ export const login = async () => {
           const identity = authClient.getIdentity();
           authStore.set({ identity });
           resolve();
+          if (cb) {
+            cb();
+          }
         },
         onError: () => {
           // TODO: Handle error

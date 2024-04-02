@@ -6,9 +6,16 @@
   import { loadCredential } from '$lib/services/load-credential.services';
   import { authStore } from '$lib/stores/auth.store';
   import { credentialsStore } from '$lib/stores/credentials.store';
+  import { onMount } from 'svelte';
 
   /* eslint-disable-next-line */
   export let parent: any;
+
+  onMount(() => {
+    if ($modalStore[0]?.meta.startFlow) {
+      startFlow();
+    }
+  });
 
   const modalStore = getModalStore();
 
