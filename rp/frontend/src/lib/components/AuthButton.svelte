@@ -9,7 +9,7 @@
 {#if nonNullish($authStore.identity)}
   <Dropdown />
 {:else}
-  <Button variant="secondary" on:click={login} loading={$authStore.identity === undefined}
+  <Button variant="secondary" on:click={() => login()} loading={$authStore.identity === undefined}
     >Login</Button
   >
 {/if}

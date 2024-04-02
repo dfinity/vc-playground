@@ -9,7 +9,6 @@ export const queryExclusiveContent = async ({
 }): Promise<ExclusiveContentList> => {
   const actor = await getRpCanister(identity);
   const response = await actor.list_exclusive_content({ owned_by: [] });
-  console.log('in da queryExclusiveContent', response);
   if ('Ok' in response) {
     return response.Ok;
   }

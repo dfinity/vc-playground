@@ -54,8 +54,6 @@
       <Button variant="error" on:click={revoke} loading={loadingRevoke} disabled={loadingAccept}
         >Decline</Button
       >
-    {:else if member.member.toText() === currentUserPrincipal?.toText()}
-      <Badge variant="primary">👑</Badge>
     {:else if status === 'approved'}
       <Button variant="secondary" on:click={revoke} loading={loadingRevoke}>Revoke</Button>
     {:else}

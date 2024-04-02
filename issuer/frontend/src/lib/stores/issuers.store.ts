@@ -26,30 +26,32 @@ export const getIssuersStore = (
 
 const sortCredentialsPerTimestampDescending = (a: PublicGroupData, b: PublicGroupData): number =>
   Number(b.stats.created_timestamp_ns - a.stats.created_timestamp_ns);
+const sortCredentialsPerType = (a: PublicGroupData, b: PublicGroupData): number => {
+  const statusA = a.membership_status[0];
+  const statusB = b.membership_status[0];
+  if (statusA === undefined || 'Rejected' in statusA) {
+    if (statusB === undefined || 'Rejected' in statusB) {
+      return sortCredentialsPerTimestampDescending(a, b);
+    }
+    return 1;
+  }
+  if (statusB === undefined || 'Rejected' in statusB) {
+    return -1;
+  }
+
+  if ('Accepted' in statusA) {
+    if ('Accepted' in statusB) {
+      return sortCredentialsPerTimestampDescending(a, b);
+    }
+    return -1;
+  }
+  // Missing only that both are "PendingApproval"
+  return sortCredentialsPerTimestampDescending(a, b);
+};
 export const getAllIssuersStore = (
   identity: Identity | undefined | null
 ): Readable<PublicGroupData[] | undefined> =>
-  derived(getIssuersStore(identity), (issuers) =>
-    issuers?.sort(sortCredentialsPerTimestampDescending)
-  );
-
-const isIdentityCredential = ({ is_owner, membership_status }: PublicGroupData): boolean => {
-  if (is_owner[0]) {
-    return true;
-  }
-  const status = membership_status[0];
-  if (status === undefined || 'Rejected' in status) {
-    return false;
-  }
-  if ('PendingReview' in status || 'Accepted' in status) {
-    return true;
-  }
-  throw new Error('Unexpected membership status');
-};
-export const getCredentialsStore = (
-  identity: Identity | undefined | null
-): Readable<PublicGroupData[] | undefined> =>
-  derived(getAllIssuersStore(identity), (issuers) => issuers?.filter(isIdentityCredential));
+  derived(getIssuersStore(identity), (issuers) => issuers?.sort(sortCredentialsPerType));
 
 const isOwner = ({ is_owner }: PublicGroupData): boolean => Boolean(is_owner[0]);
 export const getIdentityIssuersStore = (
