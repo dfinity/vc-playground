@@ -79,6 +79,7 @@ export const loadCredential = async ({
           hasCredential: false,
         });
       } finally {
+        currentFlowId = undefined;
         iiWindow?.close();
         window.removeEventListener('message', handleFlowFinished);
         resolve(null);
