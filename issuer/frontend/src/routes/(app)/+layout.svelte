@@ -1,12 +1,11 @@
 <script lang="ts">
-  import Button from '$lib/ui-components/elements/Button.svelte';
   import MainWrapper from '$lib/ui-components/elements/MainWrapper.svelte';
   import { onMount } from 'svelte';
   import '../../app.postcss';
   import { AppShell, AppBar, Modal, Toast } from '@skeletonlabs/skeleton';
   import { syncAuth } from '$lib/services/auth.services';
   import { initializeStores } from '@skeletonlabs/skeleton';
-  import Dropdown from '$lib/components/Dropdown.svelte';
+  import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
   import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   import { storePopup } from '@skeletonlabs/skeleton';
 
@@ -30,9 +29,7 @@
       <a href="/home" class="text-xl uppercase font-bold" aria-label="Go to Home" slot="lead"
         >VC Playground
       </a>
-      <svelte:fragment slot="trail">
-        <Dropdown />
-      </svelte:fragment>
+      <SettingsDropdown slot="trail" />
     </AppBar>
   </svelte:fragment>
   <MainWrapper>
