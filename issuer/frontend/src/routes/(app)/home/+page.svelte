@@ -17,6 +17,7 @@
   import TestIdWrapper from '$lib/ui-components/elements/TestIdWrapper.svelte';
   import AdminIssuerItem from '$lib/components/AdminIssuerItem.svelte';
   import MemberIssuerItem from '$lib/components/MemberIssuerItem.svelte';
+  import { setTheme } from '$lib/services/set-theme';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
@@ -60,6 +61,14 @@
     };
     modalStore.trigger(settings);
   };
+
+  $: {
+    if (tabSet < 2) {
+      setTheme('issuer');
+    } else {
+      setTheme('credentials');
+    }
+  }
 </script>
 
 <TestIdWrapper testId="home-route">
