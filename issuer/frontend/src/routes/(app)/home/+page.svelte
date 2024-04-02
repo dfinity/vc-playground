@@ -9,11 +9,7 @@
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { createIssuer } from '$lib/services/create-issuer.services';
   import { authStore } from '$lib/stores/auth.store';
-  import {
-    getAllIssuersStore,
-    getCredentialsStore,
-    getIdentityIssuersStore,
-  } from '$lib/stores/issuers.store';
+  import { getAllIssuersStore, getIdentityIssuersStore } from '$lib/stores/issuers.store';
   import TestIdWrapper from '$lib/ui-components/elements/TestIdWrapper.svelte';
   import AdminIssuerItem from '$lib/components/AdminIssuerItem.svelte';
   import MemberIssuerItem from '$lib/components/MemberIssuerItem.svelte';
@@ -29,15 +25,11 @@
 
   let allIssuersStore;
   $: allIssuersStore = getAllIssuersStore($authStore.identity);
-  let myCredentialsStore;
-  $: myCredentialsStore = getCredentialsStore($authStore.identity);
   let myIssuersStore;
   $: myIssuersStore = getIdentityIssuersStore($authStore.identity);
 
   const noMyGroupsMessage =
     'Issue credentials to users so that they can access exclusive images on the relying party dapp.';
-  const noCredentialsMessage =
-    "You don't have any credentials yet. You can request them in 'All Credentials'.";
 
   let loadingCreateIssuer = false;
   const openCreateModal = () => {
@@ -63,7 +55,7 @@
   };
 
   $: {
-    if (tabSet < 2) {
+    if (tabSet === 1) {
       setTheme('issuer');
     } else {
       setTheme('credentials');
@@ -75,9 +67,8 @@
   <Tabs
     bind:tabSet
     tabs={[
-      { name: 'all-credentials', label: 'All Credentials', value: 0 },
-      { name: 'my-credentials', label: 'My Credentials', value: 1 },
-      { name: 'issuer-control-cernter', label: 'Issuer Control Center', value: 2 },
+      { name: 'Credentials', label: 'Credentials', value: 0 },
+      { name: 'Issuer', label: 'Issuer Control Center', value: 1 },
     ]}
   >
     <AuthGuard>
@@ -88,12 +79,6 @@
           {/each}
         </IssuersList>
       {:else if tabSet === 1}
-        <IssuersList issuers={$myCredentialsStore} noGroupsMessage={noCredentialsMessage}>
-          {#each $myCredentialsStore ?? [] as issuer}
-            <MemberIssuerItem {issuer} />
-          {/each}
-        </IssuersList>
-      {:else if tabSet === 2}
         <FooterActionsWrapper>
           <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage}>
             {#each $myIssuersStore ?? [] as issuer}
