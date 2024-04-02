@@ -24,7 +24,8 @@
   let imageUrl = '';
   $: imageUrl = $modalStore[0]?.meta.content.url;
 
-  let vcFlowLoading = false;
+  // `undefined` means the flow has not started yet.
+  let vcFlowLoading: undefined | boolean = undefined;
   const startFlow = async () => {
     vcFlowLoading = true;
     await loadCredential({ groupName: issuerName, identity: $authStore.identity });
@@ -41,7 +42,7 @@
 
 <Modal>
   <svelte:fragment slot="header">Get Credential</svelte:fragment>
-  {#if !vcFlowLoading && hasCredential === undefined}
+  {#if vcFlowLoading === undefined && hasCredential === undefined}
     <div class="flex-1 flex flex-col justify-center items-center gap-4">
       <p>
         Get the credential <em>{issuerName}</em> to view this image.
