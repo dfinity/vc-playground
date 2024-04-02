@@ -81,7 +81,7 @@
             on:click={openCreateModal}
             variant="primary"
             slot="actions"
-            loading={loadingCreateIssuer}>Become an Issuer</Button
+            loading={loadingCreateIssuer}>Create Credential</Button
           >
         </FooterActionsWrapper>
       {/if}

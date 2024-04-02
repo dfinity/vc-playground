@@ -117,7 +117,7 @@
   <span slot="sub">{`Created ${nanoSecondsToDateTime(issuer.stats.created_timestamp_ns)}`}</span>
   <svelte:fragment slot="end">
     {#if issuer.is_owner[0]}
-      <Badge variant="primary">👑 Owner</Badge>
+      <Badge variant="primary">👑 Issuer</Badge>
     {:else if canJoin}
       <Button
         on:click={openRequestCredentialModal}

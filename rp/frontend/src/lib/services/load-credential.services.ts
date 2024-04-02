@@ -1,5 +1,6 @@
 import { credentialsStore } from '$lib/stores/credentials.store';
 import { isNullish } from '$lib/utils/is-nullish.utils';
+import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { Identity } from '@dfinity/agent';
 import { decodeJwt } from 'jose';
 
@@ -81,6 +82,6 @@ export const loadCredential = async ({
     window.addEventListener('message', handleFlowReady);
     const url = new URL(II_URL);
     url.pathname = 'vc-flow/';
-    iiWindow = window.open(url, '_blank');
+    iiWindow = window.open(url, '_blank', popupCenter());
   });
 };

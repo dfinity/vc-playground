@@ -42,12 +42,14 @@
       <Button on:click={startFlow} variant="primary">Get Credential</Button>
     </div>
   {:else if vcFlowLoading}
-    <div class="placehoolder" />
+    <div class="flex justify-center">
+      <div class="placeholder min-w-56 min-h-56" />
+    </div>
   {:else}
     <div class="flex flex-col gap-4">
       {#if hasCredential}
         <p>
-          You've presented the credential <em>{issuerName}</em> so you can now view the exclusive content
+          You can see this image because you hold the credential <em>{issuerName}</em>.
         </p>
         <div class="sm:px-36">
           <img class="h-auto max-w-full rounded-container-token" src={imageUrl} alt="Visible" />
