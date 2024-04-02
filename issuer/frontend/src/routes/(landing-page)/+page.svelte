@@ -6,6 +6,8 @@
   import '../../app.postcss';
   import { AppShell } from '@skeletonlabs/skeleton';
   import { authStore } from '$lib/stores/auth.store';
+  import Hero from '$lib/ui-components/elements/Hero.svelte';
+  import HeroTitle from '$lib/ui-components/elements/HeroTitle.svelte';
 
   const loginUser = async () => {
     await login();
@@ -24,16 +26,13 @@
 </script>
 
 <AppShell>
-  <div class="relative isolate px-6 pt-14 lg:px-8">
-    <div
-      class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56 flex justify-center items-center flex-col gap-8"
+  <Hero>
+    <HeroTitle>Welcome to VC Playground</HeroTitle>
+    <Button
+      loading={$authStore.identity === undefined}
+      variant="primary"
+      testId="login-button"
+      on:click={loginUser}>Connect With Internet Identity</Button
     >
-      <div class="text-center">
-        <h1 class="text-4xl font-bold tracking-tight sm:text-6xl">Welcome to VC Playground</h1>
-      </div>
-      <Button loading={$authStore.identity === undefined} variant="primary" testId="login-button" on:click={loginUser}
-        >Connect With Internet Identity</Button
-      >
-    </div>
-  </div>
+  </Hero>
 </AppShell>
