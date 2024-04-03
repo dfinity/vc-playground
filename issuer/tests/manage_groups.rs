@@ -4,7 +4,7 @@ use candid::Principal;
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
 use meta_issuer::groups_api::{
     AddGroupRequest, GetGroupRequest, GroupsError, ListGroupsRequest, MembershipStatus,
-    MembershipUpdate, PublicGroupData, UpdateMembershipRequest,
+    MembershipUpdate, PublicGroupData, SetUserRequest, UpdateMembershipRequest, UserData,
 };
 use std::collections::HashMap;
 use std::time::Duration;
@@ -12,8 +12,61 @@ use std::time::Duration;
 #[allow(dead_code)]
 mod util;
 use crate::util::{
-    api, do_add_group, do_get_group, do_join_group, do_update_membership, install_issuer,
+    api, do_add_group, do_get_group, do_get_user, do_join_group, do_set_user, do_update_membership,
+    install_issuer,
 };
+
+#[test]
+fn should_set_user() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+    let caller = principal_1();
+
+    let user_data = UserData {
+        user_nickname: Some("user".to_string()),
+        issuer_nickname: Some("issuer".to_string()),
+    };
+    do_set_user(user_data.clone(), caller, &env, canister_id);
+    let retrieved_data = do_get_user(caller, &env, canister_id);
+    assert_eq!(retrieved_data, user_data);
+}
+
+#[test]
+fn should_fail_set_user_if_anonymous() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    let user_data = UserData {
+        user_nickname: Some("user".to_string()),
+        issuer_nickname: Some("issuer".to_string()),
+    };
+    let result = api::set_user(
+        &env,
+        canister_id,
+        Principal::anonymous(),
+        SetUserRequest { user_data },
+    )
+    .expect("API call failed");
+    assert_matches!(result, Err(GroupsError::NotAuthenticated(_)));
+}
+
+#[test]
+fn should_fail_get_user_if_not_registered() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    let result = api::get_user(&env, canister_id, principal_1()).expect("API call failed");
+    assert_matches!(result, Err(GroupsError::NotFound(_)));
+}
+
+#[test]
+fn should_fail_get_user_if_anonymous() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    let result = api::get_user(&env, canister_id, Principal::anonymous()).expect("API call failed");
+    assert_matches!(result, Err(GroupsError::NotAuthenticated(_)));
+}
 
 #[test]
 fn should_add_group() {
@@ -118,11 +171,8 @@ fn should_list_groups_authenticated() {
     do_add_group(group_3_owned, owner, &env, canister_id);
     do_add_group(group_2, other_user, &env, canister_id);
 
-    let note_1 = "first note";
-    let note_2 = "second note";
-    let note_3 = "third note";
-    do_join_group(group_1_owned, note_1, owner, &env, canister_id);
-    do_join_group(group_3_owned, note_3, owner, &env, canister_id);
+    do_join_group(group_1_owned, owner, &env, canister_id);
+    do_join_group(group_3_owned, owner, &env, canister_id);
     do_update_membership(
         group_3_owned,
         vec![MembershipUpdate {
@@ -133,7 +183,7 @@ fn should_list_groups_authenticated() {
         &env,
         canister_id,
     );
-    do_join_group(group_2, note_2, owner, &env, canister_id);
+    do_join_group(group_2, owner, &env, canister_id);
 
     let req = ListGroupsRequest {
         group_name_substring: None,
@@ -175,9 +225,18 @@ fn should_join_group() {
     let group_name = "Bob's Club";
     let _ = do_add_group(group_name, principal_1(), &env, canister_id);
 
-    let note = "Alice";
+    let nickname = "Alice";
     let alice_principal = principal_2();
-    do_join_group(group_name, note, alice_principal, &env, canister_id);
+    do_set_user(
+        UserData {
+            user_nickname: Some(nickname.to_string()),
+            issuer_nickname: None,
+        },
+        alice_principal,
+        &env,
+        canister_id,
+    );
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
 
@@ -185,7 +244,7 @@ fn should_join_group() {
     assert_eq!(group_data.members.len(), 1);
     let member_data = &group_data.members[0];
     assert_eq!(member_data.member, alice_principal);
-    assert_eq!(member_data.note, note);
+    assert_eq!(member_data.nickname, nickname);
     assert_eq!(
         member_data.membership_status,
         MembershipStatus::PendingReview
@@ -201,11 +260,20 @@ fn should_join_group_again_when_rejected() {
     let bob_principal = principal_1();
     let _ = do_add_group(group_name, bob_principal, &env, canister_id);
 
-    let note = "Alice";
+    let nickname = "Alice";
     let alice_principal = principal_2();
+    do_set_user(
+        UserData {
+            user_nickname: Some(nickname.to_string()),
+            issuer_nickname: None,
+        },
+        alice_principal,
+        &env,
+        canister_id,
+    );
 
     // Join group for the first time as "Alice"
-    do_join_group(group_name, note, alice_principal, &env, canister_id);
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
 
@@ -213,7 +281,7 @@ fn should_join_group_again_when_rejected() {
     assert_eq!(group_data.members.len(), 1);
     let member_data_before = &group_data.members[0];
     assert_eq!(member_data_before.member, alice_principal);
-    assert_eq!(member_data_before.note, note);
+    assert_eq!(member_data_before.nickname, nickname);
     assert_eq!(
         member_data_before.membership_status,
         MembershipStatus::PendingReview
@@ -236,9 +304,7 @@ fn should_join_group_again_when_rejected() {
     assert_eq!(member_data.member, alice_principal);
     assert_eq!(member_data.membership_status, MembershipStatus::Rejected);
 
-    // Join group after rejection as "The real Alice".
-    let note = "The real Alice";
-    do_join_group(group_name, note, alice_principal, &env, canister_id);
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
@@ -246,7 +312,7 @@ fn should_join_group_again_when_rejected() {
     let member_data_after = &group_data.members[0];
     assert_eq!(member_data_after.member, alice_principal);
     assert!(member_data_before.joined_timestamp_ns < member_data_after.joined_timestamp_ns);
-    assert_eq!(member_data_after.note, note);
+    assert_eq!(member_data_after.nickname, nickname);
     assert_eq!(
         member_data_after.membership_status,
         MembershipStatus::PendingReview
@@ -262,11 +328,20 @@ fn should_not_join_group_again_accepted_or_pending() {
     let bob_principal = principal_1();
     let _ = do_add_group(group_name, bob_principal, &env, canister_id);
 
-    let note = "Alice";
+    let nickname = "Alice";
     let alice_principal = principal_2();
+    do_set_user(
+        UserData {
+            user_nickname: Some(nickname.to_string()),
+            issuer_nickname: None,
+        },
+        alice_principal,
+        &env,
+        canister_id,
+    );
 
     // Join group for the first time as "Alice"
-    do_join_group(group_name, note, alice_principal, &env, canister_id);
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
 
@@ -274,16 +349,15 @@ fn should_not_join_group_again_accepted_or_pending() {
     assert_eq!(group_data.members.len(), 1);
     let member_data_before = &group_data.members[0];
     assert_eq!(member_data_before.member, alice_principal);
-    assert_eq!(member_data_before.note, note);
+    assert_eq!(member_data_before.nickname, nickname);
     assert_eq!(
         member_data_before.membership_status,
         MembershipStatus::PendingReview
     );
 
-    // Try joining again while still pending  as "The real Alice", should make no change.
+    // Try joining again while still pending, should make no change.
     env.advance_time(Duration::from_secs(2));
-    let other_note = "The real Alice";
-    do_join_group(group_name, other_note, alice_principal, &env, canister_id);
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
@@ -294,7 +368,7 @@ fn should_not_join_group_again_accepted_or_pending() {
         member_data_after.joined_timestamp_ns,
         member_data_before.joined_timestamp_ns
     );
-    assert_eq!(member_data_after.note, note);
+    assert_eq!(member_data_after.nickname, nickname);
     assert_eq!(
         member_data_after.membership_status,
         MembershipStatus::PendingReview
@@ -317,10 +391,9 @@ fn should_not_join_group_again_accepted_or_pending() {
     assert_eq!(member_data.member, alice_principal);
     assert_eq!(member_data.membership_status, MembershipStatus::Accepted);
 
-    // Try joining again when accepted as "The real Alice", should make no change.
+    // Try joining again when accepted, should make no change.
     env.advance_time(Duration::from_secs(2));
-    let other_note = "The real Alice";
-    do_join_group(group_name, other_note, alice_principal, &env, canister_id);
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, bob_principal, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
@@ -331,7 +404,7 @@ fn should_not_join_group_again_accepted_or_pending() {
         member_data_after.joined_timestamp_ns,
         member_data_before.joined_timestamp_ns
     );
-    assert_eq!(member_data_after.note, note);
+    assert_eq!(member_data_after.nickname, nickname);
     assert_eq!(
         member_data_after.membership_status,
         MembershipStatus::Accepted
@@ -347,14 +420,23 @@ fn should_update_membership_single_member() {
     let bob_principal = principal_1();
     let _ = do_add_group(group_name, bob_principal, &env, canister_id);
 
-    let note = "Alice";
+    let nickname = "Alice";
     let alice_principal = principal_2();
-    do_join_group(group_name, note, alice_principal, &env, canister_id);
+    do_set_user(
+        UserData {
+            user_nickname: Some(nickname.to_string()),
+            issuer_nickname: None,
+        },
+        alice_principal,
+        &env,
+        canister_id,
+    );
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
     let member_data_before = group_data.members[0].clone();
     assert_eq!(member_data_before.member, alice_principal);
-    assert_eq!(member_data_before.note, note);
+    assert_eq!(member_data_before.nickname, nickname);
     assert_eq!(
         member_data_before.membership_status,
         MembershipStatus::PendingReview
@@ -375,7 +457,7 @@ fn should_update_membership_single_member() {
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
     let member_data_after = group_data.members[0].clone();
     assert_eq!(member_data_after.member, alice_principal);
-    assert_eq!(member_data_after.note, note);
+    assert_eq!(member_data_after.nickname, nickname);
     assert_eq!(
         member_data_after.joined_timestamp_ns,
         member_data_before.joined_timestamp_ns
@@ -392,20 +474,47 @@ fn should_update_membership_multiple_members() {
     let canister_id = install_issuer(&env, None);
 
     let group_name = "Bob's Club";
-    let bob_note = "Bob, the owner";
+    let bob_nickname = "Bob, the owner";
     let bob_principal = principal_1();
     let _ = do_add_group(group_name, bob_principal, &env, canister_id);
-    do_join_group(group_name, bob_note, bob_principal, &env, canister_id);
+    do_set_user(
+        UserData {
+            user_nickname: Some(bob_nickname.to_string()),
+            issuer_nickname: None,
+        },
+        bob_principal,
+        &env,
+        canister_id,
+    );
+    do_join_group(group_name, bob_principal, &env, canister_id);
 
     env.advance_time(Duration::from_secs(2));
-    let alice_note = "Alice";
+    let alice_nickname = "Alice";
     let alice_principal = principal_2();
-    do_join_group(group_name, alice_note, alice_principal, &env, canister_id);
+    do_set_user(
+        UserData {
+            user_nickname: Some(alice_nickname.to_string()),
+            issuer_nickname: None,
+        },
+        alice_principal,
+        &env,
+        canister_id,
+    );
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     env.advance_time(Duration::from_secs(2));
-    let eve_note = "Eve";
+    let eve_nickname = "Eve";
     let eve_principal = test_principal(42);
-    do_join_group(group_name, eve_note, eve_principal, &env, canister_id);
+    do_set_user(
+        UserData {
+            user_nickname: Some(eve_nickname.to_string()),
+            issuer_nickname: None,
+        },
+        eve_principal,
+        &env,
+        canister_id,
+    );
+    do_join_group(group_name, eve_principal, &env, canister_id);
 
     let mut timestamps: HashMap<Principal, u64> = HashMap::new();
 
@@ -414,13 +523,13 @@ fn should_update_membership_multiple_members() {
     for m in group_data_before.members {
         timestamps.insert(m.member, m.joined_timestamp_ns);
         if m.member == alice_principal {
-            assert_eq!(m.note, alice_note);
+            assert_eq!(m.nickname, alice_nickname);
             assert_eq!(m.membership_status, MembershipStatus::PendingReview);
         } else if m.member == bob_principal {
-            assert_eq!(m.note, bob_note);
+            assert_eq!(m.nickname, bob_nickname);
             assert_eq!(m.membership_status, MembershipStatus::PendingReview);
         } else if m.member == eve_principal {
-            assert_eq!(m.note, eve_note);
+            assert_eq!(m.nickname, eve_nickname);
             assert_eq!(m.membership_status, MembershipStatus::PendingReview);
         } else {
             panic!("Unexpected member {}", m.member);
@@ -453,13 +562,13 @@ fn should_update_membership_multiple_members() {
             *timestamps.get(&m.member).expect("Missing member")
         );
         if m.member == alice_principal {
-            assert_eq!(m.note, alice_note);
+            assert_eq!(m.nickname, alice_nickname);
             assert_eq!(m.membership_status, MembershipStatus::Accepted);
         } else if m.member == bob_principal {
-            assert_eq!(m.note, bob_note);
+            assert_eq!(m.nickname, bob_nickname);
             assert_eq!(m.membership_status, MembershipStatus::Rejected);
         } else if m.member == eve_principal {
-            assert_eq!(m.note, eve_note);
+            assert_eq!(m.nickname, eve_nickname);
             assert_eq!(m.membership_status, MembershipStatus::PendingReview);
         } else {
             panic!("Unexpected member {}", m.member);
@@ -474,25 +583,43 @@ fn should_update_membership_multiple_times() {
 
     let group_name = "Bob's Club";
     let bob_principal = principal_1();
-    let bob_note = "Bob";
+    let bob_nickname = "Bob";
     let _ = do_add_group(group_name, bob_principal, &env, canister_id);
-    do_join_group(group_name, bob_note, bob_principal, &env, canister_id);
+    do_set_user(
+        UserData {
+            user_nickname: Some(bob_nickname.to_string()),
+            issuer_nickname: None,
+        },
+        bob_principal,
+        &env,
+        canister_id,
+    );
+    do_join_group(group_name, bob_principal, &env, canister_id);
 
-    let alice_note = "Alice";
+    let alice_nickname = "Alice";
     let alice_principal = principal_2();
-    do_join_group(group_name, alice_note, alice_principal, &env, canister_id);
+    do_set_user(
+        UserData {
+            user_nickname: Some(alice_nickname.to_string()),
+            issuer_nickname: None,
+        },
+        alice_principal,
+        &env,
+        canister_id,
+    );
+    do_join_group(group_name, alice_principal, &env, canister_id);
 
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
     let bob_data_before = group_data.members[0].clone();
     assert_eq!(bob_data_before.member, bob_principal);
-    assert_eq!(bob_data_before.note, bob_note);
+    assert_eq!(bob_data_before.nickname, bob_nickname);
     assert_eq!(
         bob_data_before.membership_status,
         MembershipStatus::PendingReview
     );
     let alice_data_before = group_data.members[1].clone();
     assert_eq!(alice_data_before.member, alice_principal);
-    assert_eq!(alice_data_before.note, alice_note);
+    assert_eq!(alice_data_before.nickname, alice_nickname);
     assert_eq!(
         alice_data_before.membership_status,
         MembershipStatus::PendingReview
@@ -524,7 +651,7 @@ fn should_update_membership_multiple_times() {
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
     let bob_data_after = group_data.members[0].clone();
     assert_eq!(bob_data_after.member, bob_principal);
-    assert_eq!(bob_data_after.note, bob_note);
+    assert_eq!(bob_data_after.nickname, bob_nickname);
     assert_eq!(
         bob_data_after.joined_timestamp_ns,
         bob_data_before.joined_timestamp_ns
@@ -533,7 +660,7 @@ fn should_update_membership_multiple_times() {
 
     let alice_data_after = group_data.members[1].clone();
     assert_eq!(alice_data_after.member, alice_principal);
-    assert_eq!(alice_data_after.note, alice_note);
+    assert_eq!(alice_data_after.nickname, alice_nickname);
     assert_eq!(
         alice_data_after.joined_timestamp_ns,
         alice_data_before.joined_timestamp_ns
@@ -568,7 +695,7 @@ fn should_update_membership_multiple_times() {
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
     let bob_data_after = group_data.members[0].clone();
     assert_eq!(bob_data_after.member, bob_principal);
-    assert_eq!(bob_data_after.note, bob_note);
+    assert_eq!(bob_data_after.nickname, bob_nickname);
     assert_eq!(
         bob_data_after.joined_timestamp_ns,
         bob_data_before.joined_timestamp_ns
@@ -577,7 +704,7 @@ fn should_update_membership_multiple_times() {
 
     let alice_data_after = group_data.members[1].clone();
     assert_eq!(alice_data_after.member, alice_principal);
-    assert_eq!(alice_data_after.note, alice_note);
+    assert_eq!(alice_data_after.nickname, alice_nickname);
     assert_eq!(
         alice_data_after.joined_timestamp_ns,
         alice_data_before.joined_timestamp_ns

@@ -177,7 +177,6 @@ fn should_fail_get_credential_for_wrong_sender() {
     add_group_with_member(
         DUMMY_GROUP_NAME,
         authorized_principal,
-        "Alice",
         authorized_principal,
         &env,
         issuer_id,
@@ -285,7 +284,6 @@ fn should_prepare_early_adopter_credential_for_authorized_principal() {
     add_group_with_member(
         DUMMY_GROUP_NAME,
         authorized_principal,
-        "Alice",
         authorized_principal,
         &env,
         issuer_id,
@@ -361,7 +359,6 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
     add_group_with_member(
         DUMMY_GROUP_NAME,
         authorized_principal,
-        "Alice",
         authorized_principal,
         &env,
         issuer_id,

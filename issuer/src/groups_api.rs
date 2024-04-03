@@ -1,6 +1,17 @@
 use candid::{CandidType, Deserialize, Principal};
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
+pub struct UserData {
+    pub user_nickname: Option<String>,
+    pub issuer_nickname: Option<String>,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
+pub struct SetUserRequest {
+    pub user_data: UserData,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub struct ListGroupsRequest {
     pub group_name_substring: Option<String>,
 }
@@ -18,7 +29,6 @@ pub struct AddGroupRequest {
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub struct JoinGroupRequest {
     pub group_name: String,
-    pub note: String,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -57,7 +67,7 @@ pub struct PublicGroupData {
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub struct MemberData {
     pub member: Principal,
-    pub note: String,
+    pub nickname: String,
     pub joined_timestamp_ns: u64,
     pub membership_status: MembershipStatus,
 }
@@ -88,6 +98,7 @@ pub struct PublicGroupsData {
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub enum GroupsError {
     NotAuthorized(String),
+    NotAuthenticated(String),
     AlreadyExists(String),
     NotFound(String),
     Internal(String),

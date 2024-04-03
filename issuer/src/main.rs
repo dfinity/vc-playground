@@ -12,7 +12,7 @@ use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
     AddGroupRequest, FullGroupData, GetGroupRequest, GroupStats, GroupsError, JoinGroupRequest,
     ListGroupsRequest, MemberData, MembershipStatus, PublicGroupData, PublicGroupsData,
-    UpdateMembershipRequest,
+    SetUserRequest, UpdateMembershipRequest, UserData,
 };
 use serde_bytes::ByteBuf;
 use sha2::{Digest, Sha256};
@@ -38,8 +38,10 @@ use std::collections::BTreeMap;
 type Memory = RestrictedMemory<DefaultMemoryImpl>;
 type ConfigCell = StableCell<IssuerConfig, Memory>;
 type GroupsMap = StableBTreeMap<String, GroupRecord, VirtualMemory<Memory>>;
+type UsersMap = StableBTreeMap<Principal, UserRecord, VirtualMemory<Memory>>;
 
 const GROUPS_MEMORY_ID: MemoryId = MemoryId::new(0u8);
+const USERS_MEMORY_ID: MemoryId = MemoryId::new(1u8);
 
 const ISSUER_URL: &str = "https://vc-playground.vc";
 const CREDENTIAL_URL_PREFIX: &str = "data:text/plain;charset=UTF-8,";
@@ -59,9 +61,24 @@ struct GroupRecord {
 
 #[derive(CandidType, Clone, Deserialize)]
 struct MemberRecord {
-    note: String,
     joined_timestamp_ns: u64,
     membership_status: MembershipStatus,
+}
+
+#[derive(CandidType, Clone, Deserialize)]
+struct UserRecord {
+    user_nickname: Option<String>,
+    issuer_nickname: Option<String>,
+}
+
+impl Storable for UserRecord {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(candid::encode_one(self).expect("failed to encode GroupRecord"))
+    }
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).expect("failed to decode GroupRecord")
+    }
+    const BOUND: Bound = Bound::Unbounded;
 }
 
 impl Storable for GroupRecord {
@@ -84,6 +101,10 @@ thread_local! {
     static GROUPS : RefCell<GroupsMap> = RefCell::new(
       StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(GROUPS_MEMORY_ID)),
+    ));
+    static USERS : RefCell<UsersMap> = RefCell::new(
+      StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(USERS_MEMORY_ID)),
     ));
 
     /// Non-stable structures
@@ -171,6 +192,16 @@ struct IssuerInit {
     frontend_hostname: String,
 }
 
+fn check_authenticated() -> Result<(), GroupsError> {
+    if caller() == Principal::anonymous() {
+        Err(GroupsError::NotAuthenticated(
+            "anonymous caller not permitted".to_string(),
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 #[init]
 #[candid_method(init)]
 fn init(init_arg: Option<IssuerInit>) {
@@ -184,6 +215,42 @@ fn init(init_arg: Option<IssuerInit>) {
 #[post_upgrade]
 fn post_upgrade(init_arg: Option<IssuerInit>) {
     init(init_arg);
+}
+
+/// API for setting/getting user data.
+#[query]
+#[candid_method(query)]
+fn get_user() -> Result<UserData, GroupsError> {
+    check_authenticated()?;
+    USERS.with_borrow(|users| {
+        if let Some(user_record) = users.get(&caller()) {
+            Ok(UserData {
+                user_nickname: user_record.user_nickname,
+                issuer_nickname: user_record.issuer_nickname,
+            })
+        } else {
+            Err(GroupsError::NotFound(format!(
+                "user principal: {}",
+                caller()
+            )))
+        }
+    })
+}
+
+#[update]
+#[candid_method]
+fn set_user(req: SetUserRequest) -> Result<(), GroupsError> {
+    check_authenticated()?;
+    USERS.with_borrow_mut(|users| {
+        users.insert(
+            caller(),
+            UserRecord {
+                user_nickname: req.user_data.user_nickname,
+                issuer_nickname: req.user_data.issuer_nickname,
+            },
+        );
+        Ok(())
+    })
 }
 
 /// API for obtaining information about groups and group membership.
@@ -225,6 +292,17 @@ fn list_groups(req: ListGroupsRequest) -> Result<PublicGroupsData, GroupsError> 
         Ok(PublicGroupsData { groups: list })
     })
 }
+
+fn maybe_user_nickname(user: &Principal) -> Option<String> {
+    USERS.with_borrow(|users| {
+        if let Some(user_record) = users.get(user) {
+            user_record.user_nickname
+        } else {
+            None
+        }
+    })
+}
+
 #[query]
 #[candid_method(query)]
 fn get_group(req: GetGroupRequest) -> Result<FullGroupData, GroupsError> {
@@ -235,7 +313,7 @@ fn get_group(req: GetGroupRequest) -> Result<FullGroupData, GroupsError> {
                 .iter()
                 .map(|(member, record)| MemberData {
                     member: *member,
-                    note: record.note.clone(),
+                    nickname: maybe_user_nickname(member).unwrap_or("".to_string()),
                     joined_timestamp_ns: record.joined_timestamp_ns,
                     membership_status: record.membership_status.clone(),
                 })
@@ -293,12 +371,11 @@ fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
         if let Some(mut group_record) = groups.get(&req.group_name) {
             if let Some(member_record) = group_record.members.get(&caller()) {
                 // If a record exists and has `Rejected`-status,
-                // switch to `PendingReview` and update note & timestamp, otherwise do nothing.
+                // switch to `PendingReview` and update timestamp, otherwise do nothing.
                 if member_record.membership_status == MembershipStatus::Rejected {
                     group_record.members.insert(
                         caller(),
                         MemberRecord {
-                            note: req.note,
                             joined_timestamp_ns: time(),
                             membership_status: MembershipStatus::PendingReview,
                         },
@@ -308,7 +385,6 @@ fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
                 group_record.members.insert(
                     caller(),
                     MemberRecord {
-                        note: req.note,
                         joined_timestamp_ns: time(),
                         membership_status: MembershipStatus::PendingReview,
                     },
@@ -339,7 +415,6 @@ fn update_membership(req: UpdateMembershipRequest) -> Result<(), GroupsError> {
                     group_record.members.insert(
                         update.member,
                         MemberRecord {
-                            note: member_record.note.clone(),
                             joined_timestamp_ns: member_record.joined_timestamp_ns,
                             membership_status: update.new_status,
                         },
@@ -727,6 +802,7 @@ mod test {
     #[test]
     fn check_candid_interface_compatibility() {
         let canister_interface = __export_service();
+        println!("***** interface: {}", canister_interface);
         service_equal(
             CandidSource::Text(&canister_interface),
             CandidSource::File(Path::new("meta_issuer.did")),

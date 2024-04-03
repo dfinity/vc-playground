@@ -7,8 +7,8 @@ use ic_test_state_machine_client::{
 use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
     AddGroupRequest, FullGroupData, GetGroupRequest, GroupsError, JoinGroupRequest,
-    ListGroupsRequest, MembershipStatus, MembershipUpdate, PublicGroupsData,
-    UpdateMembershipRequest,
+    ListGroupsRequest, MembershipStatus, MembershipUpdate, PublicGroupsData, SetUserRequest,
+    UpdateMembershipRequest, UserData,
 };
 use std::path::PathBuf;
 use vc_util::issuer_api::{
@@ -102,16 +102,32 @@ pub fn install_issuer(env: &StateMachine, maybe_init: Option<IssuerInit>) -> Can
     canister_id
 }
 
+pub fn do_set_user(
+    user_data: UserData,
+    caller: Principal,
+    env: &StateMachine,
+    canister_id: Principal,
+) {
+    api::set_user(env, canister_id, caller, SetUserRequest { user_data })
+        .expect("API call failed")
+        .expect("Failed set_user");
+}
+
+pub fn do_get_user(caller: Principal, env: &StateMachine, canister_id: Principal) -> UserData {
+    api::get_user(env, canister_id, caller)
+        .expect("API call failed")
+        .expect("Failed get_user")
+}
+
 pub fn add_group_with_member(
     group_name: &str,
     owner: Principal,
-    note: &str,
     member: Principal,
     env: &StateMachine,
     canister_id: Principal,
 ) {
     do_add_group(group_name, owner, env, canister_id);
-    do_join_group(group_name, note, member, env, canister_id);
+    do_join_group(group_name, member, env, canister_id);
     do_update_membership(
         group_name,
         vec![MembershipUpdate {
@@ -163,7 +179,6 @@ pub fn do_get_group(
 
 pub fn do_join_group(
     group_name: &str,
-    note: &str,
     caller: Principal,
     env: &StateMachine,
     canister_id: Principal,
@@ -174,7 +189,6 @@ pub fn do_join_group(
         caller,
         JoinGroupRequest {
             group_name: group_name.to_string(),
-            note: note.to_string(),
         },
     )
     .expect("API call failed")
@@ -204,6 +218,7 @@ pub fn do_update_membership(
 /// Issuer API.
 pub mod api {
     use super::*;
+    use meta_issuer::groups_api::{SetUserRequest, UserData};
 
     pub fn configure(
         env: &StateMachine,
@@ -259,6 +274,23 @@ pub mod api {
             (get_credential_request,),
         )
         .map(|(x,)| x)
+    }
+
+    pub fn get_user(
+        env: &StateMachine,
+        canister_id: CanisterId,
+        sender: Principal,
+    ) -> Result<Result<UserData, GroupsError>, CallError> {
+        query_candid_as(env, canister_id, sender, "get_user", ()).map(|(x,)| x)
+    }
+
+    pub fn set_user(
+        env: &StateMachine,
+        canister_id: CanisterId,
+        sender: Principal,
+        req: SetUserRequest,
+    ) -> Result<Result<(), GroupsError>, CallError> {
+        call_candid_as(env, canister_id, sender, "set_user", (req,)).map(|(x,)| x)
     }
 
     pub fn list_groups(
