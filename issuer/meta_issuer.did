@@ -138,6 +138,7 @@ type AddGroupRequest = record {
 
 type JoinGroupRequest = record {
     group_name : text;
+    owner : principal;
 };
 
 type MembershipUpdate = record {
@@ -163,8 +164,9 @@ type MembershipStatus = variant {
 
 type PublicGroupData = record {
    group_name : text;
+   owner : principal;
+   issuer_nickname : text;
    stats : GroupStats;
-   is_owner : opt bool;  // set only for authenticated calls
    membership_status: opt MembershipStatus;  // set only for authenticated calls
 };
 
@@ -177,6 +179,8 @@ type MemberData = record {
 
 type FullGroupData = record {
     group_name : text;
+    owner : principal;
+    issuer_nickname : text;
     stats : GroupStats;
     members : vec MemberData;
 };

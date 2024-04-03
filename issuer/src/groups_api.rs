@@ -29,6 +29,7 @@ pub struct AddGroupRequest {
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub struct JoinGroupRequest {
     pub group_name: String,
+    pub owner: Principal,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -59,8 +60,9 @@ pub enum MembershipStatus {
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PublicGroupData {
     pub group_name: String,
+    pub owner: Principal,
+    pub issuer_nickname: String,
     pub stats: GroupStats,
-    pub is_owner: Option<bool>,
     pub membership_status: Option<MembershipStatus>,
 }
 
@@ -75,6 +77,8 @@ pub struct MemberData {
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub struct FullGroupData {
     pub group_name: String,
+    pub owner: Principal,
+    pub issuer_nickname: String,
     pub stats: GroupStats,
     pub members: Vec<MemberData>,
 }
@@ -83,8 +87,9 @@ impl From<FullGroupData> for PublicGroupData {
     fn from(full_data: FullGroupData) -> Self {
         PublicGroupData {
             group_name: full_data.group_name,
+            owner: full_data.owner,
+            issuer_nickname: full_data.issuer_nickname,
             stats: full_data.stats,
-            is_owner: None,
             membership_status: None,
         }
     }
