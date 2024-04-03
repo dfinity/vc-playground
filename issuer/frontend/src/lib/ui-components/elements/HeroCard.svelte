@@ -1,8 +1,14 @@
 <script lang="ts">
   import Heading from './Heading.svelte';
+
+  export let testId: string | undefined = undefined;
 </script>
 
-<button class="card card-hover p-4 flex flex-col justify-center items-center" on:click>
+<button
+  data-tid={testId}
+  class="card card-hover p-4 flex flex-col justify-center items-center"
+  on:click
+>
   <div class="p-8 flex justify-center items-center">
     <slot name="icon" />
   </div>

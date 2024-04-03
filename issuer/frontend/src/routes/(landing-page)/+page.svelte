@@ -38,7 +38,7 @@
     </Heading>
   </Stack>
   <TwoSlots>
-    <HeroCard on:click={loginUser('/credentials')}>
+    <HeroCard testId="login-button" on:click={loginUser('/credentials')}>
       <User slot="icon" />
       <svelte:fragment slot="title">User</svelte:fragment>
       Obtain credentials from issuers
