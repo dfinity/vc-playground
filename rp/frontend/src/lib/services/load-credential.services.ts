@@ -1,6 +1,7 @@
 import { credentialsStore } from '$lib/stores/credentials.store';
 import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
+import { nonNullish } from '$lib/utils/non-nullish';
 import type { Identity } from '@dfinity/agent';
 import { decodeJwt } from 'jose';
 
@@ -10,8 +11,6 @@ const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
 
 let iiWindow: Window | null = null;
 let nextFlowId = 0;
-// Used to not allow multiple flows to be active at the same time
-let currentFlowId: undefined | number = undefined;
 
 export const loadCredential = async ({
   groupName,
@@ -21,10 +20,6 @@ export const loadCredential = async ({
   identity: Identity | undefined | null;
 }): Promise<null> => {
   nextFlowId += 1;
-  if (currentFlowId !== undefined) {
-    return null;
-  }
-  currentFlowId = nextFlowId;
   if (isNullish(identity)) {
     return null;
   }
@@ -32,7 +27,7 @@ export const loadCredential = async ({
     const startFlow = (evnt: MessageEvent) => {
       const principal = identity.getPrincipal().toText();
       const req = {
-        id: String(currentFlowId),
+        id: String(nextFlowId),
         jsonrpc: '2.0',
         method: 'request_credential',
         params: {
@@ -55,6 +50,9 @@ export const loadCredential = async ({
     };
     const finishFlow = (evnt: MessageEvent) => {
       try {
+        if (nonNullish(evnt.data?.error)) {
+          throw new Error(evnt.data.error);
+        }
         // Make the presentation presentable
         const verifiablePresentation = evnt.data?.result?.verifiablePresentation;
         if (verifiablePresentation === undefined) {
@@ -73,13 +71,8 @@ export const loadCredential = async ({
           });
         }
       } catch (error) {
-        console.log('error in da handleFlowFinished', error);
-        credentialsStore.setCredential({
-          groupName,
-          hasCredential: false,
-        });
+        console.error('Error verifying the credential', error);
       } finally {
-        currentFlowId = undefined;
         iiWindow?.close();
         window.removeEventListener('message', handleFlowFinished);
         resolve(null);
@@ -89,7 +82,7 @@ export const loadCredential = async ({
       console.log('in da handleFlowFinished', evnt);
       if (evnt.data?.method === 'vc-flow-ready') {
         startFlow(evnt);
-      } else {
+      } else if (evnt.data?.id === String(nextFlowId)) {
         finishFlow(evnt);
       }
     };
