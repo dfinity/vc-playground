@@ -1,11 +1,11 @@
 import { browser } from '$app/environment';
 
-const CREDENTIALS_THEME = 'modern';
+const USER_THEME = 'modern';
 const ISSUER_THEME = 'wintry';
-type Role = 'issuer' | 'credentials';
+type Role = 'issuer' | 'user';
 const themeMapper: Record<Role, string> = {
-  issuer: CREDENTIALS_THEME,
-  credentials: ISSUER_THEME,
+  issuer: ISSUER_THEME,
+  user: USER_THEME,
 };
 
 export const setTheme = (role: Role) => {

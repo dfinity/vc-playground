@@ -22,6 +22,13 @@
   import type { Readable } from 'svelte/store';
   import type { MemberData } from '../../../declarations/meta_issuer.did';
   import { RP_ORIGIN } from '$lib/constants/env-vars';
+  import { onMount } from 'svelte';
+  import { setTheme } from '$lib/services/set-theme';
+  import NavBarItem from '$lib/ui-components/elements/NavBarItem.svelte';
+
+  onMount(() => {
+    setTheme('issuer');
+  });
 
   let issuerName: string | null;
   $: issuerName = browser ? $page.url.searchParams.get(ISSUER_PARAM) : null;
@@ -57,9 +64,11 @@
 
 <AuthGuard>
   <DefaultPage>
-    <Callout slot="callout">
-      <p>🎉 You are the issuer of this credential type.</p>
-    </Callout>
+    <ol class="breadcrumb" slot="nav">
+      <li class="crumb"><a class="anchor" href="/issuer-center">Issuer Control Center</a></li>
+      <li class="crumb-separator" aria-hidden>&rsaquo;</li>
+      <li>{$issuerStore?.group_name ?? ''}</li>
+    </ol>
     <svelte:fragment slot="title">{$issuerStore?.group_name}</svelte:fragment>
     <div>
       <Button variant="primary" href={RP_ORIGIN}>Test In relying party</Button>
