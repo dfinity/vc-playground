@@ -10,6 +10,7 @@
   import Issuer from '$lib/ui-components/icons/Issuer.svelte';
   import Stack from '$lib/ui-components/elements/Stack.svelte';
   import TwoSlots from '$lib/ui-components/elements/TwoSlots.svelte';
+  import { setTheme } from '$lib/services/set-theme';
 
   const loginUser = (route: string) => async () => {
     await login();
@@ -17,6 +18,7 @@
   };
 
   onMount(() => {
+    setTheme('visitor');
     syncAuth();
   });
 
