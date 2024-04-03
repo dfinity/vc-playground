@@ -111,9 +111,18 @@ type HttpResponse = record {
     body: blob;
 };
 
-/// Types for group and membership management.
+/// Types for user, group and group membership management.
 
 type TimestampNs = nat64;
+
+type UserData = record {
+    user_nickname : opt text;
+    issuer_nickname : opt text;
+};
+
+type SetUserRequest = record {
+    user_data : UserData
+};
 
 type ListGroupsRequest = record {
     group_name_substring : opt text;
@@ -129,7 +138,6 @@ type AddGroupRequest = record {
 
 type JoinGroupRequest = record {
     group_name : text;
-    note : text
 };
 
 type MembershipUpdate = record {
@@ -140,7 +148,6 @@ type MembershipUpdate = record {
 type UpdateMembershipRequest = record {
     group_name : text;
     updates : vec MembershipUpdate;
-
 };
 
 type GroupStats = record {
@@ -163,7 +170,7 @@ type PublicGroupData = record {
 
 type MemberData = record {
     member: principal;
-    note: text;
+    nickname: text;
     joined_timestamp_ns : TimestampNs;
     membership_status: MembershipStatus;
 };
@@ -180,6 +187,7 @@ type PublicGroupsData = record {
 
 type GroupsError = variant {
     NotAuthorized : text;
+    NotAuthenticated : text;
     AlreadyExists : text;
     NotFound: text;
     Internal : text;
@@ -195,7 +203,9 @@ service: (opt IssuerConfig) -> {
     /// Configure the issuer (e.g. set the root key), used for deployment/testing.
     configure: (IssuerConfig) -> ();
 
-    /// API for obtaining information about groups and group membership.
+    /// API for setting/getting information about users, groups and group membership.
+    set_user : (SetUserRequest) -> (variant { Ok ; Err : GroupsError;}); /// authenticated
+    get_user : () -> (variant { Ok : UserData ; Err : GroupsError;}) query; /// authenticated
     list_groups : (ListGroupsRequest) -> (variant { Ok : PublicGroupsData; Err : GroupsError;}) query;  /// public
     get_group : (GetGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;}) query;  /// authenticated, only for the owner
     add_group : (AddGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;});  /// authenticated

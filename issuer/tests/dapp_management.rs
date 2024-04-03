@@ -110,7 +110,6 @@ fn should_retain_groups_upgrade() -> Result<(), CallError> {
     add_group_with_member(
         group_name,
         authorized_principal,
-        "Alice",
         authorized_principal,
         &env,
         issuer_id,
