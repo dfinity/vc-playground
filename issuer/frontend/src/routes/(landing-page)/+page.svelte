@@ -11,7 +11,7 @@
 
   const loginUser = async () => {
     await login();
-    goto('/home');
+    goto('/credentials');
   };
 
   onMount(() => {
@@ -20,7 +20,7 @@
 
   $: {
     if ($authStore.identity !== null && $authStore.identity !== undefined) {
-      goto('/home');
+      goto('/credentials');
     }
   }
 </script>

@@ -8,6 +8,7 @@
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
   import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   import { storePopup } from '@skeletonlabs/skeleton';
+  import { page } from '$app/stores';
 
   storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 
@@ -16,6 +17,9 @@
   onMount(() => {
     syncAuth();
   });
+
+  let currentRole: 'User' | 'Issuer';
+  $: currentRole = $page.route.id === '/(app)/credentials' ? 'User' : 'Issuer';
 </script>
 
 <Modal />
@@ -26,10 +30,11 @@
   <svelte:fragment slot="header">
     <!-- App Bar -->
     <AppBar>
-      <a href="/home" class="text-xl uppercase font-bold" aria-label="Go to Home" slot="lead"
-        >VC Playground
-      </a>
-      <SettingsDropdown slot="trail" />
+      <span slot="lead" class="flex gap-4 items-center">
+        <span class="text-xl uppercase text-surface-500">VC Playground</span>
+        <span class="text-xl font-heading-token font-bold">{currentRole}</span>
+      </span>
+      <SettingsDropdown slot="trail" {currentRole} />
     </AppBar>
   </svelte:fragment>
   <MainWrapper>
