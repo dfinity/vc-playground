@@ -1,7 +1,7 @@
 <script lang="ts">
   import MainWrapper from '$lib/ui-components/elements/MainWrapper.svelte';
   import { onMount } from 'svelte';
-  import '../../app.postcss';
+  import '../app.postcss';
   import { AppShell, AppBar, Modal, Toast } from '@skeletonlabs/skeleton';
   import { syncAuth } from '$lib/services/auth.services';
   import { initializeStores } from '@skeletonlabs/skeleton';
@@ -9,6 +9,11 @@
   import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   import { storePopup } from '@skeletonlabs/skeleton';
   import { page } from '$app/stores';
+  import { authStore } from '$lib/stores/auth.store';
+  import { isNullish } from '$lib/utils/is-nullish.utils';
+  import HeaderSubtitle from '$lib/ui-components/elements/HeaderSubtitle.svelte';
+  import HeaderTitle from '$lib/ui-components/elements/HeaderTitle.svelte';
+  import Box from '$lib/ui-components/elements/Box.svelte';
 
   storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 
@@ -25,18 +30,20 @@
 <Modal />
 <Toast />
 
-<!-- App Shell -->
 <AppShell>
-  <svelte:fragment slot="header">
-    <!-- App Bar -->
-    <AppBar>
-      <span slot="lead" class="flex gap-4 items-center">
-        <span class="text-xl uppercase text-surface-500">VC Playground</span>
-        <span class="text-xl font-heading-token font-bold">{currentRole}</span>
-      </span>
-      <SettingsDropdown slot="trail" {currentRole} />
-    </AppBar>
-  </svelte:fragment>
+  <AppBar slot="header">
+    <Box slot="lead">
+      <HeaderSubtitle>VC Playground</HeaderSubtitle>
+      {#if !isNullish($authStore.identity)}
+        <HeaderTitle>{currentRole}</HeaderTitle>
+      {/if}
+    </Box>
+    <svelte:fragment slot="trail">
+      {#if !isNullish($authStore.identity)}
+        <SettingsDropdown {currentRole} />
+      {/if}
+    </svelte:fragment>
+  </AppBar>
   <MainWrapper>
     <!-- Page Route Content -->
     <slot />

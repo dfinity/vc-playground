@@ -1,6 +1,6 @@
 <script lang="ts">
   export let level: '1' | '2' | '3' | '4' | '5' | '6';
-  export let align: 'left' | 'middle' = 'left';
+  export let align: 'left' | 'center' = 'left';
 
   const component = `h${level}`;
   let levelClasses = {
@@ -13,7 +13,7 @@
   };
   let alignClasses = {
     left: 'text-left',
-    middle: 'text-center',
+    center: 'text-center',
   };
 </script>
 

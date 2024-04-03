@@ -25,6 +25,10 @@ export default {
             name: 'modern',
             enhancements: true,
           },
+          {
+            name: 'skeleton',
+            enhancements: true,
+          },
         ],
       },
     }),
