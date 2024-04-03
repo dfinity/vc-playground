@@ -37,7 +37,7 @@ use std::collections::BTreeMap;
 /// and the managed memory for potential other data of the canister.
 type Memory = RestrictedMemory<DefaultMemoryImpl>;
 type ConfigCell = StableCell<IssuerConfig, Memory>;
-type GroupsMap = StableBTreeMap<String, GroupRecord, VirtualMemory<Memory>>;
+type GroupsMap = StableBTreeMap<GroupKey, GroupRecord, VirtualMemory<Memory>>;
 type UsersMap = StableBTreeMap<Principal, UserRecord, VirtualMemory<Memory>>;
 
 const GROUPS_MEMORY_ID: MemoryId = MemoryId::new(0u8);
@@ -55,8 +55,13 @@ const VC_EXPIRATION_PERIOD_NS: u64 = 15 * MINUTE_NS;
 #[derive(CandidType, Clone, Deserialize)]
 struct GroupRecord {
     pub created_timestamp_ns: u64,
-    pub owner: Principal,
     pub members: BTreeMap<Principal, MemberRecord>,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+struct GroupKey {
+    group_name: String,
+    owner: Principal,
 }
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -69,6 +74,25 @@ struct MemberRecord {
 struct UserRecord {
     user_nickname: Option<String>,
     issuer_nickname: Option<String>,
+}
+
+impl From<(String, Principal)> for GroupKey {
+    fn from(value: (String, Principal)) -> Self {
+        Self {
+            group_name: value.0,
+            owner: value.1,
+        }
+    }
+}
+
+impl Storable for GroupKey {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        Cow::Owned(candid::encode_one(self).expect("failed to encode GroupRecord"))
+    }
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).expect("failed to decode GroupRecord")
+    }
+    const BOUND: Bound = Bound::Unbounded;
 }
 
 impl Storable for UserRecord {
@@ -260,17 +284,12 @@ fn list_groups(req: ListGroupsRequest) -> Result<PublicGroupsData, GroupsError> 
     let anonymous = caller() == Principal::anonymous();
     GROUPS.with_borrow(|groups| {
         let mut list = vec![];
-        for (name, record) in groups.iter() {
+        for (key, record) in groups.iter() {
             if let Some(substring) = &req.group_name_substring {
-                if !name.contains(substring) {
+                if !key.group_name.contains(substring) {
                     break;
                 }
             }
-            let is_owner = if anonymous {
-                None
-            } else {
-                Some(record.owner == caller())
-            };
             let membership_status = if anonymous {
                 None
             } else {
@@ -280,12 +299,13 @@ fn list_groups(req: ListGroupsRequest) -> Result<PublicGroupsData, GroupsError> 
                     .map(|member_record| member_record.membership_status.clone())
             };
             list.push(PublicGroupData {
-                group_name: name,
+                group_name: key.group_name,
+                owner: key.owner,
+                issuer_nickname: maybe_issuer_nickname(&caller()).unwrap_or("".to_string()),
                 stats: GroupStats {
                     member_count: record.members.len() as u32,
                     created_timestamp_ns: record.created_timestamp_ns,
                 },
-                is_owner,
                 membership_status,
             })
         }
@@ -303,11 +323,21 @@ fn maybe_user_nickname(user: &Principal) -> Option<String> {
     })
 }
 
+fn maybe_issuer_nickname(user: &Principal) -> Option<String> {
+    USERS.with_borrow(|users| {
+        if let Some(user_record) = users.get(user) {
+            user_record.issuer_nickname
+        } else {
+            None
+        }
+    })
+}
+
 #[query]
 #[candid_method(query)]
 fn get_group(req: GetGroupRequest) -> Result<FullGroupData, GroupsError> {
     GROUPS.with_borrow(|groups| {
-        if let Some(group_record) = groups.get(&req.group_name) {
+        if let Some(group_record) = groups.get(&(req.group_name.clone(), caller()).into()) {
             let members: Vec<MemberData> = group_record
                 .members
                 .iter()
@@ -320,6 +350,8 @@ fn get_group(req: GetGroupRequest) -> Result<FullGroupData, GroupsError> {
                 .collect();
             Ok(FullGroupData {
                 group_name: req.group_name,
+                owner: caller(),
+                issuer_nickname: maybe_issuer_nickname(&caller()).unwrap_or("".to_string()),
                 stats: GroupStats {
                     member_count: group_record.members.len() as u32,
                     created_timestamp_ns: group_record.created_timestamp_ns,
@@ -327,7 +359,11 @@ fn get_group(req: GetGroupRequest) -> Result<FullGroupData, GroupsError> {
                 members,
             })
         } else {
-            Err(GroupsError::NotFound(format!("group: {}", req.group_name)))
+            Err(GroupsError::NotFound(format!(
+                "group: {}, owner: {}",
+                req.group_name,
+                caller()
+            )))
         }
     })
 }
@@ -336,24 +372,29 @@ fn get_group(req: GetGroupRequest) -> Result<FullGroupData, GroupsError> {
 #[candid_method]
 fn add_group(req: AddGroupRequest) -> Result<FullGroupData, GroupsError> {
     GROUPS.with_borrow_mut(|groups| {
-        if groups.get(&req.group_name).is_some() {
+        if groups
+            .get(&(req.group_name.clone(), caller()).into())
+            .is_some()
+        {
             Err(GroupsError::AlreadyExists(format!(
-                "group: {}",
-                req.group_name
+                "group: {}, owner: {}",
+                req.group_name,
+                caller()
             )))
         } else {
             let created_timestamp_ns = time();
             let previous = groups.insert(
-                req.group_name.clone(),
+                (req.group_name.clone(), caller()).into(),
                 GroupRecord {
                     created_timestamp_ns,
-                    owner: caller(),
                     members: BTreeMap::new(),
                 },
             );
             assert!(previous.is_none());
             Ok(FullGroupData {
                 group_name: req.group_name,
+                owner: caller(),
+                issuer_nickname: maybe_issuer_nickname(&caller()).unwrap_or("".to_string()),
                 stats: GroupStats {
                     member_count: 0,
                     created_timestamp_ns,
@@ -368,7 +409,7 @@ fn add_group(req: AddGroupRequest) -> Result<FullGroupData, GroupsError> {
 #[candid_method]
 fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
     GROUPS.with_borrow_mut(|groups| {
-        if let Some(mut group_record) = groups.get(&req.group_name) {
+        if let Some(mut group_record) = groups.get(&(req.group_name.clone(), req.owner).into()) {
             if let Some(member_record) = group_record.members.get(&caller()) {
                 // If a record exists and has `Rejected`-status,
                 // switch to `PendingReview` and update timestamp, otherwise do nothing.
@@ -390,10 +431,13 @@ fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
                     },
                 );
             }
-            groups.insert(req.group_name, group_record);
+            groups.insert((req.group_name, req.owner).into(), group_record);
             Ok(())
         } else {
-            Err(GroupsError::NotFound(format!("group: {}", req.group_name)))
+            Err(GroupsError::NotFound(format!(
+                "group: {}, owner: {}",
+                req.group_name, req.owner
+            )))
         }
     })
 }
@@ -402,14 +446,7 @@ fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
 #[candid_method]
 fn update_membership(req: UpdateMembershipRequest) -> Result<(), GroupsError> {
     GROUPS.with_borrow_mut(|groups| {
-        if let Some(mut group_record) = groups.get(&req.group_name) {
-            if group_record.owner != caller() {
-                return Err(GroupsError::NotAuthorized(format!(
-                    "{} is not an owner of {}",
-                    caller(),
-                    req.group_name
-                )));
-            }
+        if let Some(mut group_record) = groups.get(&(req.group_name.clone(), caller()).into()) {
             for update in req.updates {
                 if let Some(member_record) = group_record.members.get(&update.member) {
                     group_record.members.insert(
@@ -423,10 +460,14 @@ fn update_membership(req: UpdateMembershipRequest) -> Result<(), GroupsError> {
                     return Err(GroupsError::NotFound(format!("member: {}", update.member)));
                 }
             }
-            groups.insert(req.group_name, group_record);
+            groups.insert((req.group_name, caller()).into(), group_record);
             Ok(())
         } else {
-            Err(GroupsError::NotFound(format!("group: {}", req.group_name)))
+            Err(GroupsError::NotFound(format!(
+                "group: {}, owner: {}",
+                req.group_name,
+                caller()
+            )))
         }
     })
 }
@@ -603,35 +644,52 @@ pub fn get_vc_consent_message_en(
         Err(err) => Err(Icrc21Error::ConsentMessageUnavailable(Icrc21ErrorInfo {
             description: err,
         })),
-        Ok(group_name) => Ok(Icrc21ConsentInfo {
+        Ok((group_name, _owner)) => Ok(Icrc21ConsentInfo {
             consent_message: format!("{} '{}'.", VERIFIED_MEMBER_VC_CONSENT_EN, group_name),
             language: "en".to_string(),
         }),
     }
 }
 
-fn verify_spec_and_get_group_name(spec: &CredentialSpec) -> Result<String, String> {
+fn verify_spec_and_get_group_name(spec: &CredentialSpec) -> Result<(String, Principal), String> {
     if spec.credential_type.as_str() == "VerifiedMember" {
         let Some(arguments) = &spec.arguments else {
             return Err("Credential spec has no arguments".to_string());
         };
-        let expected_argument = "groupName";
-        let Some(value) = arguments.get(expected_argument) else {
-            return Err(format!(
-                "Credential spec has no {}-argument",
-                expected_argument
-            ));
-        };
-        if arguments.len() != 1 {
+        if arguments.len() != 2 {
             return Err("Credential spec has unexpected arguments".to_string());
         }
-        let ArgumentValue::String(group_name) = value else {
+        let group_name_arg = "groupName";
+        let Some(value) = arguments.get(group_name_arg) else {
             return Err(format!(
-                "Credential spec has unexpected value for {}-argument",
-                expected_argument
+                "Credential spec has no {}-argument",
+                group_name_arg
             ));
         };
-        Ok(group_name.to_string())
+        let ArgumentValue::String(group_name) = value else {
+            return Err(format!(
+                "Credential spec has an unexpected value for {}-argument",
+                group_name_arg
+            ));
+        };
+
+        let owner_arg = "owner";
+        let Some(value) = arguments.get(owner_arg) else {
+            return Err(format!("Credential spec has no {}-argument", owner_arg));
+        };
+        let ArgumentValue::String(owner_text) = value else {
+            return Err(format!(
+                "Credential spec has an unexpected value for {}-argument",
+                owner_arg
+            ));
+        };
+        let Ok(owner) = Principal::from_text(owner_text) else {
+            return Err(format!(
+                "Credential spec has an invalid value for {}-argument",
+                owner_arg
+            ));
+        };
+        Ok((group_name.to_string(), owner))
     } else {
         Err(format!(
             "Credential {} is not supported",
@@ -710,10 +768,10 @@ fn prepare_credential_jwt(
     credential_spec: &CredentialSpec,
     alias_tuple: &AliasTuple,
 ) -> Result<String, IssueCredentialError> {
-    let group_name = verify_spec_and_get_group_name(credential_spec)
+    let (group_name, owner) = verify_spec_and_get_group_name(credential_spec)
         .map_err(IssueCredentialError::UnsupportedCredentialSpec)?;
     GROUPS.with_borrow(|groups| {
-        verify_principal_is_member(alias_tuple.id_dapp, group_name, groups)
+        verify_principal_is_member(alias_tuple.id_dapp, group_name, owner, groups)
     })?;
     Ok(verified_member_credential(
         alias_tuple.id_alias,
@@ -724,9 +782,10 @@ fn prepare_credential_jwt(
 fn verify_principal_is_member(
     user: Principal,
     group_name: String,
+    owner: Principal,
     groups: &GroupsMap,
 ) -> Result<(), IssueCredentialError> {
-    if let Some(group_record) = groups.get(&group_name) {
+    if let Some(group_record) = groups.get(&(group_name, owner).into()) {
         if let Some(member_record) = group_record.members.get(&user) {
             if member_record.membership_status == MembershipStatus::Accepted {
                 return Ok(());

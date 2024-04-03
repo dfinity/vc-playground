@@ -39,7 +39,7 @@ fn should_get_vc_consent_message() {
     let canister_id = install_issuer(&env, None);
 
     let consent_message_request = Icrc21VcConsentMessageRequest {
-        credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+        credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
         preferences: Icrc21ConsentPreferences {
             language: "en-US".to_string(),
         },
@@ -118,12 +118,13 @@ fn should_fail_vc_consent_message_if_missing_required_argument() {
     assert_matches!(response, Err(Icrc21Error::ConsentMessageUnavailable(_)));
 }
 
-fn verified_member_credential_spec(group_name: &str) -> CredentialSpec {
+fn verified_member_credential_spec(group_name: &str, owner: Principal) -> CredentialSpec {
     let mut args = HashMap::new();
     args.insert(
         "groupName".to_string(),
         ArgumentValue::String(group_name.to_string()),
     );
+    args.insert("owner".to_string(), ArgumentValue::String(owner.to_text()));
     CredentialSpec {
         credential_type: "VerifiedMember".to_string(),
         arguments: Some(args),
@@ -139,7 +140,7 @@ fn should_fail_prepare_credential_for_unauthorized_principal() {
         issuer_id,
         Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap(),
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
             signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
         },
     )
@@ -158,7 +159,7 @@ fn should_fail_prepare_credential_for_wrong_sender() {
         issuer_id,
         principal_1(), // not the same as contained in signed_id_alias
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
             signed_id_alias,
         },
     )
@@ -174,9 +175,10 @@ fn should_fail_get_credential_for_wrong_sender() {
     let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
     let signed_id_alias = DUMMY_SIGNED_ID_ALIAS.clone();
     let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
+    let owner = principal_1();
     add_group_with_member(
         DUMMY_GROUP_NAME,
-        authorized_principal,
+        owner,
         authorized_principal,
         &env,
         issuer_id,
@@ -188,7 +190,7 @@ fn should_fail_get_credential_for_wrong_sender() {
         issuer_id,
         authorized_principal,
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, owner),
             signed_id_alias: signed_id_alias.clone(),
         },
     )
@@ -200,7 +202,7 @@ fn should_fail_get_credential_for_wrong_sender() {
         issuer_id,
         unauthorized_principal,
         &GetCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, owner),
             signed_id_alias,
             prepared_context: prepare_credential_response.prepared_context,
         },
@@ -220,7 +222,7 @@ fn should_fail_prepare_credential_for_anonymous_caller() {
         issuer_id,
         Principal::anonymous(),
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
             signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
         },
     )
@@ -245,7 +247,7 @@ fn should_fail_prepare_credential_for_wrong_root_key() {
         issuer_id,
         Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap(),
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
             signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
         },
     )
@@ -268,7 +270,7 @@ fn should_fail_prepare_credential_for_wrong_idp_canister_id() {
         issuer_id,
         Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap(),
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
             signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
         },
     )
@@ -281,9 +283,10 @@ fn should_prepare_verfied_member_credential_for_authorized_principal() {
     let env = env();
     let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
     let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
+    let owner = principal_1();
     add_group_with_member(
         DUMMY_GROUP_NAME,
-        authorized_principal,
+        owner,
         authorized_principal,
         &env,
         issuer_id,
@@ -293,7 +296,7 @@ fn should_prepare_verfied_member_credential_for_authorized_principal() {
         issuer_id,
         authorized_principal,
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME),
+            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, owner),
             signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
         },
     )
@@ -356,15 +359,16 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
     .expect("Invalid ID alias");
 
     let authorized_principal = alias_tuple.id_dapp;
+    let owner = principal_1();
     add_group_with_member(
         DUMMY_GROUP_NAME,
-        authorized_principal,
+        owner,
         authorized_principal,
         &env,
         issuer_id,
     );
 
-    let credential_spec = verified_member_credential_spec(DUMMY_GROUP_NAME);
+    let credential_spec = verified_member_credential_spec(DUMMY_GROUP_NAME, owner);
     let prepared_credential = api::prepare_credential(
         &env,
         issuer_id,

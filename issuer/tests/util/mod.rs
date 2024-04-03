@@ -127,7 +127,7 @@ pub fn add_group_with_member(
     canister_id: Principal,
 ) {
     do_add_group(group_name, owner, env, canister_id);
-    do_join_group(group_name, member, env, canister_id);
+    do_join_group(group_name, owner, member, env, canister_id);
     do_update_membership(
         group_name,
         vec![MembershipUpdate {
@@ -179,6 +179,7 @@ pub fn do_get_group(
 
 pub fn do_join_group(
     group_name: &str,
+    owner: Principal,
     caller: Principal,
     env: &StateMachine,
     canister_id: Principal,
@@ -189,6 +190,7 @@ pub fn do_join_group(
         caller,
         JoinGroupRequest {
             group_name: group_name.to_string(),
+            owner,
         },
     )
     .expect("API call failed")
