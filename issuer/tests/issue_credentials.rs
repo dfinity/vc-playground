@@ -277,7 +277,7 @@ fn should_fail_prepare_credential_for_wrong_idp_canister_id() {
 }
 
 #[test]
-fn should_prepare_early_adopter_credential_for_authorized_principal() {
+fn should_prepare_verfied_member_credential_for_authorized_principal() {
     let env = env();
     let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
     let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
