@@ -11,8 +11,6 @@ const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
 
 let iiWindow: Window | null = null;
 let nextFlowId = 0;
-// Used to not allow multiple flows to be active at the same time
-let currentFlowId: undefined | number = undefined;
 
 export const loadCredential = async ({
   groupName,
@@ -22,10 +20,6 @@ export const loadCredential = async ({
   identity: Identity | undefined | null;
 }): Promise<null> => {
   nextFlowId += 1;
-  if (currentFlowId !== undefined) {
-    return null;
-  }
-  currentFlowId = nextFlowId;
   if (isNullish(identity)) {
     return null;
   }
@@ -33,7 +27,7 @@ export const loadCredential = async ({
     const startFlow = (evnt: MessageEvent) => {
       const principal = identity.getPrincipal().toText();
       const req = {
-        id: String(currentFlowId),
+        id: String(nextFlowId),
         jsonrpc: '2.0',
         method: 'request_credential',
         params: {
@@ -79,7 +73,6 @@ export const loadCredential = async ({
       } catch (error) {
         console.error('Error verifying the credential', error);
       } finally {
-        currentFlowId = undefined;
         iiWindow?.close();
         window.removeEventListener('message', handleFlowFinished);
         resolve(null);
@@ -89,7 +82,7 @@ export const loadCredential = async ({
       console.log('in da handleFlowFinished', evnt);
       if (evnt.data?.method === 'vc-flow-ready') {
         startFlow(evnt);
-      } else if (evnt.data?.id === String(currentFlowId)) {
+      } else if (evnt.data?.id === String(nextFlowId)) {
         finishFlow(evnt);
       }
     };
