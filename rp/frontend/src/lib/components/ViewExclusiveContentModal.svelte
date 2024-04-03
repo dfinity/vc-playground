@@ -50,8 +50,9 @@
       <Button on:click={startFlow} variant="primary">Get Credential</Button>
     </div>
   {:else if vcFlowLoading}
-    <div class="flex justify-center">
+    <div class="flex flex-col justify-center items-center animate-pulse">
       <div class="placeholder min-w-56 min-h-56" />
+      <p>Verify your credential in Internet Identity</p>
     </div>
   {:else}
     <div class="flex flex-col gap-4">

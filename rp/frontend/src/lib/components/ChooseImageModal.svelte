@@ -30,7 +30,7 @@
 
 <Modal>
   <svelte:fragment slot="header">Choose Image</svelte:fragment>
-  <article class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <article class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
     {#if isLoading}
       <div class="placeholder h-auto max-w-full rounded-container-token aspect-square" />
       <div class="placeholder h-auto max-w-full rounded-container-token aspect-square" />
@@ -44,7 +44,11 @@
     {:else}
       {#each $imagesStore ?? [] as image, i (image.url)}
         <a href={'#'} on:click={selectImageFactory(image)}>
-          <img class="h-auto max-w-full rounded-container-token" src={image.url} alt={`Option ${i}`} />
+          <img
+            class="h-auto max-w-full rounded-container-token"
+            src={image.url}
+            alt={`Option ${i}`}
+          />
         </a>
       {/each}
     {/if}

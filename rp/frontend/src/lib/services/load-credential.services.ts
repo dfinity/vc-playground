@@ -1,6 +1,7 @@
 import { credentialsStore } from '$lib/stores/credentials.store';
 import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
+import { nonNullish } from '$lib/utils/non-nullish';
 import type { Identity } from '@dfinity/agent';
 import { decodeJwt } from 'jose';
 
@@ -55,6 +56,9 @@ export const loadCredential = async ({
     };
     const finishFlow = (evnt: MessageEvent) => {
       try {
+        if (nonNullish(evnt.data?.error)) {
+          throw new Error(evnt.data.error);
+        }
         // Make the presentation presentable
         const verifiablePresentation = evnt.data?.result?.verifiablePresentation;
         if (verifiablePresentation === undefined) {
@@ -73,11 +77,7 @@ export const loadCredential = async ({
           });
         }
       } catch (error) {
-        console.log('error in da handleFlowFinished', error);
-        credentialsStore.setCredential({
-          groupName,
-          hasCredential: false,
-        });
+        console.error('Error verifying the credential', error);
       } finally {
         currentFlowId = undefined;
         iiWindow?.close();
@@ -89,7 +89,7 @@ export const loadCredential = async ({
       console.log('in da handleFlowFinished', evnt);
       if (evnt.data?.method === 'vc-flow-ready') {
         startFlow(evnt);
-      } else {
+      } else if (evnt.data?.id === String(currentFlowId)) {
         finishFlow(evnt);
       }
     };
