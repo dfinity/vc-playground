@@ -6,10 +6,10 @@ edition = "2021"
 
 [dependencies]
 # IC/II dependencies
-canister_sig_util = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
-internet_identity_interface = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
-vc_util = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
-asset_util = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
+asset_util.workspace = true
+canister_sig_util.workspace = true
+internet_identity_interface.workspace = true
+vc_util.workspace = true
 candid = "0.10"
 ic-cdk = "0.12"
 ic-cdk-macros = "0.8"
@@ -32,4 +32,4 @@ candid_parser = "0.1"
 ic-http-certification = "2.2"
 ic-test-state-machine-client = "3"
 ic-response-verification = "2.2"
-canister_tests = { git="https://github.com/dfinity/internet-identity", rev="facc954481eaf79c70d1182d128773254a5cfb81" }
+canister_tests.workspace = true
