@@ -129,8 +129,19 @@ fn should_list_groups_anonymously() {
     let canister_id = install_issuer(&env, None);
     let mut group_names = ["first group", "Another group", "yet another group"];
     let mut created_groups: Vec<PublicGroupData> = vec![];
+    let owner = principal_1();
+    let owner_issuer_name = "AliceVC";
+    do_set_user(
+        UserData {
+            user_nickname: None,
+            issuer_nickname: Some(owner_issuer_name.to_string()),
+        },
+        owner,
+        &env,
+        canister_id,
+    );
     for group_name in group_names {
-        created_groups.push(do_add_group(group_name, principal_1(), &env, canister_id).into());
+        created_groups.push(do_add_group(group_name, owner, &env, canister_id).into());
     }
     let req = ListGroupsRequest {
         group_name_substring: None,
@@ -152,6 +163,7 @@ fn should_list_groups_anonymously() {
     listed_groups.sort();
     assert_eq!(listed_groups, created_groups);
     for group in list.groups.iter() {
+        assert_eq!(group.issuer_nickname, owner_issuer_name);
         assert!(group.membership_status.is_none());
     }
 }
@@ -164,11 +176,34 @@ fn should_list_groups_authenticated() {
     let group_2 = "second group";
     let group_3_owned = "third group";
     let owner = principal_1();
-    let other_user = principal_2();
+    let owner_user_nickname = "Alice";
+    let owner_issuer_nickname = "AliceVC";
 
+    let not_owner = principal_2();
+    let not_owner_user_nickname = "Bob";
+    let not_owner_issuer_nickname = "BobVC";
+
+    do_set_user(
+        UserData {
+            user_nickname: Some(owner_user_nickname.to_string()),
+            issuer_nickname: Some(owner_issuer_nickname.to_string()),
+        },
+        owner,
+        &env,
+        canister_id,
+    );
+    do_set_user(
+        UserData {
+            user_nickname: Some(not_owner_user_nickname.to_string()),
+            issuer_nickname: Some(not_owner_issuer_nickname.to_string()),
+        },
+        not_owner,
+        &env,
+        canister_id,
+    );
     do_add_group(group_1_owned, owner, &env, canister_id);
     do_add_group(group_3_owned, owner, &env, canister_id);
-    do_add_group(group_2, other_user, &env, canister_id);
+    do_add_group(group_2, not_owner, &env, canister_id);
 
     do_join_group(group_1_owned, owner, owner, &env, canister_id);
     do_join_group(group_3_owned, owner, owner, &env, canister_id);
@@ -182,7 +217,7 @@ fn should_list_groups_authenticated() {
         &env,
         canister_id,
     );
-    do_join_group(group_2, other_user, owner, &env, canister_id);
+    do_join_group(group_2, not_owner, owner, &env, canister_id);
 
     let req = ListGroupsRequest {
         group_name_substring: None,
@@ -201,15 +236,22 @@ fn should_list_groups_authenticated() {
     group_names.sort();
     assert_eq!(retrieved_names, group_names);
     for g in &list.groups {
+        println!(
+            "group: {}, owner: {} nickname: {}",
+            g.group_name, g.owner, g.issuer_nickname
+        );
         if g.group_name == group_1_owned {
             assert_matches!(g.membership_status, Some(MembershipStatus::PendingReview));
             assert_eq!(g.owner, owner);
+            assert_eq!(g.issuer_nickname, owner_issuer_nickname);
         } else if g.group_name == group_2 {
             assert_matches!(g.membership_status, Some(MembershipStatus::PendingReview));
-            assert_eq!(g.owner, other_user);
+            assert_eq!(g.owner, not_owner);
+            assert_eq!(g.issuer_nickname, not_owner_issuer_nickname);
         } else if g.group_name == group_3_owned {
             assert_matches!(g.membership_status, Some(MembershipStatus::Accepted));
             assert_eq!(g.owner, owner);
+            assert_eq!(g.issuer_nickname, owner_issuer_nickname);
         } else {
             panic!("Unexpected group_name: {}", g.group_name)
         }

@@ -301,7 +301,7 @@ fn list_groups(req: ListGroupsRequest) -> Result<PublicGroupsData, GroupsError> 
             list.push(PublicGroupData {
                 group_name: key.group_name,
                 owner: key.owner,
-                issuer_nickname: maybe_issuer_nickname(&caller()).unwrap_or("".to_string()),
+                issuer_nickname: maybe_issuer_nickname(&key.owner).unwrap_or("".to_string()),
                 stats: GroupStats {
                     member_count: record.members.len() as u32,
                     created_timestamp_ns: record.created_timestamp_ns,
