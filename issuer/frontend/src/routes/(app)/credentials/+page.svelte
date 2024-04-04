@@ -15,7 +15,6 @@
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { addUserNickname } from '$lib/services/add-user-nickname.services';
   import type { Identity } from '@dfinity/agent';
-  import AdminIssuerItem from '$lib/components/AdminIssuerItem.svelte';
 
   const modalStore = getModalStore();
 
