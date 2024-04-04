@@ -25,7 +25,6 @@
       "type": "custom",
       "wasm": "internet_identity_dev.wasm.gz",
       "candid": "internet_identity.did",
-
       "build": "curl --fail -sSL \"https://github.com/dfinity/internet-identity/releases/download/release-2024-03-22/internet_identity_dev.wasm.gz\" -o internet_identity_dev.wasm.gz",
       "url": {
         "mainnet": "https://identity.internetcomputer.org/",
@@ -33,7 +32,7 @@
       },
       "remote": {
         "id": {
-          "ic_test": "fgte5-ciaaa-aaaad-aaatq-cai",
+          "ic_test": "jqajs-xiaaa-aaaad-aab5q-cai",
           "mainnet": "ewh3f-3qaaa-aaaap-aazjq-cai"
         }
       }
