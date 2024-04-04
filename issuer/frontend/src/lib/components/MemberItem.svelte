@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Principal } from '@dfinity/principal';
   import { acceptCredential, revokeCredential } from '$lib/services/manage-membership.services';
   import { authStore } from '$lib/stores/auth.store';
   import Badge from '$lib/ui-components/elements/Badge.svelte';
@@ -9,9 +8,6 @@
 
   export let issuerName: string;
   export let member: MemberData;
-
-  let currentUserPrincipal: Principal | undefined | null;
-  $: currentUserPrincipal = $authStore.identity?.getPrincipal();
 
   let status: 'pending' | 'approved' | 'revoked';
   $: status =
@@ -45,7 +41,7 @@
 </script>
 
 <ListItem>
-  <svelte:fragment slot="main">{member.note}</svelte:fragment>
+  <svelte:fragment slot="main">{member.nickname}</svelte:fragment>
   <svelte:fragment slot="end">
     {#if status === 'pending'}
       <Button variant="success" on:click={accept} loading={loadingAccept} disabled={loadingRevoke}

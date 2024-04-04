@@ -14,6 +14,11 @@
   import DefaultPage from '$lib/ui-components/page-layouts/DefaultPage.svelte';
   import HeadingSkeleton from '$lib/ui-components/elements/HeadingSkeleton.svelte';
   import { onMount } from 'svelte';
+  import { getIssuerNickname } from '$lib/stores/user.store';
+  import type { Readable } from 'svelte/store';
+  import { addIssuerNickname } from '$lib/services/add-issuer-nickname.services';
+  import type { Identity } from '@dfinity/agent';
+  import { isNullish } from '$lib/utils/is-nullish.utils';
 
   onMount(() => {
     setTheme('issuer');
@@ -50,12 +55,47 @@
     };
     modalStore.trigger(settings);
   };
+
+  let issuerNickname: Readable<undefined | null | string>;
+  $: issuerNickname = getIssuerNickname($authStore.identity);
+
+  const openIssuerNicknameModal = () => {
+    const settings: ModalSettings = {
+      type: 'prompt',
+      title: 'Create a username',
+      body: 'The username is what the issuers willl see when you request a credential.',
+      valueAttr: { placeholder: '@username' },
+      buttonTextConfirm: 'Create username',
+      buttonTextCancel: 'Close',
+      response: (nickname: boolean | string) => {
+        if (nickname) {
+          addIssuerNickname({
+            identity: $authStore.identity as Identity,
+            nickname: nickname as string,
+          });
+        }
+      },
+    };
+    modalStore.trigger(settings);
+  };
+
+  $: {
+    if ($issuerNickname === null) {
+      openIssuerNicknameModal();
+    }
+  }
 </script>
 
 <TestIdWrapper testId="home-route">
   <AuthGuard>
     <DefaultPage>
-      <svelte:fragment slot="title">Issuer Control Center</svelte:fragment>
+      <svelte:fragment slot="title">
+        {isNullish($issuerNickname) ? 'Organization' : `@${$issuerNickname}'s Organization`}
+      </svelte:fragment>
+      <svelte:fragment slot="subtitle">
+        This is the Issuer Control Center. From here you can create, issue and revoke credentials
+        from users.
+      </svelte:fragment>
       <FooterActionsWrapper>
         <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage}>
           {#each $myIssuersStore ?? [] as issuer}

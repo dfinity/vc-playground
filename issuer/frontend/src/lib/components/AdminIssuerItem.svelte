@@ -13,9 +13,5 @@
 </script>
 
 <IssuerItem {onClick} {issuer}>
-  <svelte:fragment slot="end">
-    {#if issuer.is_owner[0]}
-      <Badge variant="primary">👑 Issuer</Badge>
-    {/if}
-  </svelte:fragment>
+  <Badge variant="primary" slot="end">👑 Issuer</Badge>
 </IssuerItem>

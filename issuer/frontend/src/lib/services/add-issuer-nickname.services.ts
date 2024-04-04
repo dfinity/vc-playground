@@ -5,7 +5,7 @@ import { validateText } from '$lib/utils/validate-text.utils';
 import type { Identity } from '@dfinity/agent';
 import { get } from 'svelte/store';
 
-export const addUserNickname = async ({
+export const addIssuerNickname = async ({
   identity,
   nickname,
 }: {
@@ -18,8 +18,8 @@ export const addUserNickname = async ({
     const userData = get(userStore);
     await setUser({
       identity,
-      userNickname: nickname,
-      issuerNickname: userData?.issuer_nickname[0],
+      issuerNickname: nickname,
+      userNickname: userData?.user_nickname[0],
     });
     const user = await getUser({ identity });
     userStore.set(user);

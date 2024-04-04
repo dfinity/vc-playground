@@ -7,6 +7,9 @@
   import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { RP_ORIGIN } from '$lib/constants/env-vars';
   import IssuerItem from '$lib/components/IssuerItem.svelte';
+  import { getUserNickname } from '$lib/stores/user.store';
+  import type { Readable } from 'svelte/store';
+  import { isNullish } from '$lib/utils/is-nullish.utils';
 
   export let issuer: PublicGroupData;
   // Must be invoked at the top level: https://www.skeleton.dev/utilities/modals
@@ -39,7 +42,7 @@
     const settings: ModalSettings = {
       type: 'confirm',
       title: 'Test Your Credential On the Relying Party',
-      body: `You have a credential for <em>${issuer.group_name}</em>. Visit Xxxxx to view content that's only accessible to users with the credential of <em>${issuer.group_name}</em>.`,
+      body: `<p>You have a credential for <em>${issuer.group_name}</em>.<br></br></p><p>Visit the <a href="${RP_ORIGIN}" target="_blank">Relying Party</a> to view content that's only accessible to users with the credential of <em>${issuer.group_name}</em>.</p>`,
       buttonTextConfirm: 'Test on Relying Party',
       buttonTextCancel: 'Close',
       response: (go: boolean) => {
@@ -78,28 +81,18 @@
     return () => openPendingMemberModal();
   };
 
+  let userNickname: Readable<undefined | null | string>;
+  $: userNickname = getUserNickname($authStore.identity);
   let loadingRequestCredential = false;
-  const openRequestCredentialModal = () => {
+  const requestCredentialModal = async () => {
     loadingRequestCredential = true;
-    const settings: ModalSettings = {
-      type: 'prompt',
-      title: 'Request Credential',
-      valueAttr: { type: 'text', required: true, placeholder: 'Nickname' },
-      body: `Enter a nickname to request the <em>${issuer.group_name}</em> credential.`,
-      buttonTextSubmit: 'Send Request',
-      response: async (note: string) => {
-        if (note) {
-          await requestCredential({
-            identity: $authStore.identity,
-            issuerName: issuer.group_name,
-            note,
-            toastStore,
-          });
-        }
-        loadingRequestCredential = false;
-      },
-    };
-    modalStore.trigger(settings);
+    await requestCredential({
+      identity: $authStore.identity,
+      issuerName: issuer.group_name,
+      owner: issuer.owner,
+      toastStore,
+    });
+    loadingRequestCredential = false;
   };
 
   let onClick: (() => void) | undefined;
@@ -110,9 +103,10 @@
   <svelte:fragment slot="end">
     {#if canJoin}
       <Button
-        on:click={openRequestCredentialModal}
+        on:click={requestCredentialModal}
         variant="primary"
         size="sm"
+        disabled={isNullish($userNickname)}
         loading={loadingRequestCredential}>Request Credential</Button
       >
     {:else}

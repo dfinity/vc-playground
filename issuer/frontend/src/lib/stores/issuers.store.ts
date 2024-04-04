@@ -53,8 +53,11 @@ export const getAllIssuersStore = (
 ): Readable<PublicGroupData[] | undefined> =>
   derived(getIssuersStore(identity), (issuers) => issuers?.sort(sortCredentialsPerType));
 
-const isOwner = ({ is_owner }: PublicGroupData): boolean => Boolean(is_owner[0]);
+const isOwner =
+  (identity: Identity | undefined | null) =>
+  ({ owner }: PublicGroupData): boolean =>
+    identity?.getPrincipal().compareTo(owner) === 'eq';
 export const getIdentityIssuersStore = (
   identity: Identity | undefined | null
 ): Readable<PublicGroupData[] | undefined> =>
-  derived(getAllIssuersStore(identity), (issuers) => issuers?.filter(isOwner));
+  derived(getAllIssuersStore(identity), (issuers) => issuers?.filter(isOwner(identity)));
