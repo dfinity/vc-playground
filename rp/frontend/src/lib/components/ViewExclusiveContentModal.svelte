@@ -7,6 +7,8 @@
   import { authStore } from '$lib/stores/auth.store';
   import { credentialsStore } from '$lib/stores/credentials.store';
   import { onMount } from 'svelte';
+  import { ISSUER_ORIGIN } from '$lib/constants.ts/env-vars';
+  import type { Principal } from '@dfinity/principal';
 
   /* eslint-disable-next-line */
   export let parent: any;
@@ -21,15 +23,19 @@
 
   let issuerName = '';
   $: issuerName = $modalStore[0]?.meta.issuerName;
+  let owner: Principal | undefined;
+  $: owner = $modalStore[0]?.meta.content.credential_group_owner;
   let imageUrl = '';
   $: imageUrl = $modalStore[0]?.meta.content.url;
 
   // `undefined` means the flow has not started yet.
   let vcFlowLoading: undefined | boolean = undefined;
   const startFlow = async () => {
-    vcFlowLoading = true;
-    await loadCredential({ groupName: issuerName, identity: $authStore.identity });
-    vcFlowLoading = false;
+    if (owner) {
+      vcFlowLoading = true;
+      await loadCredential({ groupName: issuerName, owner, identity: $authStore.identity });
+      vcFlowLoading = false;
+    }
   };
 
   const close = () => {
@@ -72,5 +78,10 @@
       {/if}
     </div>
   {/if}
-  <Button slot="footer" on:click={close} variant="ghost-primary">Close</Button>
+  <div class="flex gap-4" slot="footer">
+    <Button on:click={close} variant="ghost-primary">Close</Button>
+    {#if !hasCredential && !vcFlowLoading}
+      <Button href={ISSUER_ORIGIN} variant="primary">Go to Issuer</Button>
+    {/if}
+  </div>
 </Modal>

@@ -4,9 +4,7 @@
   import { authStore } from '$lib/stores/auth.store';
   import { nonNullish } from '$lib/utils/non-nullish';
   import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
-  import type { Writable } from 'svelte/store';
-  import type { PublicGroupData } from '../../declarations/meta_issuer/meta_issuer.did';
-  import { getIssuersStore } from '$lib/stores/issuers.store';
+  import { credentialsTypesStore, issuersStore, type Issuer } from '$lib/stores/issuers.store';
   import type { ImageData } from '../../declarations/rp/rp.did';
   import { shareContent } from '$lib/services/shareContent.services';
 
@@ -19,10 +17,10 @@
     }
   }
 
-  let issuersStore: Writable<PublicGroupData[] | undefined>;
-  $: issuersStore = getIssuersStore($authStore.identity);
-
-  let selectedIssuerName: string | undefined;
+  let selectedCredential: string | undefined;
+  let issuersToSelect: Issuer[] | undefined = [];
+  $: issuersToSelect = $issuersStore[selectedCredential ?? ''];
+  let selectedIssuer: Issuer | undefined;
 
   let selectedImage: ImageData | undefined = undefined;
   const openChooseImageModal = () => {
@@ -39,19 +37,20 @@
   };
 
   let enableShareButton = false;
-  $: enableShareButton = (selectedIssuerName ?? '').length > 0 && selectedImage !== undefined;
+  $: enableShareButton = (selectedCredential ?? '').length > 0 && selectedImage !== undefined;
 
   let isLoading = false;
   const share = async () => {
     isLoading = true;
     // Edge case, should never happen because button is disabled.
-    if (!selectedIssuerName || !selectedImage) {
+    if (!selectedCredential || !selectedImage || !selectedIssuer) {
       return;
     }
     try {
       await shareContent({
-        issuerName: selectedIssuerName,
+        issuerName: selectedCredential,
         image: selectedImage,
+        owner: selectedIssuer.owner,
         identity: $authStore.identity,
       });
       toastStore.trigger({
@@ -72,23 +71,37 @@
 </script>
 
 {#if nonNullish($authStore.identity)}
-  <h1 class="h1">Give a Credential Type Access To an Exclusive Image</h1>
+  <h1 class="h1">Choose a credential type, issuer, and image.</h1>
   <div class="flex flex-col gap-4">
     <label for="credentials">
-      <h5 class="h5">With whom would you like to share this?</h5>
+      <h5 class="h5">Select the credential type that gets acces to this image.</h5>
     </label>
-    <select bind:value={selectedIssuerName} id="credentials" class="select px-4">
-      <option value="" disabled selected>Select an issuer</option>
-      {#each $issuersStore ?? [] as issuer}
-        <option value={issuer.group_name} id={issuer.group_name}>
-          {issuer.group_name}
+    <select bind:value={selectedCredential} id="credentials" class="select px-4">
+      <option value="" disabled selected>Credential type</option>
+      {#each $credentialsTypesStore as credential}
+        <option value={credential} id={credential}>
+          {credential}
         </option>
       {/each}
     </select>
   </div>
 
   <div class="flex flex-col gap-4">
-    <h5 class="h5">Pick an image to share</h5>
+    <label for="credentials">
+      <h5 class="h5">Choose the issuer that you trust.</h5>
+    </label>
+    <select bind:value={selectedIssuer} id="credentials" class="select px-4">
+      <option value="" disabled selected>Issuer</option>
+      {#each issuersToSelect ?? [] as issuer}
+        <option value={issuer} id={issuer.nickname}>
+          {issuer.nickname}
+        </option>
+      {/each}
+    </select>
+  </div>
+
+  <div class="flex flex-col gap-4">
+    <h5 class="h5">Choose an image to share</h5>
     {#if selectedImage}
       <div class="flex justify-center">
         <img

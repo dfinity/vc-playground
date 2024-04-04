@@ -45,7 +45,9 @@
 <article class="card">
   <header class="p-2">
     <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
-    <!-- TODO: Add "Trusted issuer: ..." -->
+    <p class="text-sm text-surface-600-300-token truncate">
+      {`Trusted Issuer: ${image.issuer_nickname}`}
+    </p>
   </header>
   <div class="relative text-surface-50">
     {#if !image.visible}
