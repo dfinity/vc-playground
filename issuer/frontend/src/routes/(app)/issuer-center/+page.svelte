@@ -1,7 +1,7 @@
 <script lang="ts">
   import IssuersList from '$lib/components/IssuersList.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
-  import FooterActionsWrapper from '$lib/ui-components/elements/FooterActionsWrapper.svelte';
+  import ActionsWrapper from '$lib/ui-components/elements/ActionsWrapper.svelte';
   import { getToastStore } from '@skeletonlabs/skeleton';
   import AuthGuard from '$lib/components/AuthGuard.svelte';
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
@@ -37,16 +37,14 @@
   const openCreateModal = () => {
     loadingCreateIssuer = true;
     const settings: ModalSettings = {
-      type: 'prompt',
-      title: 'Name Your Credential',
-      valueAttr: { type: 'text', required: true, placeholder: 'Credential Name' },
-      body: 'Create a credential type so that you can issue a verifiable credential. Credentials give access to exclusive images on the relying party dapp.',
-      buttonTextSubmit: 'Create Issuer',
-      response: async (issuerName: string) => {
-        if (issuerName) {
+      type: 'component',
+      component: 'createCredentialModal',
+      meta: { issuerNickname: $issuerNickname },
+      response: async (credential: string) => {
+        if (credential) {
           await createIssuer({
             identity: $authStore.identity,
-            issuerName,
+            issuerName: credential,
             toastStore,
           });
         }
@@ -96,7 +94,7 @@
         This is the Issuer Control Center. From here you can create, issue and revoke credentials
         from users.
       </svelte:fragment>
-      <FooterActionsWrapper>
+      <ActionsWrapper>
         <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage}>
           {#each $myIssuersStore ?? [] as issuer}
             <AdminIssuerItem {issuer} />
@@ -108,7 +106,7 @@
           slot="actions"
           loading={loadingCreateIssuer}>Create Credential</Button
         >
-      </FooterActionsWrapper>
+      </ActionsWrapper>
     </DefaultPage>
     <DefaultPage slot="skeleton">
       <svelte:fragment slot="title"><HeadingSkeleton size="lg" /></svelte:fragment>

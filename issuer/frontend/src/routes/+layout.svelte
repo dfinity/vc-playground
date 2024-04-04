@@ -2,7 +2,7 @@
   import MainWrapper from '$lib/ui-components/elements/MainWrapper.svelte';
   import { onMount } from 'svelte';
   import '../app.postcss';
-  import { AppShell, AppBar, Modal, Toast } from '@skeletonlabs/skeleton';
+  import { AppShell, AppBar, Modal, Toast, type ModalComponent } from '@skeletonlabs/skeleton';
   import { syncAuth } from '$lib/services/auth.services';
   import { initializeStores } from '@skeletonlabs/skeleton';
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
@@ -14,10 +14,15 @@
   import HeaderSubtitle from '$lib/ui-components/elements/HeaderSubtitle.svelte';
   import HeaderTitle from '$lib/ui-components/elements/HeaderTitle.svelte';
   import Box from '$lib/ui-components/elements/Box.svelte';
+  import CreateCredentialModal from '$lib/modals/CreateCredentialModal.svelte';
 
   storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 
   initializeStores();
+
+  const modalRegistry: Record<string, ModalComponent> = {
+    createCredentialModal: { ref: CreateCredentialModal },
+  };
 
   onMount(() => {
     syncAuth();
@@ -27,7 +32,7 @@
   $: currentRole = $page.route.id === '/(app)/credentials' ? 'User' : 'Issuer';
 </script>
 
-<Modal />
+<Modal components={modalRegistry} />
 <Toast />
 
 <AppShell>
