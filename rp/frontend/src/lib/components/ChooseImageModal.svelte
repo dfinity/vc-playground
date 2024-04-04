@@ -30,7 +30,7 @@
 
 <Modal>
   <svelte:fragment slot="header">Choose Image</svelte:fragment>
-  <article class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+  <article class={`grid grid-cols-2 md:grid-cols-4 gap-4 ${isLoading ? 'animate-pulse' : ''}`}>
     {#if isLoading}
       <div class="placeholder h-auto max-w-full rounded-container-token aspect-square" />
       <div class="placeholder h-auto max-w-full rounded-container-token aspect-square" />
