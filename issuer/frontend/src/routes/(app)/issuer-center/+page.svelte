@@ -62,10 +62,10 @@
   const openIssuerNicknameModal = () => {
     const settings: ModalSettings = {
       type: 'prompt',
-      title: 'Create a username',
-      body: 'The username is what the issuers willl see when you request a credential.',
-      valueAttr: { placeholder: '@username' },
-      buttonTextConfirm: 'Create username',
+      title: 'Name your issuer',
+      body: 'In the playground, users will see that the credential has been "issued by" this name. Typically, organizations will issue credentials to individuals, so you might name your issuer after your organization.',
+      valueAttr: { placeholder: 'Issuer name' },
+      buttonTextSubmit: 'Name issuer',
       buttonTextCancel: 'Close',
       response: (nickname: boolean | string) => {
         if (nickname) {
