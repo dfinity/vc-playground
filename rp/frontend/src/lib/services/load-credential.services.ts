@@ -63,6 +63,7 @@ export const loadCredential = async ({
           console.error('No verifiable presentation found');
           credentialsStore.setCredential({
             groupName,
+            owner,
             hasCredential: false,
           });
         } else {
@@ -71,6 +72,7 @@ export const loadCredential = async ({
           // TODO: Validate the credential
           credentialsStore.setCredential({
             groupName,
+            owner,
             hasCredential: true,
           });
         }

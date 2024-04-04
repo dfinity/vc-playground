@@ -43,7 +43,7 @@
   };
 
   let hasCredential: boolean | undefined;
-  $: hasCredential = $credentialsStore[issuerName]?.hasCredential;
+  $: hasCredential = $credentialsStore[`${issuerName}-${owner?.toText()}`]?.hasCredential;
 </script>
 
 <Modal>

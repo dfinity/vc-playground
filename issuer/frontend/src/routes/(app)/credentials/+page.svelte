@@ -33,7 +33,7 @@
       type: 'prompt',
       title: 'Create a username',
       body: 'The username is what the issuers willl see when you request a credential.',
-      valueAttr: { placeholder: '@username' },
+      valueAttr: { placeholder: 'username' },
       buttonTextSubmit: 'Create username',
       buttonTextCancel: 'Close',
       response: (nickname: boolean | string) => {
