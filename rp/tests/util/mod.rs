@@ -54,6 +54,7 @@ pub fn do_add_exclusive_content(
     content_name: &str,
     url: &str,
     credential_group_name: &str,
+    credential_group_owner: Principal,
     caller: Principal,
     env: &StateMachine,
     canister_id: Principal,
@@ -66,6 +67,7 @@ pub fn do_add_exclusive_content(
             content_name: content_name.to_string(),
             url: url.to_string(),
             credential_group_name: credential_group_name.to_string(),
+            credential_group_owner,
         },
     )
     .expect("API call failed")

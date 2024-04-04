@@ -39,6 +39,7 @@ struct ExclusiveContentRecord {
     created_timestamp_ns: u64,
     url: String,
     credential_group_name: String,
+    credential_group_owner: Principal,
 }
 
 impl Storable for ImageRecord {
@@ -183,6 +184,7 @@ fn list_exclusive_content(
                 url: record.url,
                 created_timestamp_ns: record.created_timestamp_ns,
                 credential_group_name: record.credential_group_name,
+                credential_group_owner: record.credential_group_owner,
             })
         }
         Ok(ExclusiveContentList {
@@ -201,6 +203,7 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
             url: req.url,
             created_timestamp_ns: time(),
             credential_group_name: req.credential_group_name,
+            credential_group_owner: req.credential_group_owner,
         };
 
         content.insert(
@@ -210,6 +213,7 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
                 created_timestamp_ns: data.created_timestamp_ns,
                 url: data.url.clone(),
                 credential_group_name: data.credential_group_name.clone(),
+                credential_group_owner: data.credential_group_owner,
             },
         );
         Ok(data)

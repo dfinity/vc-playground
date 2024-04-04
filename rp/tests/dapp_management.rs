@@ -1,7 +1,7 @@
 //! Tests related to general dapp management.
 
 use canister_tests::api::http_request;
-use canister_tests::framework::{env, principal_1, time};
+use canister_tests::framework::{env, principal_1, principal_2, time};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_response_verification::types::VerificationInfo;
 use ic_response_verification::verify_request_response_pair;
@@ -129,18 +129,27 @@ fn should_retain_data_after_upgrade() -> Result<(), CallError> {
     let env = env();
     let canister_id = install_rp(&env, None);
     let caller = principal_1();
+    let group_owner = principal_2();
 
     let content_name = "Some content name";
     let group_name = "Some group name";
     let url = "http://example.com";
-    let content_data =
-        do_add_exclusive_content(content_name, url, group_name, caller, &env, canister_id);
+    let content_data = do_add_exclusive_content(
+        content_name,
+        url,
+        group_name,
+        group_owner,
+        caller,
+        &env,
+        canister_id,
+    );
     let expected_content_data = ContentData {
         owner: caller,
         content_name: content_name.to_string(),
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_group_name: group_name.to_string(),
+        credential_group_owner: group_owner,
     };
     let content_list = do_list_exclusive_content(&env, None, canister_id);
     assert_eq!(content_list.content_items.len(), 1);
