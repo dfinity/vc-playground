@@ -8,6 +8,9 @@
   <Heading align="center" level="1">
     <slot name="title" />
   </Heading>
+  <Heading align="center" level="3">
+    <slot name="subtitle" />
+  </Heading>
   <div class="flex flex-col gap-6">
     <slot />
   </div>

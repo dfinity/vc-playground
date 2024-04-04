@@ -15,8 +15,8 @@ export const idlFactory = ({ IDL }) => {
   const MemberData = IDL.Record({
     'member' : IDL.Principal,
     'membership_status' : MembershipStatus,
+    'nickname' : IDL.Text,
     'joined_timestamp_ns' : TimestampNs,
-    'note' : IDL.Text,
   });
   const GroupStats = IDL.Record({
     'created_timestamp_ns' : TimestampNs,
@@ -24,7 +24,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const FullGroupData = IDL.Record({
     'members' : IDL.Vec(MemberData),
+    'owner' : IDL.Principal,
     'stats' : GroupStats,
+    'issuer_nickname' : IDL.Text,
     'group_name' : IDL.Text,
   });
   const GroupsError = IDL.Variant({
@@ -32,6 +34,7 @@ export const idlFactory = ({ IDL }) => {
     'NotFound' : IDL.Text,
     'NotAuthorized' : IDL.Text,
     'AlreadyExists' : IDL.Text,
+    'NotAuthenticated' : IDL.Text,
   });
   const DerivationOriginRequest = IDL.Record({
     'frontend_hostname' : IDL.Text,
@@ -62,6 +65,10 @@ export const idlFactory = ({ IDL }) => {
     'UnsupportedCredentialSpec' : IDL.Text,
   });
   const GetGroupRequest = IDL.Record({ 'group_name' : IDL.Text });
+  const UserData = IDL.Record({
+    'user_nickname' : IDL.Opt(IDL.Text),
+    'issuer_nickname' : IDL.Opt(IDL.Text),
+  });
   const HeaderField = IDL.Tuple(IDL.Text, IDL.Text);
   const HttpRequest = IDL.Record({
     'url' : IDL.Text,
@@ -76,7 +83,7 @@ export const idlFactory = ({ IDL }) => {
     'status_code' : IDL.Nat16,
   });
   const JoinGroupRequest = IDL.Record({
-    'note' : IDL.Text,
+    'owner' : IDL.Principal,
     'group_name' : IDL.Text,
   });
   const ListGroupsRequest = IDL.Record({
@@ -84,8 +91,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const PublicGroupData = IDL.Record({
     'membership_status' : IDL.Opt(MembershipStatus),
-    'is_owner' : IDL.Opt(IDL.Bool),
+    'owner' : IDL.Principal,
     'stats' : GroupStats,
+    'issuer_nickname' : IDL.Text,
     'group_name' : IDL.Text,
   });
   const PublicGroupsData = IDL.Record({ 'groups' : IDL.Vec(PublicGroupData) });
@@ -96,6 +104,7 @@ export const idlFactory = ({ IDL }) => {
   const PreparedCredentialData = IDL.Record({
     'prepared_context' : IDL.Opt(IDL.Vec(IDL.Nat8)),
   });
+  const SetUserRequest = IDL.Record({ 'user_data' : UserData });
   const MembershipUpdate = IDL.Record({
     'member' : IDL.Principal,
     'new_status' : MembershipStatus,
@@ -154,6 +163,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : FullGroupData, 'Err' : GroupsError })],
         ['query'],
       ),
+    'get_user' : IDL.Func(
+        [],
+        [IDL.Variant({ 'Ok' : UserData, 'Err' : GroupsError })],
+        ['query'],
+      ),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
     'join_group' : IDL.Func(
         [JoinGroupRequest],
@@ -173,6 +187,11 @@ export const idlFactory = ({ IDL }) => {
             'Err' : IssueCredentialError,
           }),
         ],
+        [],
+      ),
+    'set_user' : IDL.Func(
+        [SetUserRequest],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : GroupsError })],
         [],
       ),
     'update_membership' : IDL.Func(
