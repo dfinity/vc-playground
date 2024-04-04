@@ -62,24 +62,29 @@ fn issuer_canister_serves_http_assets() -> Result<(), CallError> {
     // for each asset and certification version, fetch the asset, check the HTTP status code, headers and certificate.
 
     for certification_version in 1..=2 {
-        let request = HttpRequest {
-            method: "GET".to_string(),
-            url: "/".to_string(),
-            headers: vec![],
-            body: ByteBuf::new(),
-            certificate_version: Some(certification_version),
-        };
-        let http_response = http_request(&env, canister_id, &request)?;
-        assert_eq!(http_response.status_code, 200);
-
-        let result = verify_response_certification(
-            &env,
-            canister_id,
-            request,
-            http_response,
-            certification_version,
-        );
-        assert_eq!(result.verification_version, certification_version);
+        for asset_name in ["/", "/.well-known/ic-domains"] {
+            let request = HttpRequest {
+                method: "GET".to_string(),
+                url: asset_name.to_string(),
+                headers: vec![],
+                body: ByteBuf::new(),
+                certificate_version: Some(certification_version),
+            };
+            let http_response = http_request(&env, canister_id, &request)?;
+            assert_eq!(
+                http_response.status_code, 200,
+                "failed for asset: {}",
+                asset_name
+            );
+            let result = verify_response_certification(
+                &env,
+                canister_id,
+                request,
+                http_response,
+                certification_version,
+            );
+            assert_eq!(result.verification_version, certification_version);
+        }
     }
 
     Ok(())

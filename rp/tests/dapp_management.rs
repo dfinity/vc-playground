@@ -55,28 +55,33 @@ fn issuer_canister_serves_http_assets() -> Result<(), CallError> {
 
     // for each asset and certification version, fetch the asset, check the HTTP status code, headers and certificate.
     for certification_version in 1..=2 {
-        for image_name in [
-            "consensus.png",
-            "faultTolerance.png",
-            "infiniteScalability.png",
-            "internetIdentity.png",
-            "messageRouting.png",
-            "motoko.png",
-            "networkNervousSystem.png",
-            "peerToPeer.png",
-            "protocolUpgrade.png",
-            "sdk.png",
-            "serviceNervousSystem.png",
+        for asset_name in [
+            "/images/consensus.png",
+            "/images/faultTolerance.png",
+            "/images/infiniteScalability.png",
+            "/images/internetIdentity.png",
+            "/images/messageRouting.png",
+            "/images/motoko.png",
+            "/images/networkNervousSystem.png",
+            "/images/peerToPeer.png",
+            "/images/protocolUpgrade.png",
+            "/images/sdk.png",
+            "/images/serviceNervousSystem.png",
+            "/.well-known/ic-domains",
         ] {
             let request = HttpRequest {
                 method: "GET".to_string(),
-                url: format!("/images/{}", image_name),
+                url: asset_name.to_string(),
                 headers: vec![],
                 body: ByteBuf::new(),
                 certificate_version: Some(certification_version),
             };
             let http_response = http_request(&env, canister_id, &request)?;
-            assert_eq!(http_response.status_code, 200);
+            assert_eq!(
+                http_response.status_code, 200,
+                "failed for asset: {}",
+                asset_name
+            );
 
             let result = verify_response_certification(
                 &env,
