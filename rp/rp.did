@@ -34,6 +34,7 @@ type ContentData = record {
     created_timestamp_ns: TimestampNs;
     url: text;
     credential_group_name: text;
+    credential_group_owner: principal;
 };
 
 type ExclusiveContentList = record {
@@ -45,6 +46,7 @@ type AddExclusiveContentRequest = record {
     content_name: text;
     url: text;
     credential_group_name: text;
+    credential_group_owner: principal;
 };
 
 /// Types related to HTTP handling

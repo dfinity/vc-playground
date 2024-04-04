@@ -44,18 +44,27 @@ fn should_add_exclusive_content() {
     let env = env();
     let canister_id = install_rp(&env, None);
     let caller = principal_1();
+    let group_owner = principal_2();
 
     let content_name = "Some content name";
     let group_name = "Some group name";
     let url = "http://example.com";
-    let content_data =
-        do_add_exclusive_content(content_name, url, group_name, caller, &env, canister_id);
+    let content_data = do_add_exclusive_content(
+        content_name,
+        url,
+        group_name,
+        group_owner,
+        caller,
+        &env,
+        canister_id,
+    );
     let expected_content_data = ContentData {
         owner: caller,
         content_name: content_name.to_string(),
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_group_name: group_name.to_string(),
+        credential_group_owner: group_owner,
     };
     assert_eq!(content_data, expected_content_data);
 }
@@ -65,12 +74,20 @@ fn should_list_exclusive_content() {
     let env = env();
     let canister_id = install_rp(&env, None);
     let caller = principal_1();
+    let group_owner = principal_2();
 
     let content_name = "Some content name";
     let group_name = "Some group name";
     let url = "http://example.com";
-    let content_data =
-        do_add_exclusive_content(content_name, url, group_name, caller, &env, canister_id);
+    let content_data = do_add_exclusive_content(
+        content_name,
+        url,
+        group_name,
+        group_owner,
+        caller,
+        &env,
+        canister_id,
+    );
     let content_list = do_list_exclusive_content(&env, None, canister_id);
     let expected_content_data = ContentData {
         owner: caller,
@@ -78,6 +95,7 @@ fn should_list_exclusive_content() {
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_group_name: group_name.to_string(),
+        credential_group_owner: group_owner,
     };
     assert_eq!(content_list.content_items.len(), 1);
     assert_eq!(content_list.content_items[0], expected_content_data);
@@ -88,6 +106,7 @@ fn should_list_exclusive_content_multiple_items() {
     let env = env();
     let canister_id = install_rp(&env, None);
     let caller = [principal_1(), principal_2(), test_principal(42)];
+    let group_owner = principal_2();
 
     let content_name = [
         "Some content name 1",
@@ -102,6 +121,7 @@ fn should_list_exclusive_content_multiple_items() {
             content_name[i],
             url[i],
             group_name[i],
+            group_owner,
             caller[i],
             &env,
             canister_id,
@@ -112,6 +132,7 @@ fn should_list_exclusive_content_multiple_items() {
             created_timestamp_ns: content_data.created_timestamp_ns,
             url: url[i].to_string(),
             credential_group_name: group_name[i].to_string(),
+            credential_group_owner: group_owner,
         };
         expected_list.insert(content_name[i].to_string(), expected_content_data);
     }
