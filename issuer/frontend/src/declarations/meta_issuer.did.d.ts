@@ -15,7 +15,9 @@ export type DerivationOriginError = { 'Internal' : string } |
 export interface DerivationOriginRequest { 'frontend_hostname' : string }
 export interface FullGroupData {
   'members' : Array<MemberData>,
+  'owner' : Principal,
   'stats' : GroupStats,
+  'issuer_nickname' : string,
   'group_name' : string,
 }
 export interface GetCredentialRequest {
@@ -31,7 +33,8 @@ export interface GroupStats {
 export type GroupsError = { 'Internal' : string } |
   { 'NotFound' : string } |
   { 'NotAuthorized' : string } |
-  { 'AlreadyExists' : string };
+  { 'AlreadyExists' : string } |
+  { 'NotAuthenticated' : string };
 export type HeaderField = [string, string];
 export interface HttpRequest {
   'url' : string,
@@ -73,13 +76,13 @@ export interface IssuerConfig {
   'ic_root_key_der' : Uint8Array | number[],
   'frontend_hostname' : string,
 }
-export interface JoinGroupRequest { 'note' : string, 'group_name' : string }
+export interface JoinGroupRequest { 'owner' : Principal, 'group_name' : string }
 export interface ListGroupsRequest { 'group_name_substring' : [] | [string] }
 export interface MemberData {
   'member' : Principal,
   'membership_status' : MembershipStatus,
+  'nickname' : string,
   'joined_timestamp_ns' : TimestampNs,
-  'note' : string,
 }
 export type MembershipStatus = { 'PendingReview' : null } |
   { 'Rejected' : null } |
@@ -97,16 +100,22 @@ export interface PreparedCredentialData {
 }
 export interface PublicGroupData {
   'membership_status' : [] | [MembershipStatus],
-  'is_owner' : [] | [boolean],
+  'owner' : Principal,
   'stats' : GroupStats,
+  'issuer_nickname' : string,
   'group_name' : string,
 }
 export interface PublicGroupsData { 'groups' : Array<PublicGroupData> }
+export interface SetUserRequest { 'user_data' : UserData }
 export interface SignedIdAlias { 'credential_jws' : string }
 export type TimestampNs = bigint;
 export interface UpdateMembershipRequest {
   'updates' : Array<MembershipUpdate>,
   'group_name' : string,
+}
+export interface UserData {
+  'user_nickname' : [] | [string],
+  'issuer_nickname' : [] | [string],
 }
 export interface _SERVICE {
   'add_group' : ActorMethod<
@@ -130,6 +139,7 @@ export interface _SERVICE {
     { 'Ok' : FullGroupData } |
       { 'Err' : GroupsError }
   >,
+  'get_user' : ActorMethod<[], { 'Ok' : UserData } | { 'Err' : GroupsError }>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'join_group' : ActorMethod<
     [JoinGroupRequest],
@@ -145,6 +155,11 @@ export interface _SERVICE {
     [PrepareCredentialRequest],
     { 'Ok' : PreparedCredentialData } |
       { 'Err' : IssueCredentialError }
+  >,
+  'set_user' : ActorMethod<
+    [SetUserRequest],
+    { 'Ok' : null } |
+      { 'Err' : GroupsError }
   >,
   'update_membership' : ActorMethod<
     [UpdateMembershipRequest],

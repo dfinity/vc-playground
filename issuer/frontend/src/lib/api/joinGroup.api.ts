@@ -1,17 +1,18 @@
 import { getMetaIssuerCanister } from '$lib/utils/actor.utils';
 import type { Identity } from '@dfinity/agent';
+import type { Principal } from '@dfinity/principal';
 
 export const joinGroup = async ({
   identity,
   issuerName,
-  note,
+  owner,
 }: {
   identity: Identity;
   issuerName: string;
-  note: string;
+  owner: Principal;
 }): Promise<void> => {
   const canister = await getMetaIssuerCanister(identity);
-  const response = await canister.join_group({ note: note, group_name: issuerName });
+  const response = await canister.join_group({ owner, group_name: issuerName });
   if ('Err' in response) {
     throw response.Err;
   }

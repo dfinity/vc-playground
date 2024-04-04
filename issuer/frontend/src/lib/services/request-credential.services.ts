@@ -4,25 +4,24 @@ import { loadIssuers } from './load-issuers.services';
 import { joinGroup } from '$lib/api/joinGroup.api';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { NO_IDENTITY_MESSAGE } from '$lib/constants/messages';
-import { validateText } from '$lib/utils/validate-text.utils';
+import type { Principal } from '@dfinity/principal';
 
 export const requestCredential = async ({
   identity,
   issuerName,
-  note,
+  owner,
   toastStore,
 }: {
   identity: Identity | null | undefined;
   issuerName: string;
-  note: string;
+  owner: Principal;
   toastStore: ToastStore;
 }) => {
   try {
     if (isNullish(identity)) {
       throw new Error(NO_IDENTITY_MESSAGE);
     }
-    validateText(note);
-    await joinGroup({ identity, issuerName, note });
+    await joinGroup({ identity, issuerName, owner });
     await loadIssuers({ identity });
   } catch (err: unknown) {
     console.error(err);
