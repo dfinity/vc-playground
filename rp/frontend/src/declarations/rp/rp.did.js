@@ -4,6 +4,7 @@ export const idlFactory = ({ IDL }) => {
     'url' : IDL.Text,
     'content_name' : IDL.Text,
     'credential_group_name' : IDL.Text,
+    'credential_group_owner' : IDL.Principal,
   });
   const TimestampNs = IDL.Nat64;
   const ContentData = IDL.Record({
@@ -12,6 +13,7 @@ export const idlFactory = ({ IDL }) => {
     'content_name' : IDL.Text,
     'credential_group_name' : IDL.Text,
     'created_timestamp_ns' : TimestampNs,
+    'credential_group_owner' : IDL.Principal,
   });
   const ContentError = IDL.Variant({
     'Internal' : IDL.Text,

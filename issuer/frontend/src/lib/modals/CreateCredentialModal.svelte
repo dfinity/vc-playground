@@ -19,7 +19,7 @@
     'Proof of humanity',
     '18 or older',
     'Lives in Switzerland',
-    'Worsk at DFINITY',
+    'Works at DFINITY',
   ];
 
   let selectedCredential: undefined | string;

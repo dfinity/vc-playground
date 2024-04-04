@@ -5,7 +5,7 @@ import { browser } from '$app/environment';
 import type { PublicGroupData } from '../../declarations/meta_issuer/meta_issuer.did';
 import type { Principal } from '@dfinity/principal';
 
-const groupsStore = writable<PublicGroupData[] | undefined>(undefined, (_set, update) => {
+export const groupsStore = writable<PublicGroupData[] | undefined>(undefined, (_set, update) => {
   if (browser) {
     queryGroups({ identity: new AnonymousIdentity() }).then((groups) => {
       update(() => groups);
@@ -18,11 +18,19 @@ export const credentialsTypesStore: Readable<string[]> = derived(groupsStore, (i
 );
 
 export type Issuer = { nickname: string; owner: Principal };
-export const issuersStore: Readable<Issuer[]> = derived(groupsStore, (issuers) =>
-  Array.from(new Set(issuers?.map((issuer) => issuer.issuer_nickname)).values()).map(
-    (nickname) => ({
-      nickname,
-      owner: issuers?.find((issuer) => issuer.issuer_nickname === nickname)?.owner as Principal,
-    })
+// Object with credential type as key and array of issuers as value.
+export type IssuersByCredential = Record<string, Issuer[]>;
+export const issuersStore: Readable<IssuersByCredential> = derived(groupsStore, (issuers) =>
+  Array.from(new Set(issuers?.map((issuer) => issuer.group_name)).values()).reduce(
+    (acc, groupName) => ({
+      ...acc,
+      [groupName]: issuers
+        ?.filter((issuer) => issuer.group_name === groupName)
+        .map((issuer) => ({
+          nickname: issuer.issuer_nickname,
+          owner: issuer.owner,
+        })),
+    }),
+    {}
   )
 );

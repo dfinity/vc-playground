@@ -6,6 +6,7 @@ export interface AddExclusiveContentRequest {
   'url' : string,
   'content_name' : string,
   'credential_group_name' : string,
+  'credential_group_owner' : Principal,
 }
 export interface ContentData {
   'url' : string,
@@ -13,6 +14,7 @@ export interface ContentData {
   'content_name' : string,
   'credential_group_name' : string,
   'created_timestamp_ns' : TimestampNs,
+  'credential_group_owner' : Principal,
 }
 export type ContentError = { 'Internal' : string } |
   { 'NotFound' : string } |

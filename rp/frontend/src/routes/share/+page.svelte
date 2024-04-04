@@ -18,6 +18,8 @@
   }
 
   let selectedCredential: string | undefined;
+  let issuersToSelect: Issuer[] | undefined = [];
+  $: issuersToSelect = $issuersStore[selectedCredential ?? ''];
   let selectedIssuer: Issuer | undefined;
 
   let selectedImage: ImageData | undefined = undefined;
@@ -48,6 +50,7 @@
       await shareContent({
         issuerName: selectedCredential,
         image: selectedImage,
+        owner: selectedIssuer.owner,
         identity: $authStore.identity,
       });
       toastStore.trigger({
@@ -89,7 +92,7 @@
     </label>
     <select bind:value={selectedIssuer} id="credentials" class="select px-4">
       <option value="" disabled selected>Issuer</option>
-      {#each $issuersStore as issuer}
+      {#each issuersToSelect ?? [] as issuer}
         <option value={issuer} id={issuer.nickname}>
           {issuer.nickname}
         </option>
