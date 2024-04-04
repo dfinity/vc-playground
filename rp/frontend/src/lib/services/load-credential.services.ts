@@ -3,6 +3,7 @@ import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import { nonNullish } from '$lib/utils/non-nullish';
 import type { Identity } from '@dfinity/agent';
+import type { Principal } from '@dfinity/principal';
 import { decodeJwt } from 'jose';
 
 const II_URL = import.meta.env.VITE_INTERNET_IDENTITY_URL;
@@ -14,9 +15,11 @@ let nextFlowId = 0;
 
 export const loadCredential = async ({
   groupName,
+  owner,
   identity,
 }: {
   groupName: string;
+  owner: Principal;
   identity: Identity | undefined | null;
 }): Promise<null> => {
   nextFlowId += 1;
@@ -39,6 +42,7 @@ export const loadCredential = async ({
             credentialType: 'VerifiedMember',
             arguments: {
               groupName,
+              owner: owner.toText(),
             },
           },
           credentialSubject: principal,
