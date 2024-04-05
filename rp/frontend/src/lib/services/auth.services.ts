@@ -31,6 +31,7 @@ export const login = async (cb?: () => void) => {
             cb();
           }
         },
+        derivationOrigin: import.meta.env.VITE_RP_DERIVATION_ORIGIN,
         onError: () => {
           // TODO: Handle error
           authStore.set({ identity: null });

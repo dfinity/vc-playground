@@ -20,7 +20,7 @@ export default {
       themes: {
         preset: [
           {
-            name: 'hamlindigo',
+            name: 'crimson',
             enhancements: true,
           },
         ],

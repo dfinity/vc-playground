@@ -27,6 +27,7 @@ export const login = async () => {
           authStore.set({ identity });
           resolve();
         },
+        derivationOrigin: import.meta.env.VITE_ISSUER_DERIVATION_ORIGIN,
         onError: () => {
           // TODO: Handle error
           authStore.set({ identity: null });
