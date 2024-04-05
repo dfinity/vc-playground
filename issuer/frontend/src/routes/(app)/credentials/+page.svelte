@@ -15,6 +15,9 @@
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { addUserNickname } from '$lib/services/add-user-nickname.services';
   import type { Identity } from '@dfinity/agent';
+  import { login } from '$lib/services/auth.services';
+  import Button from '$lib/ui-components/elements/Button.svelte';
+  import Stack from '$lib/ui-components/elements/Stack.svelte';
 
   const modalStore = getModalStore();
 
@@ -56,23 +59,31 @@
 </script>
 
 <TestIdWrapper testId="home-route">
-  <AuthGuard>
-    <DefaultPage>
-      <svelte:fragment slot="title">
+  <DefaultPage>
+    <svelte:fragment slot="title">
+      {#if $authStore.identity === undefined}
+        <HeadingSkeleton size="lg" />
+      {:else if $authStore.identity === null}
+        Credentials
+      {:else}
         {isNullish($userNickname) ? 'Credentials' : `@${$userNickname}'s Credentials`}
-      </svelte:fragment>
-      <svelte:fragment slot="subtitle">
-        Below is a list of all the credentials in the VC playground ecosystem.
-      </svelte:fragment>
-      <IssuersList issuers={$allIssuersStore}>
-        {#each $allIssuersStore ?? [] as issuer}
-          <MemberIssuerItem {issuer} />
-        {/each}
-      </IssuersList>
-    </DefaultPage>
-    <DefaultPage slot="skeleton">
-      <svelte:fragment slot="title"><HeadingSkeleton size="lg" /></svelte:fragment>
-      <IssuersList issuers={undefined} />
-    </DefaultPage>
-  </AuthGuard>
+      {/if}
+    </svelte:fragment>
+    <svelte:fragment slot="subtitle">
+      {#if $authStore.identity === null}
+        Login to request credentials.
+      {/if}
+      Below is a list of all the credentials in the VC playground ecosystem.
+    </svelte:fragment>
+    {#if $authStore.identity === null}
+      <Stack align="center">
+        <Button testId="login-button" variant="primary" on:click={login}>Login</Button>
+      </Stack>
+    {/if}
+    <IssuersList issuers={$allIssuersStore}>
+      {#each $allIssuersStore ?? [] as issuer}
+        <MemberIssuerItem {issuer} />
+      {/each}
+    </IssuersList>
+  </DefaultPage>
 </TestIdWrapper>

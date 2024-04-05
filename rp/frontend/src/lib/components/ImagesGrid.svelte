@@ -5,11 +5,8 @@
   export let images: VisibleContentData[] = [];
 </script>
 
-<section class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<section class="grid grid-cols-2 md:grid-cols-3 gap-4" data-tid="image-grid">
   {#each images as image}
     <ImageItem {image} />
   {/each}
 </section>
-
-<style>
-</style>

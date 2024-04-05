@@ -52,7 +52,7 @@
   <div class="relative text-surface-50">
     {#if !image.visible}
       <div
-        class="absolute rounded-bl-container-token rounded-br-container-token -top-0 -left-0 w-full aspect-square backdrop-blur-xl"
+        class="absolute rounded-bl-container-token rounded-br-container-token -top-0 -left-0 w-full aspect-square backdrop-blur-sm"
       ></div>
     {/if}
     <div
