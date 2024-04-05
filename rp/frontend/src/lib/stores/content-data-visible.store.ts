@@ -19,7 +19,10 @@ export const getVisibleContentData = (
       if (!$contentData) return [];
       return $contentData.map((contentData) => ({
         ...contentData,
-        visible: credentials[contentData.credential_group_name]?.hasCredential ?? false,
+        visible:
+          credentials[
+            `${contentData.credential_group_name}-${contentData.credential_group_owner.toText()}`
+          ]?.hasCredential ?? false,
         issuer_nickname: groups?.find((group) => {
           return (
             group.group_name === contentData.credential_group_name &&

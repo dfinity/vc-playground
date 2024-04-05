@@ -1,7 +1,9 @@
+import type { Principal } from '@dfinity/principal';
 import { writable } from 'svelte/store';
 
 type Credential = {
   groupName: string;
+  owner: Principal;
   timestampMillis: number;
   hasCredential: boolean;
 };
@@ -15,12 +17,22 @@ const initStore = () => {
     reset: () => {
       set({});
     },
-    setCredential: ({ groupName, hasCredential }: { groupName: string; hasCredential: boolean }) =>
+    setCredential: ({
+      groupName,
+      owner,
+      hasCredential,
+    }: {
+      groupName: string;
+      owner: Principal;
+      hasCredential: boolean;
+    }) =>
       update((storeData) => {
+        const key = `${groupName}-${owner.toText()}`;
         return {
           ...storeData,
-          [groupName]: {
+          [key]: {
             groupName,
+            owner,
             timestampMillis: Date.now(),
             hasCredential,
           },
