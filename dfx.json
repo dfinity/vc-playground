@@ -9,7 +9,12 @@
         "output": "declarations/rp"
       },
       "build": "./rp/build.sh",
-      "shrink": false
+      "shrink": false,
+      "remote": {
+        "id": {
+          "mainnet": "zihgx-uaaaa-aaaap-accoa-cai"
+        }
+      }
     },
     "meta_issuer": {
       "type": "custom",
@@ -19,7 +24,12 @@
         "output": "declarations/meta_issuer"
       },
       "build": "./issuer/build.sh",
-      "shrink": false
+      "shrink": false,
+      "remote": {
+        "id": {
+          "mainnet": "z5ax2-viaaa-aaaap-accnq-cai"
+        }
+      }
     },
     "internet_identity": {
       "type": "custom",

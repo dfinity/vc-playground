@@ -86,7 +86,7 @@ if [ "$DFX_NETWORK" = "devenv_llorenc" ]; then
 fi
 if [ "$DFX_NETWORK" = "mainnet" ]; then
   ISSUER_DERIVATION_ORIGIN="https://${ISSUER_CANISTER_ID}.icp0.io"
-  ISSUER_FRONTEND_HOSTNAME="https://${ISSUER_CANISTER_ID}.icp0.io"
+  ISSUER_FRONTEND_HOSTNAME="https://metaissuer.vc"
 fi
 if [ "$DFX_NETWORK" = "ic_test" ]; then
   ISSUER_DERIVATION_ORIGIN="https://${ISSUER_CANISTER_ID}.icp0.io"

@@ -62,9 +62,9 @@ if [ "$DFX_NETWORK" = "ic_test" ]; then
   echo "VITE_FETCH_ROOT_KEY=false" >> $ENV_FILE
 fi
 if [ "$DFX_NETWORK" = "mainnet" ]; then
-  II_URL="https://identity.ic0.app"
-  ISSUER_ORIGIN="https://${META_ISSUER_CANISTER_ID}.icp0.io"
-  RP_ORIGIN="https://${RP_CANISTER_ID}.icp0.io"
+  II_URL="https://${II_CANISTER_ID}.ic0.app"
+  ISSUER_ORIGIN="https://metaissuer.vc"
+  RP_ORIGIN="https://relyingparty.vc"
   HOST="https://icp-api.io"
   echo "VITE_INTERNET_IDENTITY_URL=${II_URL}" > $ENV_FILE
   echo "VITE_ISSUER_CANISTER_ID=${META_ISSUER_CANISTER_ID}" >> $ENV_FILE
