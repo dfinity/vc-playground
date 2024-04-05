@@ -47,11 +47,19 @@
 </script>
 
 <Modal>
-  <svelte:fragment slot="header">Get Credential</svelte:fragment>
+  <svelte:fragment slot="header">
+    {#if hasCredential}
+      Access granted
+    {:else if vcFlowLoading || vcFlowLoading === undefined}
+      Present Your Credential
+    {:else}
+      Access Denied
+    {/if}
+  </svelte:fragment>
   {#if vcFlowLoading === undefined && hasCredential === undefined}
     <div class="flex-1 flex flex-col justify-center items-center gap-4">
       <p>
-        Get the credential <em>{issuerName}</em> to view this image.
+        Present the credential <em>{issuerName}</em> to view this image.
       </p>
       <Button on:click={startFlow} variant="primary">Get Credential</Button>
     </div>
@@ -63,9 +71,6 @@
   {:else}
     <div class="flex flex-col gap-4">
       {#if hasCredential}
-        <p>
-          You can see this image because you hold the credential <em>{issuerName}</em>.
-        </p>
         <div class="sm:px-36">
           <img class="h-auto max-w-full rounded-container-token" src={imageUrl} alt="Visible" />
         </div>
