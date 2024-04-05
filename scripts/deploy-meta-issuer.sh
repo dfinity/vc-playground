@@ -68,9 +68,6 @@ do
     esac
 done
 
-# Make sure we always run from the repo's root
-SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPTS_DIR/.."
 
 DFX_NETWORK="${DFX_NETWORK:-local}"
 II_CANISTER_ID="${II_CANISTER_ID:-$(dfx canister id internet_identity --network "$DFX_NETWORK")}"
@@ -113,8 +110,5 @@ rootkey_did=$(dfx ping "$DFX_NETWORK" \
 echo "Parsed rootkey: ${rootkey_did:0:20}..." >&2
 
 echo "Using II canister: $II_CANISTER_ID" >&2
-
-# Adjust issuer's .well-known/ii-alternative-origins to contain FE-hostname of local/dev deployments.
-sed -i '' -e "s+ISSUER_FE_HOSTNAME_PLACEHOLDER+\"$ISSUER_FRONTEND_HOSTNAME\",+" ./issuer/frontend/static/.well-known/ii-alternative-origins
 
 dfx deploy meta_issuer --network "$DFX_NETWORK" --argument '(opt record { idp_canister_ids = vec{ principal "'"$II_CANISTER_ID"'" }; ic_root_key_der = vec '"$rootkey_did"'; derivation_origin = "'"$ISSUER_DERIVATION_ORIGIN"'"; frontend_hostname = "'"$ISSUER_FRONTEND_HOSTNAME"'"; })'

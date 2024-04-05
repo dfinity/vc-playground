@@ -145,7 +145,7 @@ fn should_fail_prepare_credential_for_unauthorized_principal() {
         },
     )
     .expect("API call failed");
-    assert_matches!(response, Err(e) if format!("{:?}", e).contains("is not a member of group"));
+    assert_matches!(response, Err(e) if format!("{:?}", e).contains("not an accepted member"));
 }
 
 #[test]

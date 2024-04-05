@@ -33,9 +33,6 @@ use asset_util::{collect_assets, CertifiedAssets};
 use ic_cdk_macros::post_upgrade;
 use std::collections::BTreeMap;
 
-#[cfg(target_arch = "wasm32")]
-use ic_cdk::println;
-
 /// We use restricted memory in order to ensure the separation between non-managed config memory (first page)
 /// and the managed memory for potential other data of the canister.
 type Memory = RestrictedMemory<DefaultMemoryImpl>;
@@ -497,10 +494,6 @@ fn authorize_vc_request(
         let config = config.get();
 
         for idp_canister_id in &config.idp_canister_ids {
-            println!(
-                "*** checking id_alias for subject {} with IDP {}",
-                expected_vc_subject, idp_canister_id
-            );
             if let Ok(alias_tuple) = get_verified_id_alias_from_jws(
                 &alias.credential_jws,
                 expected_vc_subject,
@@ -522,10 +515,6 @@ fn authorize_vc_request(
 async fn prepare_credential(
     req: PrepareCredentialRequest,
 ) -> Result<PreparedCredentialData, IssueCredentialError> {
-    println!(
-        "*** id_alias VC JWS: {}",
-        req.signed_id_alias.credential_jws
-    );
     let alias_tuple = match authorize_vc_request(&req.signed_id_alias, &caller(), time().into()) {
         Ok(alias_tuple) => alias_tuple,
         Err(err) => return Err(err),
@@ -629,13 +618,18 @@ async fn derivation_origin(
     get_derivation_origin(&req.frontend_hostname)
 }
 
-fn get_derivation_origin(_hostname: &str) -> Result<DerivationOriginData, DerivationOriginError> {
+fn get_derivation_origin(hostname: &str) -> Result<DerivationOriginData, DerivationOriginError> {
     CONFIG.with_borrow(|config| {
         let config = config.get();
-        println!("*** derivation origin: {}", config.derivation_origin);
-        Ok(DerivationOriginData {
-            origin: config.derivation_origin.clone(),
-        })
+        if hostname == config.frontend_hostname {
+            Ok(DerivationOriginData {
+                origin: config.derivation_origin.clone(),
+            })
+        } else {
+            Err(DerivationOriginError::UnsupportedOrigin(
+                hostname.to_string(),
+            ))
+        }
     })
 }
 
@@ -791,17 +785,16 @@ fn verify_principal_is_member(
     owner: Principal,
     groups: &GroupsMap,
 ) -> Result<(), IssueCredentialError> {
-    if let Some(group_record) = groups.get(&(group_name.clone(), owner).into()) {
+    if let Some(group_record) = groups.get(&(group_name, owner).into()) {
         if let Some(member_record) = group_record.members.get(&user) {
             if member_record.membership_status == MembershipStatus::Accepted {
                 return Ok(());
             }
         }
     }
-    Err(IssueCredentialError::UnauthorizedSubject(format!(
-        "user {} is not a member of group [{}]",
-        user, group_name
-    )))
+    Err(IssueCredentialError::UnauthorizedSubject(
+        "not an accepted member".to_string(),
+    ))
 }
 
 fn internal_error(msg: &str) -> IssueCredentialError {
@@ -868,6 +861,7 @@ mod test {
     #[test]
     fn check_candid_interface_compatibility() {
         let canister_interface = __export_service();
+        println!("***** interface: {}", canister_interface);
         service_equal(
             CandidSource::Text(&canister_interface),
             CandidSource::File(Path::new("meta_issuer.did")),
