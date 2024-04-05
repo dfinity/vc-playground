@@ -5,7 +5,7 @@
   import { nonNullish } from '$lib/utils/non-nullish';
   import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { credentialsTypesStore, issuersStore, type Issuer } from '$lib/stores/issuers.store';
-  import type { ImageData } from '../../declarations/rp/rp.did';
+  import type { ImageData } from '../../../../declarations/rp/rp.did';
   import { shareContent } from '$lib/services/shareContent.services';
 
   const modalStore = getModalStore();
