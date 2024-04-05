@@ -32,7 +32,7 @@
       </Heading>
     </Stack>
     <TwoSlots>
-      <HeroCard testId="login-button" on:click={() => goto('/credentials')}>
+      <HeroCard testId="go-credentials" on:click={() => goto('/credentials')}>
         <User slot="icon" />
         <svelte:fragment slot="title">User</svelte:fragment>
         Obtain credentials from issuers

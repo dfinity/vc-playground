@@ -77,7 +77,7 @@
     </svelte:fragment>
     {#if $authStore.identity === null}
       <Stack align="center">
-        <Button variant="primary" on:click={login}>Login</Button>
+        <Button testId="login-button" variant="primary" on:click={login}>Login</Button>
       </Stack>
     {/if}
     <IssuersList issuers={$allIssuersStore}>
