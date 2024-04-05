@@ -46,6 +46,7 @@ export const loadCredential = async ({
             },
           },
           credentialSubject: principal,
+          derivationOrigin: import.meta.env.VITE_RP_DERIVATION_ORIGIN,
         },
       };
       window.addEventListener('message', handleFlowFinished);
