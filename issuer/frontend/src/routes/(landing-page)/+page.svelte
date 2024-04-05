@@ -11,42 +11,41 @@
   import Stack from '$lib/ui-components/elements/Stack.svelte';
   import TwoSlots from '$lib/ui-components/elements/TwoSlots.svelte';
   import { setTheme } from '$lib/services/set-theme';
-
-  const loginUser = (route: string) => async () => {
-    await login();
-    goto(route);
-  };
+  import { RP_ORIGIN } from '$lib/constants/env-vars';
+  import MainWrapper from '$lib/ui-components/elements/MainWrapper.svelte';
+  import HeroWrapper from '$lib/ui-components/elements/HeroWrapper.svelte';
 
   onMount(() => {
     setTheme('visitor');
     syncAuth();
   });
-
-  $: {
-    if ($authStore.identity !== null && $authStore.identity !== undefined) {
-      goto('/credentials');
-    }
-  }
 </script>
 
-<Stack gap="l">
-  <Stack gap="l">
-    <Heading level="1" align="center">Select your role</Heading>
-    <Heading level="5" align="center">
-      Experience the playground as an end-user or an issuer. You can switch your role at any time
-      after authenticating.
-    </Heading>
-  </Stack>
-  <TwoSlots>
-    <HeroCard testId="login-button" on:click={loginUser('/credentials')}>
-      <User slot="icon" />
-      <svelte:fragment slot="title">User</svelte:fragment>
-      Obtain credentials from issuers
-    </HeroCard>
-    <HeroCard on:click={loginUser('/issuer-center')}>
-      <Issuer slot="icon" />
-      <svelte:fragment slot="title">Issuer</svelte:fragment>
-      Create and issue credentials to users
-    </HeroCard>
-  </TwoSlots>
-</Stack>
+<MainWrapper>
+  <HeroWrapper>
+    <Stack gap="l">
+      <Heading level="1" align="center">Request and Issue Credentials</Heading>
+      <Heading level="5" align="center">
+        Experience the verifiable credential playground by requesting credentials, issuing
+        credentials, or using credentials to view images. You can switch your flow at any time after
+        authenticating.
+      </Heading>
+    </Stack>
+    <TwoSlots>
+      <HeroCard testId="login-button" on:click={() => goto('/credentials')}>
+        <User slot="icon" />
+        <svelte:fragment slot="title">User</svelte:fragment>
+        Obtain credentials from issuers
+      </HeroCard>
+      <HeroCard on:click={() => goto('/issuer-center')}>
+        <Issuer slot="icon" />
+        <svelte:fragment slot="title">Issuer</svelte:fragment>
+        Create, issue and revoke credentials
+      </HeroCard>
+    </TwoSlots>
+    <Stack gap="md" align="center">
+      <Heading level="3" align="center">Want to use credentials?</Heading>
+      <a href={RP_ORIGIN} target="_blank">Try it on the Image Sharing Platform</a>
+    </Stack>
+  </HeroWrapper>
+</MainWrapper>

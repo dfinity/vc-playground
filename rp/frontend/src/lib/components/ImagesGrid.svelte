@@ -10,6 +10,3 @@
     <ImageItem {image} />
   {/each}
 </section>
-
-<style>
-</style>

@@ -16,8 +16,6 @@
     LightSwitch,
   } from '@skeletonlabs/skeleton';
   import { syncAuth } from '$lib/services/auth.services';
-  import { authStore } from '$lib/stores/auth.store';
-  import { nonNullish } from '$lib/utils/non-nullish';
   import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   import { storePopup } from '@skeletonlabs/skeleton';
 
@@ -42,16 +40,17 @@
   <svelte:fragment slot="header">
     <!-- App Bar -->
     <AppBar>
-      <a href="/" class="text-xl uppercase font-bold" aria-label="Go to Home" slot="lead"
-        >Relying Party
-      </a>
-      <div slot="trail" class="flex flex-col gap-2 items-end">
-        <div class="flex gap-2">
-          {#if $page.route.id !== '/share' && nonNullish($authStore.identity)}
-            <Button variant="primary" href="/share">Share Image</Button>
-          {/if}
-          <AuthButton />
+      <div slot="lead" class="flex flex-col sm:flex-row sm:gap-8 sm:items-center">
+        <a href="/" class="text-xl uppercase font-bold" aria-label="Go to Home"
+          >Image Sharing Platform
+        </a>
+        <div class="flex gap-4">
+          <a href="/feed" class={$page.route.id === '/(app)/feed' ? 'underline' : ''}>View</a>
+          <a href="/share" class={$page.route.id === '/(app)/share' ? 'underline' : ''}>Publish</a>
         </div>
+      </div>
+      <div slot="trail" class="flex flex-col gap-2 items-end">
+        <AuthButton />
       </div>
     </AppBar>
   </svelte:fragment>

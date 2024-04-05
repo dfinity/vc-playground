@@ -6,14 +6,30 @@
     getVisibleContentData,
     type VisibleContentData,
   } from '$lib/stores/content-data-visible.store';
+  import Button from '$lib/components/Button.svelte';
+  import { nonNullish } from '$lib/utils/non-nullish';
+  import { login } from '$lib/services/auth.services';
 
   let contentDataStore: Readable<VisibleContentData[]>;
   $: contentDataStore = getVisibleContentData($authStore.identity);
 </script>
 
-<h1 class="h1 text-center">View and Share Content</h1>
-<p class="text-center">
-  This is an example of a Relying Party. You can view an image if you hold the particular credential
-  required to access the image.
-</p>
-<ImagesGrid images={$contentDataStore} />
+<div class="flex flex-col gap-6 items-center">
+  <h1 class="h1 text-center">View and Publish Content</h1>
+  <p class="text-center">
+    This is an example of a Relying Party. You can view an image if you hold the particular
+    credential required to access the image.
+  </p>
+
+  {#if nonNullish($authStore.identity)}
+    <Button variant="primary" href="/share">Publish Image</Button>
+  {:else}
+    <Button variant="secondary" on:click={() => login()} loading={$authStore.identity === undefined}
+      >Login</Button
+    >
+  {/if}
+</div>
+
+{#if nonNullish($authStore.identity)}
+  <ImagesGrid images={$contentDataStore} />
+{/if}

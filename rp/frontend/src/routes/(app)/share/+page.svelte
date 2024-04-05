@@ -5,17 +5,11 @@
   import { nonNullish } from '$lib/utils/non-nullish';
   import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { credentialsTypesStore, issuersStore, type Issuer } from '$lib/stores/issuers.store';
-  import type { ImageData } from '../../../../declarations/rp/rp.did';
+  import type { ImageData } from '../../../declarations/rp/rp.did';
   import { shareContent } from '$lib/services/shareContent.services';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
-
-  $: {
-    if ($authStore.identity === null) {
-      goto('/');
-    }
-  }
 
   let selectedCredential: string | undefined;
   let issuersToSelect: Issuer[] | undefined = [];
@@ -39,6 +33,15 @@
   let enableShareButton = false;
   $: enableShareButton = (selectedCredential ?? '').length > 0 && selectedImage !== undefined;
 
+  let showSuccessfulMessage = false;
+
+  const shareAnotherImage = () => {
+    showSuccessfulMessage = false;
+    selectedCredential = undefined;
+    selectedIssuer = undefined;
+    selectedImage = undefined;
+  };
+
   let isLoading = false;
   const share = async () => {
     isLoading = true;
@@ -57,7 +60,7 @@
         message: 'Content shared successfully!',
         background: 'variant-filled-success',
       });
-      goto('/');
+      showSuccessfulMessage = true;
     } catch (error) {
       console.error('Error sharing content', error);
       toastStore.trigger({
@@ -70,7 +73,16 @@
   };
 </script>
 
-{#if nonNullish($authStore.identity)}
+{#if showSuccessfulMessage && selectedImage}
+  <h1 class="h1">Published!</h1>
+  <div class="flex justify-center">
+    <img src={selectedImage.url} alt="Selected" class="max-w-72 h-auto rounded-container-token" />
+  </div>
+  <div class="flex justify-center gap-6">
+    <Button on:click={() => goto('/feed')} variant="secondary">View Published Images</Button>
+    <Button on:click={shareAnotherImage} variant="primary">Publish another image</Button>
+  </div>
+{:else}
   <h1 class="h1">Choose a credential type, issuer, and image.</h1>
   <div class="flex flex-col gap-4">
     <label for="credentials">
@@ -120,9 +132,5 @@
     <Button on:click={share} variant="primary" disabled={!enableShareButton} loading={isLoading}
       >Share</Button
     >
-  </div>
-{:else}
-  <div class="animate-pulse">
-    <div class="placeholder" />
   </div>
 {/if}

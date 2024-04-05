@@ -3,7 +3,6 @@
   import Button from '$lib/ui-components/elements/Button.svelte';
   import ActionsWrapper from '$lib/ui-components/elements/ActionsWrapper.svelte';
   import { getToastStore } from '@skeletonlabs/skeleton';
-  import AuthGuard from '$lib/components/AuthGuard.svelte';
   import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { createIssuer } from '$lib/services/create-issuer.services';
   import { authStore } from '$lib/stores/auth.store';
@@ -12,13 +11,14 @@
   import AdminIssuerItem from '$lib/components/AdminIssuerItem.svelte';
   import { setTheme } from '$lib/services/set-theme';
   import DefaultPage from '$lib/ui-components/page-layouts/DefaultPage.svelte';
-  import HeadingSkeleton from '$lib/ui-components/elements/HeadingSkeleton.svelte';
   import { onMount } from 'svelte';
   import { getIssuerNickname } from '$lib/stores/user.store';
   import type { Readable } from 'svelte/store';
   import { addIssuerNickname } from '$lib/services/add-issuer-nickname.services';
   import type { Identity } from '@dfinity/agent';
   import { isNullish } from '$lib/utils/is-nullish.utils';
+  import { login } from '$lib/services/auth.services';
+  import Stack from '$lib/ui-components/elements/Stack.svelte';
 
   onMount(() => {
     setTheme('issuer');
@@ -85,15 +85,23 @@
 </script>
 
 <TestIdWrapper testId="home-route">
-  <AuthGuard>
-    <DefaultPage>
-      <svelte:fragment slot="title">
-        {isNullish($issuerNickname) ? 'Organization' : `@${$issuerNickname}'s Organization`}
-      </svelte:fragment>
-      <svelte:fragment slot="subtitle">
+  <DefaultPage>
+    <svelte:fragment slot="title">
+      {isNullish($issuerNickname) ? 'Organization' : `@${$issuerNickname}'s Organization`}
+    </svelte:fragment>
+    <svelte:fragment slot="subtitle">
+      {#if $authStore.identity === null}
+        Log in to create, issue and revoke credentials from users.
+      {:else if !isNullish($authStore.identity)}
         This is the Issuer Control Center. From here you can create, issue and revoke credentials
         from users.
-      </svelte:fragment>
+      {/if}
+    </svelte:fragment>
+    {#if $authStore.identity === null}
+      <Stack align="center">
+        <Button variant="primary" on:click={login}>Login</Button>
+      </Stack>
+    {:else if !isNullish($authStore.identity)}
       <ActionsWrapper>
         <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage}>
           {#each $myIssuersStore ?? [] as issuer}
@@ -107,10 +115,6 @@
           loading={loadingCreateIssuer}>Create Credential</Button
         >
       </ActionsWrapper>
-    </DefaultPage>
-    <DefaultPage slot="skeleton">
-      <svelte:fragment slot="title"><HeadingSkeleton size="lg" /></svelte:fragment>
-      <IssuersList issuers={undefined} />
-    </DefaultPage>
-  </AuthGuard>
+    {/if}
+  </DefaultPage>
 </TestIdWrapper>
