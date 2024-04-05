@@ -62,7 +62,11 @@ fn issuer_canister_serves_http_assets() -> Result<(), CallError> {
     // for each asset and certification version, fetch the asset, check the HTTP status code, headers and certificate.
 
     for certification_version in 1..=2 {
-        for asset_name in ["/", "/.well-known/ic-domains"] {
+        for asset_name in [
+            "/",
+            "/.well-known/ic-domains",
+            "/.well-known/ii-alternative-origins",
+        ] {
             let request = HttpRequest {
                 method: "GET".to_string(),
                 url: asset_name.to_string(),

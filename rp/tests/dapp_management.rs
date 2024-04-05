@@ -68,6 +68,7 @@ fn issuer_canister_serves_http_assets() -> Result<(), CallError> {
             "/images/sdk.png",
             "/images/serviceNervousSystem.png",
             "/.well-known/ic-domains",
+            "/.well-known/ii-alternative-origins",
         ] {
             let request = HttpRequest {
                 method: "GET".to_string(),
