@@ -130,7 +130,7 @@
 
   <div class="flex justify-end">
     <Button on:click={share} variant="primary" disabled={!enableShareButton} loading={isLoading}
-      >Share</Button
+      >Publish</Button
     >
   </div>
 {/if}

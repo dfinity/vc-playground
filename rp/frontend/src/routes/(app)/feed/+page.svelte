@@ -15,10 +15,9 @@
 </script>
 
 <div class="flex flex-col gap-6 items-center">
-  <h1 class="h1 text-center">View and Publish Content</h1>
+  <h1 class="h1 text-center">View Gated Imaages</h1>
   <p class="text-center">
-    This is an example of a Relying Party. You can view an image if you hold the particular
-    credential required to access the image.
+    You can view an image if you hold the particular credential required to access the image.
   </p>
 
   {#if nonNullish($authStore.identity)}
