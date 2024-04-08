@@ -26,6 +26,7 @@ export const loadCredential = async ({
   if (isNullish(identity)) {
     return null;
   }
+  console.info("Loading credential for", groupName, owner.toText());
   return new Promise<null>((resolve) => {
     const startFlow = (evnt: MessageEvent) => {
       const principal = identity.getPrincipal().toText();
@@ -78,7 +79,7 @@ export const loadCredential = async ({
           });
         }
       } catch (error) {
-        console.error('Error verifying the credential', error);
+        console.error('Error verifying the credential', JSON.stringify(error));
       } finally {
         iiWindow?.close();
         window.removeEventListener('message', handleFlowFinished);
@@ -86,7 +87,7 @@ export const loadCredential = async ({
       }
     };
     const handleFlowFinished = (evnt: MessageEvent) => {
-      console.log('in da handleFlowFinished', evnt);
+      console.info('Message received in the finished flow handler', evnt);
       if (evnt.data?.method === 'vc-flow-ready') {
         startFlow(evnt);
       } else if (evnt.data?.id === String(nextFlowId)) {
@@ -94,7 +95,7 @@ export const loadCredential = async ({
       }
     };
     const handleFlowReady = (evnt: MessageEvent) => {
-      console.log('in da handleFlowReady', evnt);
+      console.info('Message received in the init flow handler', evnt);
       if (evnt.data?.method !== 'vc-flow-ready') {
         return;
       }
