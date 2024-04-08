@@ -2,6 +2,7 @@
   import ArticleWrapper from '$lib/ui-components/elements/ArticleWrapper.svelte';
   import HeadingSkeleton from '$lib/ui-components/elements/HeadingSkeleton.svelte';
   import List from '$lib/ui-components/elements/List.svelte';
+  import Paragraph from '$lib/ui-components/elements/Paragraph.svelte';
   import type { MemberData } from '../../declarations/meta_issuer.did';
   import MemberItem from './MemberItem.svelte';
   import MemberItemSkeleton from './MemberItemSkeleton.svelte';
@@ -21,7 +22,9 @@
     </List>
   </ArticleWrapper>
 {:else if members.length === 0}
-  <p>There are no credentials requests nor issued credentials yet.</p>
+  <Paragraph align="center">
+    You have not issued any credentials of this type, and there are no pending requests.
+  </Paragraph>
 {:else}
   <ArticleWrapper>
     <svelte:fragment slot="title">{title}</svelte:fragment>

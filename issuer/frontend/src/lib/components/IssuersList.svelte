@@ -4,7 +4,7 @@
   import IssuerItemSkeleton from './IssuerItemSkeleton.svelte';
 
   export let issuers: PublicGroupData[] | undefined;
-  export let noGroupsMessage: string = 'No groups found';
+  export let noGroupsMessage: string | undefined = undefined;
 </script>
 
 {#if issuers === undefined}
@@ -13,9 +13,9 @@
     <IssuerItemSkeleton />
     <IssuerItemSkeleton />
   </List>
-{:else if issuers?.length === 0}
+{:else if issuers?.length === 0 && noGroupsMessage !== undefined}
   <p>{noGroupsMessage}</p>
-{:else}
+{:else if issuers?.length > 0}
   <List>
     <slot />
   </List>

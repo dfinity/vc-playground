@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { ISSUER_PARAM } from '$lib/constants/url-params.constants';
-  import Badge from '$lib/ui-components/elements/Badge.svelte';
   import type { PublicGroupData } from '../../declarations/meta_issuer.did';
   import IssuerItem from '$lib/components/IssuerItem.svelte';
 
@@ -12,6 +11,4 @@
   };
 </script>
 
-<IssuerItem {onClick} {issuer}>
-  <Badge variant="primary" slot="end">👑 Issuer</Badge>
-</IssuerItem>
+<IssuerItem {onClick} {issuer} />

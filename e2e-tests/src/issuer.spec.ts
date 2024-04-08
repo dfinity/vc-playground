@@ -6,7 +6,7 @@ test('use registers with Internet Identity and is redirected to the home page', 
   context,
 }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle(/VC Playground/);
+  await expect(page).toHaveTitle(/Verifiable Credentials Playground/);
 
   expect(page.getByTestId('home-route')).not.toBeVisible();
   await page.getByTestId("go-credentials").click();

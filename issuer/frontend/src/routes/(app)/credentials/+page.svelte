@@ -73,14 +73,14 @@
       {#if $authStore.identity === null}
         Login to request credentials.
       {/if}
-      Below is a list of all the credentials in the VC playground ecosystem.
+      Below is a list of all the credentials in the Verifiable Credentials Playground ecosystem.
     </svelte:fragment>
     {#if $authStore.identity === null}
       <Stack align="center">
         <Button testId="login-button" variant="primary" on:click={login}>Login</Button>
       </Stack>
     {/if}
-    <IssuersList issuers={$allIssuersStore}>
+    <IssuersList issuers={$allIssuersStore} noGroupsMessage="No credentials found.">
       {#each $allIssuersStore ?? [] as issuer}
         <MemberIssuerItem {issuer} />
       {/each}

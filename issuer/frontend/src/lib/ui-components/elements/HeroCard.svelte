@@ -6,7 +6,7 @@
 
 <button
   data-tid={testId}
-  class="card card-hover p-4 flex flex-col justify-center items-center"
+  class="card card-hover p-4 flex flex-col justify-start items-center"
   on:click
 >
   <div class="p-8 flex justify-center items-center">
