@@ -264,11 +264,38 @@ fn get_user() -> Result<UserData, GroupsError> {
     })
 }
 
+fn ensure_unique_nicknames(new_user_data: &UserData, users: &UsersMap) -> Result<(), GroupsError> {
+    if let Some(ref user_nickname) = new_user_data.user_nickname {
+        let new_user_nickname = Some(user_nickname.clone());
+        for (_key, user) in users.iter() {
+            if user.user_nickname == new_user_nickname {
+                return Err(GroupsError::AlreadyExists(format!(
+                    "user nickname: {}",
+                    user_nickname
+                )));
+            }
+        }
+    }
+    if let Some(ref issuer_nickname) = new_user_data.issuer_nickname {
+        let new_issuer_nickname = Some(issuer_nickname.clone());
+        for (_key, user) in users.iter() {
+            if user.issuer_nickname == new_issuer_nickname {
+                return Err(GroupsError::AlreadyExists(format!(
+                    "issuer nickname: {}",
+                    issuer_nickname
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
 #[update]
 #[candid_method]
 fn set_user(req: SetUserRequest) -> Result<(), GroupsError> {
     check_authenticated()?;
     USERS.with_borrow_mut(|users| {
+        ensure_unique_nicknames(&req.user_data, users)?;
         users.insert(
             caller(),
             UserRecord {
