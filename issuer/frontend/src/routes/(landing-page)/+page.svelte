@@ -33,12 +33,12 @@
         </Heading>
       </Stack>
       <TwoSlots>
-        <HeroCard testId="go-credentials" on:click={() => goto('/credentials')}>
+        <HeroCard testId="go-credentials" href="/credentials">
           <UserIcon slot="icon" />
           <svelte:fragment slot="title">Request</svelte:fragment>
           Obtain credentials from issuers
         </HeroCard>
-        <HeroCard on:click={() => goto('/issuer-center')}>
+        <HeroCard testId="go-issuer-center" href="/issuer-center">
           <IssuerIcon slot="icon" />
           <svelte:fragment slot="title">Issuer</svelte:fragment>
           Create, issue and revoke credentials

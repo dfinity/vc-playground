@@ -81,7 +81,7 @@
   }
 </script>
 
-<TestIdWrapper testId="home-route">
+<TestIdWrapper testId="issuer-center-route">
   <DefaultPage>
     <svelte:fragment slot="title">
       {isNullish($issuerNickname) ? 'Organization' : $issuerNickname}
@@ -96,7 +96,7 @@
     </svelte:fragment>
     {#if $authStore.identity === null}
       <Stack align="center">
-        <Button variant="primary" on:click={login}>Login</Button>
+        <Button testId="login-button" variant="primary" on:click={login}>Login</Button>
       </Stack>
     {:else if !isNullish($authStore.identity)}
       <ActionsWrapper>
@@ -107,6 +107,7 @@
         </IssuersList>
         <Button
           on:click={openCreateModal}
+          testId="open-create-credential-modal"
           variant="primary"
           slot="actions"
           loading={loadingCreateIssuer}>Create Credential</Button

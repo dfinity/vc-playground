@@ -1,6 +1,7 @@
 <script lang="ts">
   export let level: '1' | '2' | '3' | '4' | '5' | '6';
   export let align: 'left' | 'center' = 'left';
+  export let testId: string | undefined = undefined;
 
   const component = `h${level}`;
   let levelClasses = {
@@ -17,6 +18,6 @@
   };
 </script>
 
-<svelte:element this={component} class={`${levelClasses[level]} ${alignClasses[align]}`}>
+<svelte:element this={component} data-tid={testId} class={`${levelClasses[level]} ${alignClasses[align]}`}>
   <slot />
 </svelte:element>

@@ -58,7 +58,7 @@
   }
 </script>
 
-<TestIdWrapper testId="home-route">
+<TestIdWrapper testId="credentials-page">
   <DefaultPage>
     <svelte:fragment slot="title">
       {#if $authStore.identity === undefined}

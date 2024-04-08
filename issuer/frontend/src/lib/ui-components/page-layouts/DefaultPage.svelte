@@ -5,7 +5,7 @@
 <section class="flex flex-col gap-8">
   <slot name="nav" />
   <slot name="callout" />
-  <Heading align="center" level="1">
+  <Heading align="center" testId="page-title" level="1">
     <slot name="title" />
   </Heading>
   <Heading align="center" level="3">

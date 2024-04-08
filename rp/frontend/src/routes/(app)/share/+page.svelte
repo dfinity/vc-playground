@@ -7,6 +7,7 @@
   import { credentialsTypesStore, issuersStore, type Issuer } from '$lib/stores/issuers.store';
   import type { ImageData } from '../../../declarations/rp/rp.did';
   import { shareContent } from '$lib/services/shareContent.services';
+  import TestIdWrapper from '$lib/components/TestIdWrapper.svelte';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
@@ -65,64 +66,66 @@
   };
 </script>
 
-{#if showSuccessfulMessage && selectedImage}
-  <h1 class="h1">Published!</h1>
-  <div class="flex justify-center">
-    <img src={selectedImage.url} alt="Selected" class="max-w-72 h-auto rounded-container-token" />
-  </div>
-  <div class="flex justify-center gap-6">
-    <Button on:click={() => goto('/feed')} variant="secondary">View Published Images</Button>
-    <Button on:click={shareAnotherImage} variant="primary">Publish another image</Button>
-  </div>
-{:else}
-  <h1 class="h1">Choose a credential type, issuer, and image.</h1>
-  <div class="flex flex-col gap-4">
-    <label for="credentials">
-      <h5 class="h5">Select the credential type that gets acces to this image.</h5>
-    </label>
-    <select bind:value={selectedCredential} id="credentials" class="select px-4">
-      <option value="" disabled selected>Credential type</option>
-      {#each $credentialsTypesStore as credential}
-        <option value={credential} id={credential}>
-          {credential}
-        </option>
-      {/each}
-    </select>
-  </div>
-
-  <div class="flex flex-col gap-4">
-    <label for="credentials">
-      <h5 class="h5">Choose the issuer that you trust.</h5>
-    </label>
-    <select bind:value={selectedIssuer} id="credentials" class="select px-4">
-      <option value="" disabled selected>Issuer</option>
-      {#each issuersToSelect ?? [] as issuer}
-        <option value={issuer} id={issuer.nickname}>
-          {issuer.nickname}
-        </option>
-      {/each}
-    </select>
-  </div>
-
-  <div class="flex flex-col gap-4">
-    <h5 class="h5">Choose an image to share</h5>
-    {#if selectedImage}
-      <div class="flex justify-center">
-        <img
-          src={selectedImage.url}
-          alt="Selected"
-          class="max-w-72 h-auto rounded-container-token"
-        />
-      </div>
-    {/if}
+<TestIdWrapper testId="share-page">
+  {#if showSuccessfulMessage && selectedImage}
+    <h1 data-tid="success-message" class="h1">Published!</h1>
     <div class="flex justify-center">
-      <Button on:click={openChooseImageModal} variant="secondary">Choose Image</Button>
+      <img src={selectedImage.url} alt="Selected" class="max-w-72 h-auto rounded-container-token" />
     </div>
-  </div>
-
-  <div class="flex justify-end">
-    <Button on:click={share} variant="primary" disabled={!enableShareButton} loading={isLoading}
-      >Publish</Button
-    >
-  </div>
-{/if}
+    <div class="flex justify-center gap-6">
+      <Button on:click={() => goto('/feed')} variant="secondary">View Published Images</Button>
+      <Button on:click={shareAnotherImage} variant="primary">Publish another image</Button>
+    </div>
+  {:else}
+    <h1 class="h1">Choose a credential type, issuer, and image.</h1>
+    <div class="flex flex-col gap-4">
+      <label for="credentials">
+        <h5 class="h5">Select the credential type that gets acces to this image.</h5>
+      </label>
+      <select bind:value={selectedCredential} id="credentials" class="select px-4">
+        <option value="" disabled selected>Credential type</option>
+        {#each $credentialsTypesStore as credential}
+          <option value={credential} id={credential}>
+            {credential}
+          </option>
+        {/each}
+      </select>
+    </div>
+  
+    <div class="flex flex-col gap-4">
+      <label for="credentials">
+        <h5 class="h5">Choose the issuer that you trust.</h5>
+      </label>
+      <select bind:value={selectedIssuer} id="issuers" class="select px-4">
+        <option value="" disabled selected>Issuer</option>
+        {#each issuersToSelect ?? [] as issuer}
+          <option value={issuer} id={issuer.nickname}>
+            {issuer.nickname}
+          </option>
+        {/each}
+      </select>
+    </div>
+  
+    <div class="flex flex-col gap-4">
+      <h5 class="h5">Choose an image to share</h5>
+      {#if selectedImage}
+        <div class="flex justify-center">
+          <img
+            src={selectedImage.url}
+            alt="Selected"
+            class="max-w-72 h-auto rounded-container-token"
+          />
+        </div>
+      {/if}
+      <div class="flex justify-center">
+        <Button testId="choose-image" on:click={openChooseImageModal} variant="secondary">Choose Image</Button>
+      </div>
+    </div>
+  
+    <div class="flex justify-end">
+      <Button testId="publish-button" on:click={share} variant="primary" disabled={!enableShareButton} loading={isLoading}
+        >Publish</Button
+      >
+    </div>
+  {/if}
+</TestIdWrapper>

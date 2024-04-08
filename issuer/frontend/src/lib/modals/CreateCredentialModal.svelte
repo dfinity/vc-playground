@@ -65,7 +65,7 @@
   </div>
   <div class="modal-footer flex justify-end space-x-2">
     <Button on:click={close} variant="ghost">Cancel</Button>
-    <Button on:click={sendCredential} disabled={isNullish(selectedCredential)} variant="primary"
+    <Button testId="create-credential" on:click={sendCredential} disabled={isNullish(selectedCredential)} variant="primary"
       >Create Credential</Button
     >
   </div>
