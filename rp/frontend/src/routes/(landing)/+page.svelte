@@ -1,7 +1,5 @@
 <script lang="ts">
   import HeroCard from '$lib/components/HeroCard.svelte';
-  import UserIcon from '$lib/components/UserIcon.svelte';
-  import IssuerIcon from '$lib/components/IssuerIcon.svelte';
   import { goto } from '$app/navigation';
   import MainWrapper from '$lib/components/MainWrapper.svelte';
   import PublishIcon from '$lib/components/PublishIcon.svelte';
