@@ -64,15 +64,15 @@
 
 <AuthGuard>
   <DefaultPage>
+    <!-- TODO: Create Breadcrumb ui-element -->
     <ol class="breadcrumb" slot="nav">
       <li class="crumb"><a class="anchor" href="/issuer-center">Issuer Control Center</a></li>
       <li class="crumb-separator" aria-hidden>&rsaquo;</li>
       <li>{$issuerStore?.group_name ?? ''}</li>
     </ol>
     <svelte:fragment slot="title">{$issuerStore?.group_name}</svelte:fragment>
-    <div>
-      <Button variant="primary" href={RP_ORIGIN}>Test In relying party</Button>
-    </div>
+    <svelte:fragment slot="subtitle">{`Issued by ${$issuerStore?.issuer_nickname}`}</svelte:fragment
+    >
     <MembersList
       members={$membersStore}
       issuerName={$issuerStore?.group_name}

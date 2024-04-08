@@ -16,9 +16,9 @@
     lg: 'btn-lg',
   };
   let variantClasses: Record<Variant, string> = {
-    'ghost-primary': 'variant-ghost-primary',
+    'ghost-primary': 'variant-ghost',
     'ghost-secondary': 'variant-ghost-secondary',
-    primary: 'variant-filled-primary',
+    primary: 'variant-filled',
     secondary: 'variant-filled-secondary',
   };
 </script>

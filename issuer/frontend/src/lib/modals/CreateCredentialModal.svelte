@@ -38,19 +38,18 @@
   <header class="modal-header text-2xl font-bold">Create credential</header>
   <div class="flex-1 flex flex-col gap-6">
     <div>
-      <p>Select a credential type so that you can issue credentials to users.</p>
-      <p>VC Playground credentials gate access to images on the relying party dapp.</p>
+      <p>Using this playground, you can gate access to images on the image sharing platform.</p>
     </div>
     <div class="flex flex-col gap-4">
       <label for="choose-credential">
         <p>Credential type</p>
         <p class="text-sm text-surface-500">
-          Choose a popular example of type of credentials from the list below. It will be the name
-          of a credential.
+          Select a type of credential from the list below. These serve as examples of the types of
+          credentials issuers might create for users.
         </p>
       </label>
       <select bind:value={selectedCredential} id="choose-credential" class="select px-4">
-        <option value="" disabled selected>Select a credential</option>
+        <option value="" disabled selected>Select a credential type</option>
         {#each credentials as credential}
           <option value={credential} id={credential}>
             {credential}
@@ -60,7 +59,7 @@
     </div>
     <div>
       <p class="text-surface-500">
-        {`Credential will be issued by "${issuerNickname}'s Organization".`}
+        {`This credential will be issued by "${issuerNickname}".`}
       </p>
     </div>
   </div>

@@ -30,9 +30,6 @@
   let myIssuersStore;
   $: myIssuersStore = getIdentityIssuersStore($authStore.identity);
 
-  const noMyGroupsMessage =
-    'Issue credentials to users so that they can access exclusive images on the relying party dapp.';
-
   let loadingCreateIssuer = false;
   const openCreateModal = () => {
     loadingCreateIssuer = true;
@@ -87,7 +84,7 @@
 <TestIdWrapper testId="home-route">
   <DefaultPage>
     <svelte:fragment slot="title">
-      {isNullish($issuerNickname) ? 'Organization' : `@${$issuerNickname}'s Organization`}
+      {isNullish($issuerNickname) ? 'Organization' : $issuerNickname}
     </svelte:fragment>
     <svelte:fragment slot="subtitle">
       {#if $authStore.identity === null}
@@ -103,7 +100,7 @@
       </Stack>
     {:else if !isNullish($authStore.identity)}
       <ActionsWrapper>
-        <IssuersList issuers={$myIssuersStore} noGroupsMessage={noMyGroupsMessage}>
+        <IssuersList issuers={$myIssuersStore}>
           {#each $myIssuersStore ?? [] as issuer}
             <AdminIssuerItem {issuer} />
           {/each}

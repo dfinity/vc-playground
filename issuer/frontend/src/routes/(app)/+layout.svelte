@@ -36,7 +36,7 @@
 <AppShell>
   <AppBar slot="header">
     <Box slot="lead">
-      <HeaderTitle>VC Playground</HeaderTitle>
+      <HeaderTitle>Verifiable Credentials Playground</HeaderTitle>
       <Box responsive={false}>
         <a class={$page.route.id === '/(app)/credentials' ? 'underline' : ''} href="/credentials"
           >Request</a

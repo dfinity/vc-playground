@@ -76,10 +76,7 @@
         </div>
       {:else}
         <p>You did not prove you hold the <em>{issuerName}</em> credential.</p>
-        <p>
-          If you want to access the image, request the <em>{issuerName}</em> credential from the issuer
-          and share your credential with the demo relying party.
-        </p>
+        <p>Visit the issuer to request the credential that grants you access to this image.</p>
       {/if}
     </div>
   {/if}
