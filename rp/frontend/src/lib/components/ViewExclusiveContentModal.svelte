@@ -71,7 +71,7 @@
   {:else}
     <div class="flex flex-col gap-4">
       {#if hasCredential}
-        <div class="sm:px-36">
+        <div class="sm:px-36" data-tid="verify-credential-image-success">
           <img class="h-auto max-w-full rounded-container-token" src={imageUrl} alt="Visible" />
         </div>
       {:else}

@@ -23,7 +23,7 @@
           <svelte:fragment slot="title">Publish</svelte:fragment>
           Share images with credential holders
         </HeroCard>
-        <HeroCard href="/feed">
+        <HeroCard testId="go-view" href="/feed">
           <ViewIcon slot="icon" />
           <svelte:fragment slot="title">View</svelte:fragment>
           View gated images using your credentials

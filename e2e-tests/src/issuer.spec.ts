@@ -1,9 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { signInWithNewUser } from './utils/sigin-in-user.utils';
+import { signInWithAnchor, signInWithNewUser } from './utils/sigin-in-user.utils';
 
-const ISSUER_URL = 'http://localhost:5173/';
-const RP_URL = 'http://localhost:5174/';
+// TODO: Get this from the environment
+const ISSUER_URL = 'http://aovwi-4maaa-aaaaa-qaagq-cai.localhost:8080/';
+const RP_URL = 'http://ctiya-peaaa-aaaaa-qaaja-cai.localhost:8080';
 
+// This test is long because it involves multiple sequential steps.
+// Maybe we can split it into multiple tests in the future.
+// But the dependencies between them make it tricky to split.
+test.setTimeout(120_000);
 test('verifieable credentials flow works end to end', async ({
   browser,
 }) => {
@@ -44,16 +49,14 @@ test('verifieable credentials flow works end to end', async ({
 
   await expect(issuerPage.getByTestId(`credentials ${issuerName} ${credentialName}`)).toBeVisible();
 
-  /**
-   * PUBLISH CONTENT REQUIRING PREVIOUS CREDENTIAL
-   */
+  // /**
+  //  * PUBLISH CONTENT REQUIRING PREVIOUS CREDENTIAL
+  //  */
   const publisherContext = await browser.newContext();
   const publisherPage = await publisherContext.newPage();
   await publisherPage.goto(RP_URL);
 
   await expect(publisherPage.getByTestId("share-page")).not.toBeVisible();
-  // await expect(publisherPage.getByTestId("go-publish")).toBeVisible();
-  // await expect(publisherPage.getByTestId("go-publish")).toBeEnabled();
   await publisherPage.getByTestId("go-publish").click();
   await expect(publisherPage.getByTestId("share-page")).toBeVisible();
   await expect(publisherPage.getByTestId("success-message")).not.toBeVisible();
@@ -83,6 +86,7 @@ test('verifieable credentials flow works end to end', async ({
 
   await expect(requesterPage.getByTestId('login-button')).toBeVisible();
   const requesterAnchor = await signInWithNewUser({ page: requesterPage, context: requesterContext });
+  await expect(requesterPage.getByTestId('login-button')).not.toBeVisible();
   
   // Wait until nickname modal to be visible.
   await expect(requesterPage.locator('[data-testid=modal]')).toBeVisible();
@@ -93,11 +97,49 @@ test('verifieable credentials flow works end to end', async ({
   await requesterPage.locator('button[type=submit]').click();
 
   // Wait for nickname to be set
-  await expect.poll(() => requesterPage.getByTestId('page-title').textContent()).toBe(userName);
+  await expect.poll(() => requesterPage.getByTestId('page-title').textContent()).toBe(`@${userName}'s Credentials`);
 
   // Request credential
   const credentialElement = requesterPage.getByTestId(`credentials ${issuerName} ${credentialName}`);
   await expect(credentialElement).toBeVisible();
   await expect(credentialElement.locator("button")).toBeEnabled();
   await credentialElement.locator("button").click();
+  await expect(credentialElement.locator("button")).not.toBeVisible();
+
+  /**
+   * VIEW IMAGE WITH CREDENTIAL
+   */
+  await requesterPage.goto(RP_URL);
+  await requesterPage.getByTestId("go-view").click();
+
+  await expect(requesterPage.getByTestId("feed-page")).toBeVisible();
+
+  await expect(requesterPage.getByTestId('login-button')).toBeVisible();
+  await signInWithAnchor({ page: requesterPage, context: requesterContext, anchor: requesterAnchor });
+  await expect(requesterPage.getByTestId('login-button')).not.toBeVisible();
+
+  const firstImage = await requesterPage.locator("[data-tid=image-item]").first();
+  await expect(await firstImage.getAttribute('data-credential-name')).toBe(credentialName);
+  await expect(firstImage.locator("button")).toBeEnabled();
+  await expect(requesterPage.getByTestId("verify-credential-image-success")).not.toBeVisible();
+
+  /**
+   * VERIFY CREDENTIAL FLOW IN INTERNET IDENTITY
+   * 
+   * TODO: Move to helper?
+   */
+  const iiPagePromise = requesterContext.waitForEvent('page');
+  await firstImage.locator("button").click();
+
+  const iiPage = await iiPagePromise;
+  await expect(iiPage).toHaveTitle('Internet Identity');
+
+  await iiPage.locator('[data-action=allow]').click();
+  await iiPage.waitForEvent('close');
+  await expect(iiPage.isClosed()).toBe(true);
+
+  /**
+   * BACK TO VIEW IMAGE WITH CREDENTIAL
+   */
+  await expect(requesterPage.getByTestId("verify-credential-image-success")).toBeVisible();
 });

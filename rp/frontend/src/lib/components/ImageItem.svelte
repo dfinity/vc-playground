@@ -42,7 +42,7 @@
   `;
 </script>
 
-<article class="card">
+<article class="card" data-tid="image-item" data-credential-name={image.credential_group_name}>
   <header class="p-2">
     <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
     <p class="text-sm text-surface-600-300-token truncate">
