@@ -49,27 +49,19 @@
     if (!selectedCredential || !selectedImage || !selectedIssuer) {
       return;
     }
-    try {
-      await shareContent({
-        issuerName: selectedCredential,
-        image: selectedImage,
-        owner: selectedIssuer.owner,
-        identity: $authStore.identity,
-      });
-      toastStore.trigger({
-        message: 'Content shared successfully!',
-        background: 'variant-filled-success',
-      });
-      showSuccessfulMessage = true;
-    } catch (error) {
-      console.error('Error sharing content', error);
-      toastStore.trigger({
-        message: `Oops! There was an error sharing the content. Please try again. ${error}`,
-        background: 'variant-filled-error',
-      });
-    } finally {
-      isLoading = false;
-    }
+    await shareContent({
+      issuerName: selectedCredential,
+      image: selectedImage,
+      owner: selectedIssuer.owner,
+      identity: $authStore.identity,
+      toastStore,
+    });
+    toastStore.trigger({
+      message: 'Content shared successfully!',
+      background: 'variant-filled-success',
+    });
+    showSuccessfulMessage = true;
+    isLoading = false;
   };
 </script>
 
