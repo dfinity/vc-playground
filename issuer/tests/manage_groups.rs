@@ -51,6 +51,60 @@ fn should_fail_set_user_if_anonymous() {
 }
 
 #[test]
+fn should_fail_set_user_if_duplicate_user_nickname() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    // Set a user with "UserNickname".
+    let user_data = UserData {
+        user_nickname: Some("UserNickname".to_string()),
+        issuer_nickname: None,
+    };
+    do_set_user(user_data.clone(), principal_1(), &env, canister_id);
+
+    // Try setting another user with "UserNickname".
+    let user_data = UserData {
+        user_nickname: Some("UserNickname".to_string()),
+        issuer_nickname: Some("issuer".to_string()),
+    };
+    let result = api::set_user(
+        &env,
+        canister_id,
+        principal_2(),
+        SetUserRequest { user_data },
+    )
+    .expect("API call failed");
+    assert_matches!(result, Err(GroupsError::AlreadyExists(msg)) if msg.contains("user nickname"));
+}
+
+#[test]
+fn should_fail_set_user_if_duplicate_issuer_nickname() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+
+    // Set a user with "IssuerNickname".
+    let user_data = UserData {
+        user_nickname: Some("Alice".to_string()),
+        issuer_nickname: Some("IssuerNickname".to_string()),
+    };
+    do_set_user(user_data.clone(), principal_1(), &env, canister_id);
+
+    // Try setting another user with "IssuerNickname".
+    let user_data = UserData {
+        user_nickname: Some("Bob".to_string()),
+        issuer_nickname: Some("IssuerNickname".to_string()),
+    };
+    let result = api::set_user(
+        &env,
+        canister_id,
+        principal_2(),
+        SetUserRequest { user_data },
+    )
+    .expect("API call failed");
+    assert_matches!(result, Err(GroupsError::AlreadyExists(msg)) if msg.contains("issuer nickname"));
+}
+
+#[test]
 fn should_fail_get_user_if_not_registered() {
     let env = env();
     let canister_id = install_issuer(&env, None);
