@@ -111,6 +111,7 @@
           testId="open-create-credential-modal"
           variant="primary"
           slot="actions"
+          disabled={loadingCreateIssuer || isNullish($issuerNickname)}
           loading={loadingCreateIssuer}>Create Credential</Button
         >
       </ActionsWrapper>
