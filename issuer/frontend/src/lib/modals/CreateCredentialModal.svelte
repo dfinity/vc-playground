@@ -35,7 +35,7 @@
   role="dialog"
   aria-modal="true"
 >
-  <header class="modal-header text-2xl font-bold">Create credential</header>
+  <header class="modal-header text-2xl font-bold">Create Credential</header>
   <div class="flex-1 flex flex-col gap-6">
     <div>
       <p>Using this playground, you can gate access to images on the image sharing platform.</p>
@@ -65,8 +65,11 @@
   </div>
   <div class="modal-footer flex justify-end space-x-2">
     <Button on:click={close} variant="ghost">Cancel</Button>
-    <Button testId="create-credential" on:click={sendCredential} disabled={isNullish(selectedCredential)} variant="primary"
-      >Create Credential</Button
+    <Button
+      testId="create-credential"
+      on:click={sendCredential}
+      disabled={isNullish(selectedCredential) || selectedCredential === ''}
+      variant="primary">Create Credential</Button
     >
   </div>
 </div>

@@ -21,10 +21,12 @@
 
   const modalStore = getModalStore();
 
-  let issuerName = '';
-  $: issuerName = $modalStore[0]?.meta.issuerName;
+  let credentialName = '';
+  $: credentialName = $modalStore[0]?.meta.issuerName;
   let owner: Principal | undefined;
   $: owner = $modalStore[0]?.meta.content.credential_group_owner;
+  let issuerName = '';
+  $: issuerName = $modalStore[0]?.meta.content.issuer_nickname;
   let imageUrl = '';
   $: imageUrl = $modalStore[0]?.meta.content.url;
 
@@ -33,7 +35,7 @@
   const startFlow = async () => {
     if (owner) {
       vcFlowLoading = true;
-      await loadCredential({ groupName: issuerName, owner, identity: $authStore.identity });
+      await loadCredential({ groupName: credentialName, owner, identity: $authStore.identity });
       vcFlowLoading = false;
     }
   };
@@ -43,7 +45,7 @@
   };
 
   let hasCredential: boolean | undefined;
-  $: hasCredential = $credentialsStore[`${issuerName}-${owner?.toText()}`]?.hasCredential;
+  $: hasCredential = $credentialsStore[`${credentialName}-${owner?.toText()}`]?.hasCredential;
 </script>
 
 <Modal>
@@ -59,7 +61,7 @@
   {#if vcFlowLoading === undefined && hasCredential === undefined}
     <div class="flex-1 flex flex-col justify-center items-center gap-4">
       <p>
-        Present the credential <em>{issuerName}</em> to view this image.
+        Present the credential <em>{credentialName}</em> to view this image.
       </p>
       <Button on:click={startFlow} variant="primary">Get Credential</Button>
     </div>
@@ -75,7 +77,10 @@
           <img class="h-auto max-w-full rounded-container-token" src={imageUrl} alt="Visible" />
         </div>
       {:else}
-        <p>You did not prove you hold the <em>{issuerName}</em> credential.</p>
+        <p>
+          You did not prove you hold the <em>{credentialName}</em> credential issued by
+          <em>{issuerName}</em>.
+        </p>
         <p>Visit the issuer to request the credential that grants you access to this image.</p>
       {/if}
     </div>

@@ -25,9 +25,6 @@
   onMount(() => {
     syncAuth();
   });
-
-  let currentRole: 'User' | 'Issuer';
-  $: currentRole = $page.route.id === '/(app)/credentials' ? 'User' : 'Issuer';
 </script>
 
 <Modal components={modalRegistry} />
@@ -48,7 +45,7 @@
     </Box>
     <svelte:fragment slot="trail">
       {#if !isNullish($authStore.identity)}
-        <SettingsDropdown {currentRole} />
+        <SettingsDropdown />
       {/if}
     </svelte:fragment>
   </AppBar>
