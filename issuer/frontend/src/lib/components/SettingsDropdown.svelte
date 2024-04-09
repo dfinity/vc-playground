@@ -4,31 +4,15 @@
   import IconCopy from './IconCopy.svelte';
   import PopoverDropdown from '$lib/ui-components/elements/PopoverDropdown.svelte';
   import NavBarItem from '$lib/ui-components/elements/NavBarItem.svelte';
-  import { goto } from '$app/navigation';
-
-  export let currentRole: 'User' | 'Issuer';
 
   let principal: string;
   $: principal = $authStore.identity?.getPrincipal().toText() ?? '';
 
   const copyToClipboard = async () => await navigator.clipboard.writeText(principal);
-
-  const switchRole = () => {
-    if (currentRole === 'User') {
-      goto('/issuer-center');
-    } else {
-      goto('/credentials');
-    }
-  };
 </script>
 
 <PopoverDropdown>
   <ul>
-    <li>
-      <NavBarItem on:click={switchRole}
-        >{`Switch to ${currentRole === 'Issuer' ? 'User' : 'Issuer'}`}</NavBarItem
-      >
-    </li>
     <li>
       <NavBarItem on:click={copyToClipboard}>
         <span><IconCopy /></span>

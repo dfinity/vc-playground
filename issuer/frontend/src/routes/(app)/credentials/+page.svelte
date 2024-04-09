@@ -1,6 +1,5 @@
 <script lang="ts">
   import IssuersList from '$lib/components/IssuersList.svelte';
-  import AuthGuard from '$lib/components/AuthGuard.svelte';
   import { authStore } from '$lib/stores/auth.store';
   import { getAllIssuersStore } from '$lib/stores/issuers.store';
   import TestIdWrapper from '$lib/ui-components/elements/TestIdWrapper.svelte';
@@ -12,7 +11,7 @@
   import { getUserNickname } from '$lib/stores/user.store';
   import { isNullish } from '$lib/utils/is-nullish.utils';
   import type { Readable } from 'svelte/store';
-  import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { addUserNickname } from '$lib/services/add-user-nickname.services';
   import type { Identity } from '@dfinity/agent';
   import { login } from '$lib/services/auth.services';
@@ -20,6 +19,7 @@
   import Stack from '$lib/ui-components/elements/Stack.svelte';
 
   const modalStore = getModalStore();
+  const toastStore = getToastStore();
 
   onMount(() => {
     setTheme('user');
@@ -44,6 +44,7 @@
           addUserNickname({
             identity: $authStore.identity as Identity,
             nickname: nickname as string,
+            toastStore,
           });
         }
       },

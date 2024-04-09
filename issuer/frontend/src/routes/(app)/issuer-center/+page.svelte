@@ -67,6 +67,7 @@
           addIssuerNickname({
             identity: $authStore.identity as Identity,
             nickname: nickname as string,
+            toastStore,
           });
         }
       },

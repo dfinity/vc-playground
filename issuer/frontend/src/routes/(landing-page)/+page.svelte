@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { syncAuth } from '$lib/services/auth.services';
   import { onMount } from 'svelte';
   import '../../app.postcss';
@@ -40,7 +39,7 @@
         </HeroCard>
         <HeroCard testId="go-issuer-center" href="/issuer-center">
           <IssuerIcon slot="icon" />
-          <svelte:fragment slot="title">Issuer</svelte:fragment>
+          <svelte:fragment slot="title">Issue</svelte:fragment>
           Create, issue and revoke credentials
         </HeroCard>
       </TwoSlots>

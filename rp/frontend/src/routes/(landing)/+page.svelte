@@ -1,6 +1,5 @@
 <script lang="ts">
   import HeroCard from '$lib/components/HeroCard.svelte';
-  import { goto } from '$app/navigation';
   import MainWrapper from '$lib/components/MainWrapper.svelte';
   import PublishIcon from '$lib/components/PublishIcon.svelte';
   import ViewIcon from '$lib/components/ViewIcon.svelte';
@@ -13,7 +12,7 @@
       <div class="flex flex-col gap-6">
         <h1 class="h1 text-center">Image Sharing Platform</h1>
         <h3 class="h3 text-center">
-          Publish images for people with specific credentials to view, or view gates images using
+          Publish images for people with specific credentials to view, or view gated images using
           your credentials.
         </h3>
       </div>
