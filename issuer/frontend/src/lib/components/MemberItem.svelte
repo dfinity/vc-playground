@@ -40,11 +40,11 @@
   };
 </script>
 
-<ListItem>
+<ListItem testId={`member ${member.nickname}`}>
   <svelte:fragment slot="main">{member.nickname}</svelte:fragment>
   <svelte:fragment slot="end">
     {#if status === 'pending'}
-      <Button variant="success" on:click={accept} loading={loadingAccept} disabled={loadingRevoke}
+      <Button testId="approve-button" variant="success" on:click={accept} loading={loadingAccept} disabled={loadingRevoke}
         >Approve</Button
       >
       <Button variant="error" on:click={revoke} loading={loadingRevoke} disabled={loadingAccept}

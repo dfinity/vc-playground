@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { signInWithAnchor, signInWithNewUser } from './utils/sigin-in-user.utils';
 
-// TODO: Get this from the environment
-const ISSUER_URL = 'http://aovwi-4maaa-aaaaa-qaagq-cai.localhost:8080/';
+// TODO: Get this from the environment and add to CI
+const ISSUER_URL = 'http://aovwi-4maaa-aaaaa-qaagq-cai.localhost:8080';
+// const ISSUER_URL = 'http://localhost:5173';
 const RP_URL = 'http://ctiya-peaaa-aaaaa-qaaja-cai.localhost:8080';
+// const RP_URL = 'http://localhost:5174';
 
 // This test is long because it involves multiple sequential steps.
 // Maybe we can split it into multiple tests in the future.
@@ -21,8 +23,6 @@ test('verifieable credentials flow works end to end', async ({
   await expect(issuerPage).toHaveTitle(/Verifiable Credentials Playground/);
 
   expect(issuerPage.getByTestId('issuer-center-route')).not.toBeVisible();
-  // await expect(issuerPage.getByTestId("go-issuer-center")).toBeVisible();
-  // await expect(issuerPage.getByTestId("go-issuer-center")).toBeEnabled();
   await issuerPage.getByTestId("go-issuer-center").click();
   await expect(issuerPage.getByTestId('issuer-center-route')).toBeVisible();
 
@@ -105,6 +105,23 @@ test('verifieable credentials flow works end to end', async ({
   await expect(credentialElement.locator("button")).toBeEnabled();
   await credentialElement.locator("button").click();
   await expect(credentialElement.locator("button")).not.toBeVisible();
+
+  /**
+   * ACCEPT CREDENTIAL REQUEST
+   */
+  await issuerPage.goto(`${ISSUER_URL}/issuer-center`);
+  await expect(issuerPage).toHaveTitle(/Verifiable Credentials Playground/);
+
+  await expect(issuerPage.getByTestId(`credentials ${issuerName} ${credentialName}`)).toBeVisible();
+  await issuerPage.getByTestId(`credentials ${issuerName} ${credentialName}`).click();
+
+  await expect(issuerPage.getByTestId("members-list")).toBeVisible();
+
+  const memberItem = issuerPage.getByTestId(`member ${userName}`);
+  await expect(memberItem).toBeVisible();
+  const approveButton = memberItem.getByTestId("approve-button");
+  await approveButton.click();
+  await expect(approveButton).not.toBeVisible();
 
   /**
    * VIEW IMAGE WITH CREDENTIAL
