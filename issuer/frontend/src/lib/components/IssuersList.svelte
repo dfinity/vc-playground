@@ -16,7 +16,7 @@
 {:else if issuers?.length === 0 && noGroupsMessage !== undefined}
   <p>{noGroupsMessage}</p>
 {:else if issuers?.length > 0}
-  <List>
+  <List testId="issuers-list">
     <slot />
   </List>
 {/if}

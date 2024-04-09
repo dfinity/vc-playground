@@ -35,12 +35,6 @@ const config: PlaywrightTestConfig = {
       use: { ...devices['Desktop Firefox'] },
     },
 
-    // Subdomains of localhost not supported.
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',

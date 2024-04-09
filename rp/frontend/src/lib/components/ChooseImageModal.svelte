@@ -43,7 +43,7 @@
       <div class="placeholder h-auto max-w-full rounded-container-token aspect-square" />
     {:else}
       {#each $imagesStore ?? [] as image, i (image.url)}
-        <a href={'#'} on:click={selectImageFactory(image)}>
+        <a data-tid={`image-${i}`} href={'#'} on:click={selectImageFactory(image)}>
           <img
             class="h-auto max-w-full rounded-container-token"
             src={image.url}

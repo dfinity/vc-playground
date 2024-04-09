@@ -6,7 +6,7 @@
   export let onClick: (() => void) | undefined = undefined;
 </script>
 
-<ListItem {onClick}>
+<ListItem testId={`credentials ${issuer.issuer_nickname} ${issuer.group_name}`} {onClick}>
   <svelte:fragment slot="main">{issuer.group_name}</svelte:fragment>
   <span slot="sub">{`Issued by ${issuer.issuer_nickname}`}</span>
   <slot name="end" slot="end" />

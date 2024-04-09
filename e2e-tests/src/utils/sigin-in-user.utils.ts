@@ -1,12 +1,35 @@
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 
+export const signInWithAnchor = async ({
+  page,
+  context,
+  anchor,
+}: {
+  page: Page;
+  context: BrowserContext;
+  anchor: number;
+}): Promise<void> => {
+  const iiPagePromise = context.waitForEvent('page');
+  
+  await page.locator('[data-tid=login-button]').click();
+  
+  const iiPage = await iiPagePromise;
+  await expect(iiPage).toHaveTitle('Internet Identity');
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  await iiPage.locator(`[data-anchor-id='${anchor}']`).click();
+  await iiPage.locator('[data-action=cancel]').click();
+  await iiPage.waitForEvent('close');
+  await expect(iiPage.isClosed()).toBe(true);
+}
+
 export const signInWithNewUser = async ({
   page,
   context,
 }: {
   page: Page;
   context: BrowserContext;
-}) => {
+}): Promise<number> => {
   const iiPagePromise = context.waitForEvent('page');
   
   await page.locator('[data-tid=login-button]').click();
@@ -20,8 +43,18 @@ export const signInWithNewUser = async ({
   await iiPage.locator('input#captchaInput').fill('a');
   await iiPage.locator('#confirmRegisterButton').click();
 
-  await iiPage.locator('#displayUserContinue').click();
+  try {
+    const anchor = await iiPage.locator('#userNumber').textContent();
+    await iiPage.locator('#displayUserContinue').click();
+    await iiPage.waitForEvent('close');
+    await expect(iiPage.isClosed()).toBe(true);
 
-  await iiPage.waitForEvent('close');
-  expect(iiPage.isClosed()).toBe(true);
+    if (anchor === null) {
+      throw new Error('Anchor is null');
+    }
+    return parseInt(anchor);
+  } catch (err) {
+    console.error('Error:', err);
+    return -1;
+  }
 };

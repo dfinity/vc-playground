@@ -6,6 +6,8 @@ on:
     branches: [ main, master ]
 jobs:
   test:
+    # TODO: Enable when we prepare the environment to run the tests
+    if: false
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:

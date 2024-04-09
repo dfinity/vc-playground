@@ -4,6 +4,7 @@
   import Stack from './Stack.svelte';
 
   export let onClick: (() => void) | undefined = undefined;
+  export let testId: string | undefined = undefined;
 
   function handleClick() {
     if (onClick) {
@@ -18,6 +19,7 @@
   on:click={handleClick}
   on:keypress={handleClick}
   role="row"
+  data-tid={testId}
   class={`flex justify-between items-center gap-4 p-2 hover:bg-tertiary-hover-token rounded-container-token ${hoverClass}`}
 >
   <slot name="start" />

@@ -18,12 +18,12 @@
         </h3>
       </div>
       <section class="sm:grid sm:grid-cols-2 gap-6 flex flex-col">
-        <HeroCard testId="login-button" on:click={() => goto('/share')}>
+        <HeroCard testId="go-publish" href="/share">
           <PublishIcon slot="icon" />
           <svelte:fragment slot="title">Publish</svelte:fragment>
           Share images with credential holders
         </HeroCard>
-        <HeroCard on:click={() => goto('/feed')}>
+        <HeroCard testId="go-view" href="/feed">
           <ViewIcon slot="icon" />
           <svelte:fragment slot="title">View</svelte:fragment>
           View gated images using your credentials

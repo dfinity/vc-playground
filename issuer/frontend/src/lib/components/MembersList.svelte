@@ -26,7 +26,7 @@
     You have not issued any credentials of this type, and there are no pending requests.
   </Paragraph>
 {:else}
-  <ArticleWrapper>
+  <ArticleWrapper testId="members-list">
     <svelte:fragment slot="title">{title}</svelte:fragment>
     <List>
       {#each members as member}

@@ -14,7 +14,7 @@
   $: contentDataStore = getVisibleContentData($authStore.identity);
 </script>
 
-<div class="flex flex-col gap-6 items-center">
+<div class="flex flex-col gap-6 items-center" data-tid="feed-page">
   <h1 class="h1 text-center">View Gated Images</h1>
   <p class="text-center">
     You can view an image if you hold the particular credential required to access the image.
@@ -23,7 +23,7 @@
   {#if nonNullish($authStore.identity)}
     <Button variant="primary" href="/share">Publish Image</Button>
   {:else}
-    <Button variant="secondary" on:click={() => login()} loading={$authStore.identity === undefined}
+    <Button testId="login-button" variant="secondary" on:click={() => login()} loading={$authStore.identity === undefined}
       >Login</Button
     >
   {/if}
