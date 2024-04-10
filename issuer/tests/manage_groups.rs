@@ -32,6 +32,40 @@ fn should_set_user() {
 }
 
 #[test]
+fn should_set_user_subsequently() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+    let user = principal_1();
+
+    // Set a user with "UserNickname".
+    let user_data = UserData {
+        user_nickname: Some("UserNickname".to_string()),
+        issuer_nickname: None,
+    };
+    do_set_user(user_data.clone(), user, &env, canister_id);
+
+    // Set issuer-nickname for the same user, without changing user-nickname.
+    let user_data = UserData {
+        user_nickname: Some("UserNickname".to_string()),
+        issuer_nickname: Some("IssuerNickname".to_string()),
+    };
+    do_set_user(user_data.clone(), user, &env, canister_id);
+
+    let retrieved_data = do_get_user(user, &env, canister_id);
+    assert_eq!(retrieved_data, user_data);
+
+    // Overwrite user's issuer-name.
+    let user_data = UserData {
+        user_nickname: Some("UserNickname".to_string()),
+        issuer_nickname: Some("NewIssuerNickname".to_string()),
+    };
+    do_set_user(user_data.clone(), user, &env, canister_id);
+
+    let retrieved_data = do_get_user(user, &env, canister_id);
+    assert_eq!(retrieved_data, user_data);
+}
+
+#[test]
 fn should_fail_set_user_if_anonymous() {
     let env = env();
     let canister_id = install_issuer(&env, None);
