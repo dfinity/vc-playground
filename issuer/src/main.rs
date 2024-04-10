@@ -264,11 +264,15 @@ fn get_user() -> Result<UserData, GroupsError> {
     })
 }
 
-fn ensure_unique_nicknames(new_user_data: &UserData, users: &UsersMap) -> Result<(), GroupsError> {
+fn ensure_unique_nicknames(
+    new_user_data: &UserData,
+    user_principal: Principal,
+    users: &UsersMap,
+) -> Result<(), GroupsError> {
     if let Some(ref user_nickname) = new_user_data.user_nickname {
         let new_user_nickname = Some(user_nickname.clone());
-        for (_key, user) in users.iter() {
-            if user.user_nickname == new_user_nickname {
+        for (principal, user_record) in users.iter() {
+            if user_record.user_nickname == new_user_nickname && principal != user_principal {
                 return Err(GroupsError::AlreadyExists(format!(
                     "user nickname: {}",
                     user_nickname
@@ -278,8 +282,8 @@ fn ensure_unique_nicknames(new_user_data: &UserData, users: &UsersMap) -> Result
     }
     if let Some(ref issuer_nickname) = new_user_data.issuer_nickname {
         let new_issuer_nickname = Some(issuer_nickname.clone());
-        for (_key, user) in users.iter() {
-            if user.issuer_nickname == new_issuer_nickname {
+        for (principal, user_record) in users.iter() {
+            if user_record.issuer_nickname == new_issuer_nickname && principal != user_principal {
                 return Err(GroupsError::AlreadyExists(format!(
                     "issuer nickname: {}",
                     issuer_nickname
@@ -295,7 +299,7 @@ fn ensure_unique_nicknames(new_user_data: &UserData, users: &UsersMap) -> Result
 fn set_user(req: SetUserRequest) -> Result<(), GroupsError> {
     check_authenticated()?;
     USERS.with_borrow_mut(|users| {
-        ensure_unique_nicknames(&req.user_data, users)?;
+        ensure_unique_nicknames(&req.user_data, caller(), users)?;
         users.insert(
             caller(),
             UserRecord {
