@@ -13,7 +13,7 @@
   import IssuerIcon from '$lib/ui-components/icons/IssuerIcon.svelte';
   import UserIcon from '$lib/ui-components/icons/UserIcon.svelte';
   import { AppShell } from '@skeletonlabs/skeleton';
-  import Link from '$lib/ui-components/elements/Link.svelte';
+  import Button from '$lib/ui-components/elements/Button.svelte';
 
   onMount(() => {
     setTheme('visitor');
@@ -45,7 +45,7 @@
       </TwoSlots>
       <Stack gap="md" align="center">
         <Heading level="3" align="center">Want to use credentials?</Heading>
-        <Link href={RP_ORIGIN}>Try it on the Image Sharing Platform</Link>
+        <Button variant="primary" href={RP_ORIGIN}>Try it on the Image Sharing Platform</Button>
       </Stack>
     </HeroWrapper>
   </MainWrapper>

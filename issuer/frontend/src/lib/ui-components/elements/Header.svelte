@@ -2,7 +2,6 @@
   import { AppBar } from '@skeletonlabs/skeleton';
   import WarningMessage from './WarningMessage.svelte';
   import HeaderTitle from './HeaderTitle.svelte';
-  import { page } from '$app/stores';
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
 
   export let currentRole: 'User' | 'Issuer';
@@ -10,20 +9,16 @@
 
 <AppBar
   slot="header"
-  gridColumns="sm:grid-cols-[1fr_3fr_1fr] grid-cols-[1fr_auto]"
+  gridColumns="sm:grid-cols-[1fr_1fr_1fr] grid-cols-[1fr_auto]"
   slotTrail="place-self-end"
-  slotLead="hidden sm:block"
+  slotDefault="hidden sm:flex justify-center"
 >
-  <WarningMessage slot="lead">This is a demo application</WarningMessage>
-  <HeaderTitle>Verifiable Credentials Playground</HeaderTitle>
+  <HeaderTitle slot="lead">Verifiable Credentials Playground</HeaderTitle>
+  <WarningMessage>This is a demo application</WarningMessage>
   <div slot="trail" class="flex gap-4 items-center self-end">
-    <div class="hidden sm:flex gap-2">
-      <a class={$page.route.id === '/(app)/credentials' ? 'underline' : ''} href="/credentials"
-        >Request</a
-      >
-      <a class={$page.route.id === '/(app)/credentials' ? '' : 'underline'} href="/issuer-center"
-        >Issue</a
-      >
+    <div class="hidden sm:flex gap-4">
+      <a href="/credentials">View</a>
+      <a href="/issuer-center">Publish</a>
     </div>
     <SettingsDropdown {currentRole} />
   </div>
