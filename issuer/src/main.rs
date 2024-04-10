@@ -666,10 +666,6 @@ fn get_derivation_origin(_hostname: &str) -> Result<DerivationOriginData, Deriva
     })
 }
 
-const VERIFIED_MEMBER_VC_CONSENT_EN: &str = r###"# Verified Member
-
-Credential stating that you are a member of group "###;
-
 pub fn get_vc_consent_message_en(
     credential_spec: &CredentialSpec,
 ) -> Result<Icrc21ConsentInfo, Icrc21Error> {
@@ -678,7 +674,7 @@ pub fn get_vc_consent_message_en(
             description: err,
         })),
         Ok((group_name, _owner)) => Ok(Icrc21ConsentInfo {
-            consent_message: format!("{} '{}'.", VERIFIED_MEMBER_VC_CONSENT_EN, group_name),
+            consent_message: format!("#\"{}\"", group_name),
             language: "en".to_string(),
         }),
     }

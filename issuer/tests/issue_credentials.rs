@@ -49,7 +49,7 @@ fn should_get_vc_consent_message() {
         api::vc_consent_message(&env, canister_id, principal_1(), &consent_message_request)
             .expect("API call failed")
             .expect("Failed to obtain consent info");
-    assert!(consent_info.consent_message.contains("Verified Member"));
+    assert!(consent_info.consent_message.contains(DUMMY_GROUP_NAME));
 }
 
 #[test]
