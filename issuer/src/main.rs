@@ -674,7 +674,7 @@ pub fn get_vc_consent_message_en(
             description: err,
         })),
         Ok((group_name, _owner)) => Ok(Icrc21ConsentInfo {
-            consent_message: format!("#\"{}\"", group_name),
+            consent_message: format!("# \"{}\"", group_name),
             language: "en".to_string(),
         }),
     }
