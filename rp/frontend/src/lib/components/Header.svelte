@@ -1,0 +1,25 @@
+<script lang="ts">
+  import { AppBar } from '@skeletonlabs/skeleton';
+  import WarningMessage from './WarningMessage.svelte';
+  import HeaderTitle from './HeaderTitle.svelte';
+  import Dropdown from './Dropdown.svelte';
+
+  export let currentRole: 'View' | 'Publish';
+</script>
+
+<AppBar
+  slot="header"
+  gridColumns="sm:grid-cols-[1fr_1fr_1fr] grid-cols-[1fr_auto]"
+  slotTrail="place-self-end"
+  slotDefault="hidden sm:flex justify-center"
+>
+  <HeaderTitle slot="lead">Image Sharing Platform</HeaderTitle>
+  <WarningMessage>This is a demo application</WarningMessage>
+  <div slot="trail" class="flex gap-4 items-center self-end">
+    <div class="hidden sm:flex gap-4">
+      <a href="/feed">View</a>
+      <a href="/share">Publish</a>
+    </div>
+    <Dropdown {currentRole} />
+  </div>
+</AppBar>
