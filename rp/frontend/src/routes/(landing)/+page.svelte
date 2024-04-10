@@ -16,7 +16,7 @@
           your credentials.
         </h3>
       </div>
-      <section class="sm:grid sm:grid-cols-2 gap-6 flex flex-col">
+      <section class="sm:grid sm:grid-cols-2 gap-6 flex flex-col px-12 sm:px-8">
         <HeroCard testId="go-publish" href="/share">
           <PublishIcon slot="icon" />
           <svelte:fragment slot="title">Publish</svelte:fragment>

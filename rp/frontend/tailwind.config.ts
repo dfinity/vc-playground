@@ -20,7 +20,7 @@ export default {
       themes: {
         preset: [
           {
-            name: 'crimson',
+            name: 'gold-nouveau',
             enhancements: true,
           },
         ],
