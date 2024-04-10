@@ -3,7 +3,7 @@
   import MainWrapper from '$lib/components/MainWrapper.svelte';
   import PublishIcon from '$lib/components/PublishIcon.svelte';
   import ViewIcon from '$lib/components/ViewIcon.svelte';
-  import { AppShell } from '@skeletonlabs/skeleton';
+  import { AppShell, LightSwitch } from '@skeletonlabs/skeleton';
 </script>
 
 <AppShell>
@@ -30,4 +30,7 @@
       </section>
     </div>
   </MainWrapper>
+  <span class="fixed bottom-0 right-0 p-4">
+    <LightSwitch />
+  </span>
 </AppShell>
