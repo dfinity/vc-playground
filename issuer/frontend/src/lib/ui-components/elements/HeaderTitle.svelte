@@ -1,1 +1,3 @@
-<a href="/" class="text-xl font-heading-token uppercase"><slot /></a>
+<a href="/" class="sm:text-xl text-base font-heading-token uppercase block sm:text-center"
+  ><slot /></a
+>

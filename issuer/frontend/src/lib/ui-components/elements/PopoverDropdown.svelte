@@ -9,7 +9,7 @@
 </script>
 
 <div>
-  <button class="btn btn-icon bg-initial" use:popup={popupCombobox}>⋮</button>
+  <button class="btn btn-icon variant-ringed" use:popup={popupCombobox}>⋮</button>
   <nav class="w-48 shadow-xl py-2 variant-filled-surface" data-popup="popupCombobox">
     <slot />
   </nav>
