@@ -192,7 +192,10 @@ fn get_validate_vp_request_and_rp_init() -> (ValidateVpRequest, RpInit) {
         ic_root_key_der,
         ii_origin: II_ISSUER_URL.to_string(),
         ii_canister_id,
-        issuers: vec![IssuerData{ origin: issuer_origin.to_string(), canister_id: issuer_canister_id }],
+        issuers: vec![IssuerData {
+            origin: issuer_origin.to_string(),
+            canister_id: issuer_canister_id,
+        }],
     };
     (req, rp_init)
 }

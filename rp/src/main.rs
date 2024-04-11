@@ -5,7 +5,11 @@ use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemor
 use ic_stable_structures::storable::{Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, RestrictedMemory, StableBTreeMap, StableCell};
 use include_dir::{include_dir, Dir};
-use relying_party::rp_api::{AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, HttpRequest, HttpResponse, ImageData, ImagesList, ListExclusiveContentRequest, ListImagesRequest, RpInit, UploadImagesRequest, ValidateVpRequest};
+use relying_party::rp_api::{
+    AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, HttpRequest,
+    HttpResponse, ImageData, ImagesList, ListExclusiveContentRequest, ListImagesRequest, RpInit,
+    UploadImagesRequest, ValidateVpRequest,
+};
 use serde_bytes::ByteBuf;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -116,7 +120,11 @@ impl From<RpInit> for RpConfig {
                 .expect("failed to extract raw root pk from der"),
             ii_origin: init.ii_origin,
             ii_canister_id: init.ii_canister_id,
-            issuers: init.issuers.iter().map(|data| (data.origin.to_string(), data.canister_id)).collect(),
+            issuers: init
+                .issuers
+                .iter()
+                .map(|data| (data.origin.to_string(), data.canister_id))
+                .collect(),
         }
     }
 }
@@ -253,7 +261,10 @@ fn validate_ii_vp(req: ValidateVpRequest) -> Result<(), ContentError> {
     let (ic_root_key_raw, vc_flow_signers) = CONFIG.with_borrow(|config| {
         let config = config.get();
         let Some(issuer_canister_id) = config.issuers.get(&req.issuer_origin) else {
-            return Err(ContentError::NotAuthorized(format!("issuer not supported: {}", req.issuer_origin)));
+            return Err(ContentError::NotAuthorized(format!(
+                "issuer not supported: {}",
+                req.issuer_origin
+            )));
         };
         if let Some(issuer_canister_id_from_req) = req.issuer_canister_id {
             if *issuer_canister_id != issuer_canister_id_from_req {
