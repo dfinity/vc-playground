@@ -2,7 +2,7 @@
 use assert_matches::assert_matches;
 use candid::Principal;
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
-use relying_party::rp_api::{ContentData, ContentError, RpInit, ValidateVpRequest};
+use relying_party::rp_api::{ContentData, ContentError, IssuerData, RpInit, ValidateVpRequest};
 use std::collections::{HashMap, HashSet};
 use vc_util::issuer_api::{ArgumentValue, CredentialSpec};
 use vc_util::II_ISSUER_URL;
@@ -192,8 +192,7 @@ fn get_validate_vp_request_and_rp_init() -> (ValidateVpRequest, RpInit) {
         ic_root_key_der,
         ii_origin: II_ISSUER_URL.to_string(),
         ii_canister_id,
-        issuer_origin: issuer_origin.to_string(),
-        issuer_canister_id,
+        issuers: vec![IssuerData{ origin: issuer_origin.to_string(), canister_id: issuer_canister_id }],
     };
     (req, rp_init)
 }
@@ -221,7 +220,7 @@ fn should_fail_verify_ii_vp_with_wrong_issuer_origin() {
     let result =
         api::validate_ii_vp(&env, canister_id, principal_1(), req).expect("API call failed");
     assert_matches!(result,
-        Err(ContentError::NotAuthorized(e)) if e.contains("VP validation error"));
+        Err(ContentError::NotAuthorized(e)) if e.contains("issuer not supported"));
 }
 
 #[test]

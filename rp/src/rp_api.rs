@@ -85,6 +85,12 @@ pub struct ValidateVpRequest {
 }
 
 #[derive(CandidType, Deserialize)]
+pub struct IssuerData {
+    pub origin: String,
+    pub canister_id: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct RpInit {
     /// Root of trust for checking canister signatures.
     pub ic_root_key_der: Vec<u8>,
@@ -93,7 +99,6 @@ pub struct RpInit {
     pub ii_origin: String,
     pub ii_canister_id: Principal,
 
-    /// Issuer that is trusted by this relying party.
-    pub issuer_origin: String,
-    pub issuer_canister_id: Principal,
+    /// Issuers that are trusted by this relying party.
+    pub issuers: Vec<IssuerData>,
 }

@@ -85,12 +85,16 @@ type HttpResponse = record {
     body: blob;
 };
 
+type IssuerData = record {
+    origin : text;
+    canister_id : principal
+};
+
 type RpInit = record {
-  ic_root_key_der : vec nat8;
-  ii_origin : text;
-  ii_canister_id : principal;
-  issuer_origin : text;
-  issuer_canister_id : principal;
+    ic_root_key_der : vec nat8;
+    ii_origin : text;
+    ii_canister_id : principal;
+    issuers : vec IssuerData;
 };
 
 service: (opt RpInit) -> {

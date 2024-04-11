@@ -5,14 +5,11 @@ use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemor
 use ic_stable_structures::storable::{Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, RestrictedMemory, StableBTreeMap, StableCell};
 use include_dir::{include_dir, Dir};
-use relying_party::rp_api::{
-    AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, HttpRequest,
-    HttpResponse, ImageData, ImagesList, ListExclusiveContentRequest, ListImagesRequest, RpInit,
-    UploadImagesRequest, ValidateVpRequest,
-};
+use relying_party::rp_api::{AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, HttpRequest, HttpResponse, ImageData, ImagesList, ListExclusiveContentRequest, ListImagesRequest, RpInit, UploadImagesRequest, ValidateVpRequest};
 use serde_bytes::ByteBuf;
 use std::borrow::Cow;
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 use asset_util::{collect_assets, CertifiedAssets};
 use canister_sig_util::extract_raw_root_pk_from_der;
@@ -107,9 +104,9 @@ struct RpConfig {
     ii_origin: String,
     ii_canister_id: Principal,
 
-    /// Issuer that is trusted by this relying party.
-    issuer_origin: String,
-    issuer_canister_id: Principal,
+    /// Issuers that are trusted by this relying party.
+    /// (a map from the origin to canister id)
+    issuers: BTreeMap<String, Principal>,
 }
 
 impl From<RpInit> for RpConfig {
@@ -119,8 +116,7 @@ impl From<RpInit> for RpConfig {
                 .expect("failed to extract raw root pk from der"),
             ii_origin: init.ii_origin,
             ii_canister_id: init.ii_canister_id,
-            issuer_origin: init.issuer_origin,
-            issuer_canister_id: init.issuer_canister_id,
+            issuers: init.issuers.iter().map(|data| (data.origin.to_string(), data.canister_id)).collect(),
         }
     }
 }
@@ -141,8 +137,7 @@ impl Default for RpConfig {
             ic_root_key_raw: vec![],
             ii_origin: "".to_string(),
             ii_canister_id: Principal::anonymous(),
-            issuer_origin: "".to_string(),
-            issuer_canister_id: Principal::anonymous(),
+            issuers: BTreeMap::new(),
         }
     }
 }
@@ -257,11 +252,14 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
 fn validate_ii_vp(req: ValidateVpRequest) -> Result<(), ContentError> {
     let (ic_root_key_raw, vc_flow_signers) = CONFIG.with_borrow(|config| {
         let config = config.get();
-        if let Some(issuer_id) = req.issuer_canister_id {
-            if issuer_id != config.issuer_canister_id {
+        let Some(issuer_canister_id) = config.issuers.get(&req.issuer_origin) else {
+            return Err(ContentError::NotAuthorized(format!("issuer not supported: {}", req.issuer_origin)));
+        };
+        if let Some(issuer_canister_id_from_req) = req.issuer_canister_id {
+            if *issuer_canister_id != issuer_canister_id_from_req {
                 return Err(ContentError::NotAuthorized(format!(
                     "wrong issuer canister id: expected {}, got {}",
-                    config.issuer_canister_id, issuer_id
+                    issuer_canister_id, issuer_canister_id_from_req
                 )));
             }
         }
@@ -271,7 +269,7 @@ fn validate_ii_vp(req: ValidateVpRequest) -> Result<(), ContentError> {
                 ii_origin: config.ii_origin.clone(),
                 ii_canister_id: config.ii_canister_id,
                 issuer_origin: req.issuer_origin,
-                issuer_canister_id: config.issuer_canister_id,
+                issuer_canister_id: *issuer_canister_id,
             },
         ))
     })?;

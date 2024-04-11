@@ -14,9 +14,7 @@ use internet_identity_interface::internet_identity::types::vc_mvp::{
 };
 use internet_identity_interface::internet_identity::types::FrontendHostname;
 use relying_party::rp_api;
-use relying_party::rp_api::{
-    AddExclusiveContentRequest, ContentData, ContentError, ValidateVpRequest,
-};
+use relying_party::rp_api::{AddExclusiveContentRequest, ContentData, ContentError, IssuerData, ValidateVpRequest};
 use std::collections::HashMap;
 use std::time::UNIX_EPOCH;
 use vc_util::issuer_api::{
@@ -353,8 +351,7 @@ fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
             ic_root_key_der: env.root_key().to_vec(),
             ii_origin: ii_url.clone(),
             ii_canister_id: ii_id,
-            issuer_origin: issuer_url.clone(),
-            issuer_canister_id: issuer_id,
+            issuers: vec![IssuerData{ origin: issuer_url.clone(), canister_id: issuer_id }],
         }),
     );
 
