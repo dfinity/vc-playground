@@ -1,5 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde_bytes::ByteBuf;
+use vc_util::issuer_api::CredentialSpec;
 
 /// Types for requesting a list of available images.
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -72,4 +73,27 @@ pub enum ContentError {
     AlreadyExists(String),
     NotFound(String),
     Internal(String),
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
+pub struct ValidateVpRequest {
+    pub vp_jwt: String,
+    pub effective_vc_subject: Principal,
+    pub credential_spec: CredentialSpec,
+    pub issuer_origin: String,
+    pub issuer_canister_id: Option<Principal>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct RpInit {
+    /// Root of trust for checking canister signatures.
+    pub ic_root_key_der: Vec<u8>,
+
+    /// II instance that is allowed to provide id alias credentials.
+    pub ii_origin: String,
+    pub ii_canister_id: Principal,
+
+    /// Issuer that is trusted by this relying party.
+    pub issuer_origin: String,
+    pub issuer_canister_id: Principal,
 }

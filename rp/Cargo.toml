@@ -32,4 +32,6 @@ candid_parser = "0.1"
 ic-http-certification = "2.2"
 ic-test-state-machine-client = "3"
 ic-response-verification = "2.2"
+identity_core = { git = "https://github.com/frederikrothenberger/identity.rs.git", branch = "frederik/wasm-test", default-features = false }
+identity_credential = { git = "https://github.com/frederikrothenberger/identity.rs.git", branch = "frederik/wasm-test", default-features = false , features = ["validator"] }
 canister_tests.workspace = true

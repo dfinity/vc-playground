@@ -46,7 +46,7 @@ type UsersMap = StableBTreeMap<Principal, UserRecord, VirtualMemory<Memory>>;
 const GROUPS_MEMORY_ID: MemoryId = MemoryId::new(0u8);
 const USERS_MEMORY_ID: MemoryId = MemoryId::new(1u8);
 
-const ISSUER_URL: &str = "https://vc-playground.vc";
+const ISSUER_URL: &str = "https://metaissuer.vc";
 const CREDENTIAL_URL_PREFIX: &str = "data:text/plain;charset=UTF-8,";
 
 const MINUTE_NS: u64 = 60 * 1_000_000_000;

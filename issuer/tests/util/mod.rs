@@ -31,17 +31,31 @@ pub const DUMMY_DERIVATION_ORIGIN: &str = "https://y2aaj-miaaa-aaaad-aacxq-cai.i
 pub const DUMMY_FRONTEND_HOSTNAME: &str = "https://y2aaj-miaaa-aaaad-aacxq-cai.ic0.app";
 
 lazy_static! {
-    /// Gzipped Wasm module for the current Early Adopter Issuer build, i.e. the one we're testing
+    /// Gzipped Wasm module for the current VC Playground Meta-Issuer build, i.e. the one we're testing
     pub static ref META_ISSUER_WASM: Vec<u8> = {
         let def_path = PathBuf::from("./../").join("meta_issuer.wasm.gz");
         let err = format!("
         Could not find Early Adopter Issuer Wasm module for current build.
         I will look for it at {:?} (note that I run from {:?}).
-        You can build the Wasm by running ./build.sh
+        You can build the Wasm by running ./build.sh in <project-home>/issuer/
         ", &def_path,
             &std::env::current_dir().map(|x| x.display().to_string()).unwrap_or_else(|_|
                 "an unknown directory".to_string()));
                 get_wasm_path("META_ISSUER_WASM".to_string(), &def_path).expect(&err)
+
+    };
+
+        /// Gzipped Wasm module for the current VC Playground RP build, i.e. the one we're testing
+    pub static ref RELYING_PARTY_WASM: Vec<u8> = {
+        let def_path = PathBuf::from("./../").join("relying_party.wasm.gz");
+        let err = format!("
+        Could not find Early Adopter Issuer Wasm module for current build.
+        I will look for it at {:?} (note that I run from {:?}).
+        You can build the Wasm by running ./build.sh in <project-home>/rp/
+        ", &def_path,
+            &std::env::current_dir().map(|x| x.display().to_string()).unwrap_or_else(|_|
+                "an unknown directory".to_string()));
+                get_wasm_path("RELYING_PARTY_WASM".to_string(), &def_path).expect(&err)
 
     };
 
@@ -83,23 +97,22 @@ pub struct IssuerInit {
     pub frontend_hostname: String,
 }
 
-pub fn install_canister(env: &StateMachine, wasm: Vec<u8>) -> CanisterId {
+pub fn install_canister<Init: CandidType>(
+    env: &StateMachine,
+    wasm: Vec<u8>,
+    maybe_init: Option<Init>,
+) -> CanisterId {
     let canister_id = env.create_canister(None);
-    let arg = candid::encode_one("()").expect("error encoding empty arg as candid");
+    let arg = match maybe_init {
+        Some(init) => candid::encode_one(Some(init)).expect("error encoding init arg as candid"),
+        None => candid::encode_one("()").expect("error encoding empty arg as candid"),
+    };
     env.install_canister(canister_id, wasm, arg, None);
     canister_id
 }
 
 pub fn install_issuer(env: &StateMachine, maybe_init: Option<IssuerInit>) -> CanisterId {
-    let canister_id = env.create_canister(None);
-    let arg = match maybe_init {
-        Some(init) => {
-            candid::encode_one(Some(init)).expect("error encoding issuer init arg as candid")
-        }
-        None => candid::encode_one("()").expect("error encoding empty arg as candid"),
-    };
-    env.install_canister(canister_id, META_ISSUER_WASM.clone(), arg, None);
-    canister_id
+    install_canister(env, META_ISSUER_WASM.clone(), maybe_init)
 }
 
 pub fn do_set_user(

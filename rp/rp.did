@@ -49,6 +49,21 @@ type AddExclusiveContentRequest = record {
     credential_group_owner: principal;
 };
 
+type CredentialSpec = record {
+    credential_type : text;
+    /// arguments are optional, and specific to the credential_type
+    arguments : opt vec record { text; ArgumentValue };
+};
+type ArgumentValue = variant { "Int" : int32; String : text };
+
+type ValidateVpRequest = record {
+    vp_jwt: text;
+    effective_vc_subject: principal;
+    credential_spec: CredentialSpec;
+    issuer_origin: text;
+    issuer_canister_id: opt principal;
+};
+
 /// Types related to HTTP handling
 
 type HeaderField = record {
@@ -70,17 +85,24 @@ type HttpResponse = record {
     body: blob;
 };
 
-type RpConfig = record {};
+type RpInit = record {
+  ic_root_key_der : vec nat8;
+  ii_origin : text;
+  ii_canister_id : principal;
+  issuer_origin : text;
+  issuer_canister_id : principal;
+};
 
-service: (opt RpConfig) -> {
+service: (opt RpInit) -> {
     /// API for creating/accessing exclusive content.
     list_images : (ListImagesRequest) -> (variant { Ok : ImagesList; Err : ContentError;}) query;  /// public
     list_exclusive_content : (ListExclusiveContentRequest) -> (variant { Ok : ExclusiveContentList; Err : ContentError;}) query;  /// public
     add_exclusive_content : (AddExclusiveContentRequest) -> (variant { Ok : ContentData; Err : ContentError;});  /// authenticated
+    validate_ii_vp : (ValidateVpRequest) -> (variant { Ok ; Err : ContentError;});
 
     /// API for configuring and initializing the RP.
     /// authenticated, only for the controller
-    configure: (RpConfig) -> ();
+    configure: (RpInit) -> ();
     upload_images : (UploadImagesRequest) -> (variant { Ok : ImagesList; Err : ContentError;});
 
     /// Serve the app

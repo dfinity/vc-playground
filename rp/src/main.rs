@@ -7,15 +7,17 @@ use ic_stable_structures::{DefaultMemoryImpl, RestrictedMemory, StableBTreeMap, 
 use include_dir::{include_dir, Dir};
 use relying_party::rp_api::{
     AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, HttpRequest,
-    HttpResponse, ImageData, ImagesList, ListExclusiveContentRequest, ListImagesRequest,
-    UploadImagesRequest,
+    HttpResponse, ImageData, ImagesList, ListExclusiveContentRequest, ListImagesRequest, RpInit,
+    UploadImagesRequest, ValidateVpRequest,
 };
 use serde_bytes::ByteBuf;
 use std::borrow::Cow;
 use std::cell::RefCell;
 
 use asset_util::{collect_assets, CertifiedAssets};
+use canister_sig_util::extract_raw_root_pk_from_der;
 use ic_cdk_macros::post_upgrade;
+use vc_util::{validate_ii_presentation_and_claims, VcFlowSigners};
 
 /// We use restricted memory in order to ensure the separation between non-managed config memory (first page)
 /// and the managed memory for potential other data of the canister.
@@ -64,7 +66,7 @@ impl Storable for ExclusiveContentRecord {
 
 thread_local! {
     /// Stable structures
-    // Static configuration of the canister set by init() or post_upgrade().
+    // Static configuration of the canister set by init(), configure(), or post_upgrade().
     static CONFIG: RefCell<ConfigCell> = RefCell::new(ConfigCell::init(config_memory(), RpConfig::default()).expect("failed to initialize stable cell"));
 
     static MEMORY_MANAGER: RefCell<MemoryManager<Memory>> =
@@ -97,7 +99,31 @@ fn managed_memory() -> Memory {
 }
 
 #[derive(CandidType, Deserialize)]
-struct RpConfig {}
+struct RpConfig {
+    /// Root of trust for checking canister signatures.
+    ic_root_key_raw: Vec<u8>,
+
+    /// II instance that is allowed to provide id alias credentials.
+    ii_origin: String,
+    ii_canister_id: Principal,
+
+    /// Issuer that is trusted by this relying party.
+    issuer_origin: String,
+    issuer_canister_id: Principal,
+}
+
+impl From<RpInit> for RpConfig {
+    fn from(init: RpInit) -> Self {
+        Self {
+            ic_root_key_raw: extract_raw_root_pk_from_der(&init.ic_root_key_der)
+                .expect("failed to extract raw root pk from der"),
+            ii_origin: init.ii_origin,
+            ii_canister_id: init.ii_canister_id,
+            issuer_origin: init.issuer_origin,
+            issuer_canister_id: init.issuer_canister_id,
+        }
+    }
+}
 
 impl Storable for RpConfig {
     fn to_bytes(&self) -> Cow<[u8]> {
@@ -111,22 +137,28 @@ impl Storable for RpConfig {
 
 impl Default for RpConfig {
     fn default() -> Self {
-        Self {}
+        Self {
+            ic_root_key_raw: vec![],
+            ii_origin: "".to_string(),
+            ii_canister_id: Principal::anonymous(),
+            issuer_origin: "".to_string(),
+            issuer_canister_id: Principal::anonymous(),
+        }
     }
 }
 
 #[init]
 #[candid_method(init)]
-fn init(init_arg: Option<RpConfig>) {
-    if let Some(config) = init_arg {
-        apply_config(config);
+fn init(init_arg: Option<RpInit>) {
+    if let Some(init) = init_arg {
+        apply_config(init.into());
     };
     init_assets();
     init_images_map();
 }
 
 #[post_upgrade]
-fn post_upgrade(init_arg: Option<RpConfig>) {
+fn post_upgrade(init_arg: Option<RpInit>) {
     init(init_arg);
 }
 
@@ -220,11 +252,50 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
     })
 }
 
+#[update]
+#[candid_method]
+fn validate_ii_vp(req: ValidateVpRequest) -> Result<(), ContentError> {
+    let (ic_root_key_raw, vc_flow_signers) = CONFIG.with_borrow(|config| {
+        let config = config.get();
+        if let Some(issuer_id) = req.issuer_canister_id {
+            if issuer_id != config.issuer_canister_id {
+                return Err(ContentError::NotAuthorized(format!(
+                    "wrong issuer canister id: expected {}, got {}",
+                    config.issuer_canister_id, issuer_id
+                )));
+            }
+        }
+        Ok((
+            config.ic_root_key_raw.clone(),
+            VcFlowSigners {
+                ii_origin: config.ii_origin.clone(),
+                ii_canister_id: config.ii_canister_id,
+                issuer_origin: req.issuer_origin,
+                issuer_canister_id: config.issuer_canister_id,
+            },
+        ))
+    })?;
+    match validate_ii_presentation_and_claims(
+        &req.vp_jwt,
+        req.effective_vc_subject,
+        &vc_flow_signers,
+        &req.credential_spec,
+        &ic_root_key_raw,
+        time() as u128,
+    ) {
+        Ok(()) => Ok(()),
+        Err(err) => Err(ContentError::NotAuthorized(format!(
+            "VP validation error: {:?}",
+            err
+        ))),
+    }
+}
+
 // TODO: restrict or remove `configure()`.
 #[update]
 #[candid_method]
-fn configure(config: RpConfig) {
-    apply_config(config);
+fn configure(init: RpInit) {
+    apply_config(init.into());
 }
 
 fn apply_config(config: RpConfig) {
@@ -319,8 +390,8 @@ mod test {
         )
         .unwrap_or_else(|e| {
             panic!(
-                "the canister code interface is not equal to the did file: {:?}",
-                e
+                "the canister code interface is not equal to the did file: {:?}\n code interface:\n{}",
+                e, canister_interface
             )
         });
     }

@@ -7,8 +7,8 @@ resolver = "2"
 
 
 [workspace.dependencies]
-asset_util = { git="https://github.com/dfinity/internet-identity", rev="abdb167c903b7ce9e1193185f3bf70ee122cebf8" }
-canister_sig_util = { git="https://github.com/dfinity/internet-identity", rev="abdb167c903b7ce9e1193185f3bf70ee122cebf8" }
-internet_identity_interface = { git="https://github.com/dfinity/internet-identity", rev="abdb167c903b7ce9e1193185f3bf70ee122cebf8" }
-vc_util = { git="https://github.com/dfinity/internet-identity", rev="abdb167c903b7ce9e1193185f3bf70ee122cebf8" }
-canister_tests = { git="https://github.com/dfinity/internet-identity", rev="abdb167c903b7ce9e1193185f3bf70ee122cebf8" }
+asset_util = { git="https://github.com/dfinity/internet-identity", rev="ba982be1f627af53a9f411e5bd68fc3f5005adef" }
+canister_sig_util = { git="https://github.com/dfinity/internet-identity", rev="ba982be1f627af53a9f411e5bd68fc3f5005adef" }
+internet_identity_interface = { git="https://github.com/dfinity/internet-identity", rev="ba982be1f627af53a9f411e5bd68fc3f5005adef" }
+vc_util = { git="https://github.com/dfinity/internet-identity", rev="ba982be1f627af53a9f411e5bd68fc3f5005adef" }
+canister_tests = { git="https://github.com/dfinity/internet-identity", rev="ba982be1f627af53a9f411e5bd68fc3f5005adef" }

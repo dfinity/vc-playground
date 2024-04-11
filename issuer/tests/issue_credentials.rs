@@ -7,11 +7,16 @@ use canister_tests::api::internet_identity::vc_mvp as ii_api;
 use canister_tests::flows;
 use canister_tests::framework::{env, principal_1, test_principal};
 
-use ic_test_state_machine_client::CallError;
+use ic_cdk::api::management_canister::main::CanisterId;
+use ic_test_state_machine_client::{call_candid_as, CallError, StateMachine};
 use internet_identity_interface::internet_identity::types::vc_mvp::{
     GetIdAliasRequest, PrepareIdAliasRequest,
 };
 use internet_identity_interface::internet_identity::types::FrontendHostname;
+use relying_party::rp_api;
+use relying_party::rp_api::{
+    AddExclusiveContentRequest, ContentData, ContentError, ValidateVpRequest,
+};
 use std::collections::HashMap;
 use std::time::UNIX_EPOCH;
 use vc_util::issuer_api::{
@@ -20,8 +25,8 @@ use vc_util::issuer_api::{
     SignedIdAlias as SignedIssuerIdAlias,
 };
 use vc_util::{
-    get_verified_id_alias_from_jws, validate_claims_match_spec,
-    verify_credential_jws_with_canister_id,
+    build_ii_verifiable_presentation_jwt, get_verified_id_alias_from_jws,
+    validate_claims_match_spec, verify_credential_jws_with_canister_id,
 };
 
 #[allow(dead_code)]
@@ -29,6 +34,7 @@ mod util;
 use crate::util::{
     add_group_with_member, api, install_canister, install_issuer, IssuerInit,
     DUMMY_ALIAS_ID_DAPP_PRINCIPAL, DUMMY_ISSUER_INIT, DUMMY_SIGNED_ID_ALIAS, II_WASM,
+    RELYING_PARTY_WASM,
 };
 
 const DUMMY_GROUP_NAME: &str = "Dummy group";
@@ -304,11 +310,34 @@ fn should_prepare_verfied_member_credential_for_authorized_principal() {
     assert_matches!(response, Ok(_));
 }
 
+fn rp_add_exclusive_content(
+    env: &StateMachine,
+    canister_id: CanisterId,
+    sender: Principal,
+    req: AddExclusiveContentRequest,
+) -> Result<Result<ContentData, ContentError>, CallError> {
+    call_candid_as(env, canister_id, sender, "add_exclusive_content", (req,)).map(|(x,)| x)
+}
+
+fn rp_validate_ii_vp(
+    env: &StateMachine,
+    canister_id: CanisterId,
+    sender: Principal,
+    req: ValidateVpRequest,
+) -> Result<Result<(), ContentError>, CallError> {
+    call_candid_as(env, canister_id, sender, "validate_ii_vp", (req,)).map(|(x,)| x)
+}
+
 /// Verifies that credentials are being created including II interactions.
 #[test]
-fn should_issue_credential_e2e() -> Result<(), CallError> {
+fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
     let env = env();
-    let ii_id = install_canister(&env, II_WASM.clone());
+    let ii_url = FrontendHostname::from(vc_util::II_ISSUER_URL);
+    let issuer_url = FrontendHostname::from("https://metaissuer.vc/");
+    let rp_url = FrontendHostname::from("https://some-dapp.com/");
+
+    // Setup canisters
+    let ii_id = install_canister::<IssuerInit>(&env, II_WASM.clone(), None);
     let issuer_id = install_issuer(
         &env,
         Some(IssuerInit {
@@ -317,14 +346,25 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
             ..DUMMY_ISSUER_INIT.clone()
         }),
     );
+    let rp_id = install_canister(
+        &env,
+        RELYING_PARTY_WASM.clone(),
+        Some(rp_api::RpInit {
+            ic_root_key_der: env.root_key().to_vec(),
+            ii_origin: ii_url.clone(),
+            ii_canister_id: ii_id,
+            issuer_origin: issuer_url.clone(),
+            issuer_canister_id: issuer_id,
+        }),
+    );
+
+    // Register a user with II
     let identity_number = flows::register_anchor(&env, ii_id);
-    let relying_party = FrontendHostname::from("https://some-dapp.com");
-    let issuer = FrontendHostname::from("https://some-issuer.com");
 
     let prepare_id_alias_req = PrepareIdAliasRequest {
         identity_number,
-        relying_party: relying_party.clone(),
-        issuer: issuer.clone(),
+        relying_party: rp_url.clone(),
+        issuer: issuer_url.clone(),
     };
 
     let prepared_id_alias =
@@ -337,8 +377,8 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
 
     let get_id_alias_req = GetIdAliasRequest {
         identity_number,
-        relying_party,
-        issuer,
+        relying_party: rp_url,
+        issuer: issuer_url.clone(),
         rp_id_alias_jwt: prepared_id_alias.rp_id_alias_jwt,
         issuer_id_alias_jwt: prepared_id_alias.issuer_id_alias_jwt,
     };
@@ -358,6 +398,7 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
     )
     .expect("Invalid ID alias");
 
+    // Add a group to the meta issuer with the expected member.
     let authorized_principal = alias_tuple.id_dapp;
     let owner = principal_1();
     add_group_with_member(
@@ -369,6 +410,25 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
     );
 
     let credential_spec = verified_member_credential_spec(DUMMY_GROUP_NAME, owner);
+
+    // Add an exclusive content to the rp, gated by a VC.
+    let content_url = "http://example.com";
+
+    rp_add_exclusive_content(
+        &env,
+        rp_id,
+        principal_1(),
+        AddExclusiveContentRequest {
+            content_name: "restricted content".to_string(),
+            url: content_url.to_string(),
+            credential_group_name: DUMMY_GROUP_NAME.to_string(),
+            credential_group_owner: owner,
+        },
+    )
+    .expect("API call failed")
+    .expect("Failed add_exclusive_content");
+
+    // Request the credential.
     let prepared_credential = api::prepare_credential(
         &env,
         issuer_id,
@@ -400,8 +460,11 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
             prepared_context: prepared_credential.prepared_context,
         },
     )?;
+    let requested_vc_jws = get_credential_response
+        .expect("failed get_credential")
+        .vc_jws;
     let claims = verify_credential_jws_with_canister_id(
-        &get_credential_response.unwrap().vc_jws,
+        &requested_vc_jws,
         &issuer_id,
         &root_pk_raw,
         env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
@@ -409,6 +472,21 @@ fn should_issue_credential_e2e() -> Result<(), CallError> {
     .expect("credential verification failed");
     let vc_claims = claims.vc().expect("missing VC claims");
     validate_claims_match_spec(vc_claims, &credential_spec).expect("Clam validation failed");
-
+    // Request credential validation from RP's backend.
+    let vp_jwt = build_ii_verifiable_presentation_jwt(
+        id_alias_credentials.rp_id_alias_credential.id_dapp,
+        id_alias_credentials.rp_id_alias_credential.credential_jws,
+        requested_vc_jws,
+    )
+    .expect("failed building VP");
+    let validate_vp_request = ValidateVpRequest {
+        vp_jwt,
+        effective_vc_subject: id_alias_credentials.rp_id_alias_credential.id_dapp,
+        credential_spec,
+        issuer_origin: issuer_url.to_string(),
+        issuer_canister_id: Some(issuer_id),
+    };
+    let result = rp_validate_ii_vp(&env, rp_id, principal_1(), validate_vp_request)?;
+    assert!(result.is_ok(), "{:?}", result);
     Ok(())
 }
