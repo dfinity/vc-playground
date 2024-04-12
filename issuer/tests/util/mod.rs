@@ -35,7 +35,7 @@ lazy_static! {
     pub static ref META_ISSUER_WASM: Vec<u8> = {
         let def_path = PathBuf::from("./../").join("meta_issuer.wasm.gz");
         let err = format!("
-        Could not find Early Adopter Issuer Wasm module for current build.
+        Could not find Meta Issuer Wasm module for current build.
         I will look for it at {:?} (note that I run from {:?}).
         You can build the Wasm by running ./build.sh in <project-home>/issuer/
         ", &def_path,
@@ -49,7 +49,7 @@ lazy_static! {
     pub static ref RELYING_PARTY_WASM: Vec<u8> = {
         let def_path = PathBuf::from("./../").join("relying_party.wasm.gz");
         let err = format!("
-        Could not find Early Adopter Issuer Wasm module for current build.
+        Could not find Relying Party Wasm module for current build.
         I will look for it at {:?} (note that I run from {:?}).
         You can build the Wasm by running ./build.sh in <project-home>/rp/
         ", &def_path,
