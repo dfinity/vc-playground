@@ -1,11 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { signInWithAnchor, signInWithNewUser } from './utils/sigin-in-user.utils';
 
-// TODO: Get this from the environment and add to CI
-const ISSUER_URL = 'http://aovwi-4maaa-aaaaa-qaagq-cai.localhost:8080';
-// const ISSUER_URL = 'http://localhost:5173';
-const RP_URL = 'http://ctiya-peaaa-aaaaa-qaaja-cai.localhost:8080';
-// const RP_URL = 'http://localhost:5174';
+const ISSUER_URL = process.env.ISSUER_URL;
+const RP_URL = process.env.RP_URL;
 
 // This test is long because it involves multiple sequential steps.
 // Maybe we can split it into multiple tests in the future.
@@ -14,6 +11,9 @@ test.setTimeout(120_000);
 test('verifieable credentials flow works end to end', async ({
   browser,
 }) => {
+  if (!ISSUER_URL || !RP_URL) {
+    throw new Error("ISSUER_URL and RP_URL must be set in the environment");
+  }
   /**
    * CREATE ISSUER AND CREDENTIAL
    */

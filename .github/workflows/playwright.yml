@@ -6,8 +6,6 @@ on:
     branches: [ main, master ]
 jobs:
   test:
-    # TODO: Enable when we prepare the environment to run the tests
-    if: false
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -40,11 +38,17 @@ jobs:
     - name: Deploy internet identity canister
       run: dfx deploy --no-wallet --network local internet_identity
     - name: Deploy meta-issuer canister
-      run: dfx deploy --no-wallet --network local meta_issuer
-    # TODO: When we deploy RP we can use `dfx deploy` directly.
+      run: ./scripts/deploy-meta-issuer.sh --dfx-network local
+    - name: Deploy relying party canister
+      run: dfx deploy rp --no-wallet --network local
+    - name: Set env vars
+      run: |
+        export REPLICA_SERVER_PORT=$(dfx info webserver-port)
+        export ISSUER_URL="http://${META_ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}"
+        export RP_URL="http://${RP_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}"
     - name: Run Playwright tests
       working-directory: e2e-tests
-      run: PLAYWRIGHT_BASE_URL=http:/$(dfx canister id meta_issuer).localhost:$(dfx info webserver-port) npm run test:e2e
+      run: ISSUER_URL=$ISSUER_URL RP_URL=$RP_URL npm run test:e2e
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
