@@ -39,14 +39,11 @@ jobs:
       run: ./scripts/deploy-meta-issuer.sh --dfx-network local
     - name: Deploy relying party canister
       run: ./scripts/deploy-rp.sh --dfx-network local
-    - name: Set env vars
-      run: |
-        export REPLICA_SERVER_PORT=$(dfx info webserver-port)
-        export ISSUER_URL="http://${META_ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}"
-        export RP_URL="http://${RP_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}"
     - name: Run Playwright tests
       working-directory: e2e-tests
-      run: ISSUER_URL=$ISSUER_URL RP_URL=$RP_URL npm run test:e2e
+      run: |
+        export REPLICA_SERVER_PORT=$(dfx info webserver-port)
+        ISSUER_URL="http://${META_ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}" RP_URL="http://${RP_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}" npm run test:e2e
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
