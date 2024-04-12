@@ -114,12 +114,7 @@ echo "Parsed rootkey: ${rootkey_did:0:20}..." >&2
 
 echo "Using II canister: $II_CANISTER_ID" >&2
 
-which sed
-pwd
-cat "./issuer/frontend/static/.well-known/ii-alternative-origins"
-cat "${BASH_SOURCE[0]}"
-
 # Adjust issuer's .well-known/ii-alternative-origins to contain FE-hostname of local/dev deployments.
-sed -i '' -e "s+ISSUER_FE_HOSTNAME_PLACEHOLDER+\"$ISSUER_FRONTEND_HOSTNAME\",+" "./issuer/frontend/static/.well-known/ii-alternative-origins"
+sed -i "s+ISSUER_FE_HOSTNAME_PLACEHOLDER+\"$ISSUER_FRONTEND_HOSTNAME\",+" ./issuer/frontend/static/.well-known/ii-alternative-origins
 
 dfx deploy meta_issuer --network "$DFX_NETWORK" --argument '(opt record { idp_canister_ids = vec{ principal "'"$II_CANISTER_ID"'" }; ic_root_key_der = vec '"$rootkey_did"'; derivation_origin = "'"$ISSUER_DERIVATION_ORIGIN"'"; frontend_hostname = "'"$ISSUER_FRONTEND_HOSTNAME"'"; })'
