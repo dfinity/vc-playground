@@ -37,7 +37,7 @@ jobs:
     - name: Deploy meta-issuer canister
       run: ./scripts/deploy-meta-issuer.sh --dfx-network local
     - name: Deploy relying party canister
-      run: dfx deploy rp --no-wallet --network local
+      run: ./scripts/deploy-rp.sh --dfx-network local
     - name: Set env vars
       run: |
         export REPLICA_SERVER_PORT=$(dfx info webserver-port)
