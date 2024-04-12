@@ -17,8 +17,8 @@
   <WarningMessage>This is a demo application</WarningMessage>
   <div slot="trail" class="flex gap-4 items-center self-end">
     <div class="hidden sm:flex gap-4">
-      <a href="/credentials">View</a>
-      <a href="/issuer-center">Publish</a>
+      <a href="/credentials">Request</a>
+      <a href="/issuer-center">Issue</a>
     </div>
     <SettingsDropdown {currentRole} />
   </div>
