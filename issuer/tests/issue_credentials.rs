@@ -351,10 +351,10 @@ fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
         RELYING_PARTY_WASM.clone(),
         Some(rp_api::RpInit {
             ic_root_key_der: env.root_key().to_vec(),
-            ii_origin: ii_url.clone(),
+            ii_vc_url: ii_url.clone(),
             ii_canister_id: ii_id,
             issuers: vec![IssuerData {
-                origin: issuer_url.clone(),
+                vc_url: issuer_url.clone(),
                 canister_id: issuer_id,
             }],
         }),

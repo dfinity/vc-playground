@@ -86,7 +86,7 @@ pub struct ValidateVpRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct IssuerData {
-    pub origin: String,
+    pub vc_url: String,
     pub canister_id: Principal,
 }
 
@@ -96,7 +96,7 @@ pub struct RpInit {
     pub ic_root_key_der: Vec<u8>,
 
     /// II instance that is allowed to provide id alias credentials.
-    pub ii_origin: String,
+    pub ii_vc_url: String,
     pub ii_canister_id: Principal,
 
     /// Issuers that are trusted by this relying party.

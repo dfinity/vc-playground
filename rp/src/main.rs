@@ -118,12 +118,12 @@ impl From<RpInit> for RpConfig {
         Self {
             ic_root_key_raw: extract_raw_root_pk_from_der(&init.ic_root_key_der)
                 .expect("failed to extract raw root pk from der"),
-            ii_origin: init.ii_origin,
+            ii_origin: init.ii_vc_url,
             ii_canister_id: init.ii_canister_id,
             issuers: init
                 .issuers
                 .iter()
-                .map(|data| (data.origin.to_string(), data.canister_id))
+                .map(|data| (data.vc_url.to_string(), data.canister_id))
                 .collect(),
         }
     }

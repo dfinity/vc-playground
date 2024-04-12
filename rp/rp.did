@@ -86,13 +86,13 @@ type HttpResponse = record {
 };
 
 type IssuerData = record {
-    origin : text;
+    vc_url : text;
     canister_id : principal
 };
 
 type RpInit = record {
     ic_root_key_der : vec nat8;
-    ii_origin : text;
+    ii_vc_url : text;
     ii_canister_id : principal;
     issuers : vec IssuerData;
 };
