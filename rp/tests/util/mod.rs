@@ -1,16 +1,16 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::Principal;
 use canister_tests::framework::get_wasm_path;
 use ic_cdk::api::management_canister::main::CanisterId;
 use ic_test_state_machine_client::{call_candid, call_candid_as, CallError, StateMachine};
 use lazy_static::lazy_static;
 use relying_party::rp_api::{
     AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, ImagesList,
-    ListExclusiveContentRequest, ListImagesRequest,
+    ListExclusiveContentRequest, ListImagesRequest, RpInit,
 };
 use std::path::PathBuf;
 
 lazy_static! {
-    /// Gzipped Wasm module for the current Early Adopter Issuer build, i.e. the one we're testing
+    /// Gzipped Wasm module for the current VC Playground RP build, i.e. the one we're testing
     pub static ref RELYING_PARTY_WASM: Vec<u8> = {
         let def_path = PathBuf::from("./../").join("relying_party.wasm.gz");
         let err = format!("
@@ -26,10 +26,6 @@ lazy_static! {
 
 }
 
-// Setup helpers.
-#[derive(CandidType, Clone, Deserialize)]
-pub struct RpConfig {}
-
 pub fn install_canister(env: &StateMachine, wasm: Vec<u8>) -> CanisterId {
     let canister_id = env.create_canister(None);
     let arg = candid::encode_one("()").expect("error encoding empty arg as candid");
@@ -37,7 +33,7 @@ pub fn install_canister(env: &StateMachine, wasm: Vec<u8>) -> CanisterId {
     canister_id
 }
 
-pub fn install_rp(env: &StateMachine, maybe_init: Option<RpConfig>) -> CanisterId {
+pub fn install_rp(env: &StateMachine, maybe_init: Option<RpInit>) -> CanisterId {
     let canister_id = env.create_canister(None);
     let arg = match maybe_init {
         Some(init) => {
@@ -100,12 +96,12 @@ pub fn do_list_exclusive_content(
 pub mod api {
     use super::*;
     use ic_test_state_machine_client::query_candid;
-    use relying_party::rp_api::{AddExclusiveContentRequest, ContentData};
+    use relying_party::rp_api::{AddExclusiveContentRequest, ContentData, ValidateVpRequest};
 
     pub fn configure(
         env: &StateMachine,
         canister_id: CanisterId,
-        config: &RpConfig,
+        config: &RpInit,
     ) -> Result<(), CallError> {
         call_candid(env, canister_id, "configure", (config,))
     }
@@ -133,5 +129,14 @@ pub mod api {
         req: AddExclusiveContentRequest,
     ) -> Result<Result<ContentData, ContentError>, CallError> {
         call_candid_as(env, canister_id, sender, "add_exclusive_content", (req,)).map(|(x,)| x)
+    }
+
+    pub fn validate_ii_vp(
+        env: &StateMachine,
+        canister_id: CanisterId,
+        sender: Principal,
+        req: ValidateVpRequest,
+    ) -> Result<Result<(), ContentError>, CallError> {
+        call_candid_as(env, canister_id, sender, "validate_ii_vp", (req,)).map(|(x,)| x)
     }
 }

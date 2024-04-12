@@ -100,7 +100,7 @@ checksum = "9b34d609dfbaf33d6889b2b7106d3ca345eacad44200913df5ba02bfd31d2ba9"
 [[package]]
 name = "asset_util"
 version = "0.1.0"
-source = "git+https://github.com/dfinity/internet-identity?rev=abdb167c903b7ce9e1193185f3bf70ee122cebf8#abdb167c903b7ce9e1193185f3bf70ee122cebf8"
+source = "git+https://github.com/dfinity/internet-identity?rev=ba982be1f627af53a9f411e5bd68fc3f5005adef#ba982be1f627af53a9f411e5bd68fc3f5005adef"
 dependencies = [
  "base64 0.21.4",
  "candid",
@@ -386,7 +386,7 @@ dependencies = [
 [[package]]
 name = "canister_sig_util"
 version = "0.1.0"
-source = "git+https://github.com/dfinity/internet-identity?rev=abdb167c903b7ce9e1193185f3bf70ee122cebf8#abdb167c903b7ce9e1193185f3bf70ee122cebf8"
+source = "git+https://github.com/dfinity/internet-identity?rev=ba982be1f627af53a9f411e5bd68fc3f5005adef#ba982be1f627af53a9f411e5bd68fc3f5005adef"
 dependencies = [
  "candid",
  "hex",
@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "canister_tests"
 version = "0.1.0"
-source = "git+https://github.com/dfinity/internet-identity?rev=abdb167c903b7ce9e1193185f3bf70ee122cebf8#abdb167c903b7ce9e1193185f3bf70ee122cebf8"
+source = "git+https://github.com/dfinity/internet-identity?rev=ba982be1f627af53a9f411e5bd68fc3f5005adef#ba982be1f627af53a9f411e5bd68fc3f5005adef"
 dependencies = [
  "base64 0.21.4",
  "candid",
@@ -2001,7 +2001,7 @@ dependencies = [
 [[package]]
 name = "internet_identity_interface"
 version = "0.1.0"
-source = "git+https://github.com/dfinity/internet-identity?rev=abdb167c903b7ce9e1193185f3bf70ee122cebf8#abdb167c903b7ce9e1193185f3bf70ee122cebf8"
+source = "git+https://github.com/dfinity/internet-identity?rev=ba982be1f627af53a9f411e5bd68fc3f5005adef#ba982be1f627af53a9f411e5bd68fc3f5005adef"
 dependencies = [
  "candid",
  "ic-cdk",
@@ -2258,6 +2258,7 @@ dependencies = [
  "include_dir",
  "internet_identity_interface",
  "lazy_static",
+ "relying_party",
  "serde",
  "serde_bytes",
  "serde_cbor",
@@ -2783,6 +2784,8 @@ dependencies = [
  "ic-response-verification",
  "ic-stable-structures 0.6.3",
  "ic-test-state-machine-client",
+ "identity_core",
+ "identity_credential",
  "include_dir",
  "internet_identity_interface",
  "lazy_static",
@@ -3397,7 +3400,7 @@ checksum = "5190c9442dcdaf0ddd50f37420417d219ae5261bbf5db120d0f9bab996c9cba1"
 [[package]]
 name = "vc_util"
 version = "0.1.0"
-source = "git+https://github.com/dfinity/internet-identity?rev=abdb167c903b7ce9e1193185f3bf70ee122cebf8#abdb167c903b7ce9e1193185f3bf70ee122cebf8"
+source = "git+https://github.com/dfinity/internet-identity?rev=ba982be1f627af53a9f411e5bd68fc3f5005adef#ba982be1f627af53a9f411e5bd68fc3f5005adef"
 dependencies = [
  "candid",
  "canister_sig_util",
