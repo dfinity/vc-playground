@@ -114,6 +114,10 @@ echo "Parsed rootkey: ${rootkey_did:0:20}..." >&2
 
 echo "Using II canister: $II_CANISTER_ID" >&2
 
+which sed
+pwd
+cat "./issuer/frontend/static/.well-known/ii-alternative-origins"
+
 # Adjust issuer's .well-known/ii-alternative-origins to contain FE-hostname of local/dev deployments.
 sed -i '' -e "s+ISSUER_FE_HOSTNAME_PLACEHOLDER+\"$ISSUER_FRONTEND_HOSTNAME\",+" ./issuer/frontend/static/.well-known/ii-alternative-origins
 
