@@ -43,7 +43,10 @@ jobs:
       working-directory: e2e-tests
       run: |
         export REPLICA_SERVER_PORT=$(dfx info webserver-port)
-        ISSUER_URL="http://${META_ISSUER_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}" RP_URL="http://${RP_CANISTER_ID}.localhost:${REPLICA_SERVER_PORT}" npm run test:e2e
+        echo "before calling test:e2e"
+        echo $REPLICA_SERVER_PORT
+        dfx canister id meta_issuer --network local
+        ISSUER_URL="http://${dfx canister id meta_issuer --network local}.localhost:${REPLICA_SERVER_PORT}" RP_URL="http://${dfx canister id rp --network local}.localhost:${REPLICA_SERVER_PORT}" npm run test:e2e
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
