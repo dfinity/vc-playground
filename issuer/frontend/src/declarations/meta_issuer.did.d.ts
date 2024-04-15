@@ -70,7 +70,7 @@ export type IssueCredentialError = { 'Internal' : string } |
   { 'UnknownSubject' : string } |
   { 'UnsupportedCredentialSpec' : string };
 export interface IssuedCredentialData { 'vc_jws' : string }
-export interface IssuerConfig {
+export interface IssuerInit {
   'derivation_origin' : string,
   'idp_canister_ids' : Array<Principal>,
   'ic_root_key_der' : Uint8Array | number[],
@@ -123,7 +123,7 @@ export interface _SERVICE {
     { 'Ok' : FullGroupData } |
       { 'Err' : GroupsError }
   >,
-  'configure' : ActorMethod<[IssuerConfig], undefined>,
+  'configure' : ActorMethod<[IssuerInit], undefined>,
   'derivation_origin' : ActorMethod<
     [DerivationOriginRequest],
     { 'Ok' : DerivationOriginData } |

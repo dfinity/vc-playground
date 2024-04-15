@@ -1,5 +1,5 @@
 export const idlFactory = ({ IDL }) => {
-  const IssuerConfig = IDL.Record({
+  const IssuerInit = IDL.Record({
     'derivation_origin' : IDL.Text,
     'idp_canister_ids' : IDL.Vec(IDL.Principal),
     'ic_root_key_der' : IDL.Vec(IDL.Nat8),
@@ -137,7 +137,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : FullGroupData, 'Err' : GroupsError })],
         [],
       ),
-    'configure' : IDL.Func([IssuerConfig], [], []),
+    'configure' : IDL.Func([IssuerInit], [], []),
     'derivation_origin' : IDL.Func(
         [DerivationOriginRequest],
         [
@@ -207,11 +207,11 @@ export const idlFactory = ({ IDL }) => {
   });
 };
 export const init = ({ IDL }) => {
-  const IssuerConfig = IDL.Record({
+  const IssuerInit = IDL.Record({
     'derivation_origin' : IDL.Text,
     'idp_canister_ids' : IDL.Vec(IDL.Principal),
     'ic_root_key_der' : IDL.Vec(IDL.Nat8),
     'frontend_hostname' : IDL.Text,
   });
-  return [IDL.Opt(IssuerConfig)];
+  return [IDL.Opt(IssuerInit)];
 };
