@@ -6,7 +6,7 @@
 /// Specification of a requested credential.
 type CredentialSpec = record {
     credential_type : text;
-    /// arguments are optional, and specific to the credential_name
+    /// arguments are optional, and specific to the credential_type
     arguments : opt vec record { text; ArgumentValue };
 };
 type ArgumentValue = variant { "Int" : int32; String : text };
@@ -79,7 +79,7 @@ type DerivationOriginError = variant {
 };
 
 /// Configuration specific to this issuer.
-type IssuerConfig = record {
+type IssuerInit = record {
     /// Root of trust for checking canister signatures.
     ic_root_key_der : blob;
     /// List of canister ids that are allowed to provide id alias credentials.
@@ -197,7 +197,7 @@ type GroupsError = variant {
     Internal : text;
 };
 
-service: (opt IssuerConfig) -> {
+service: (opt IssuerInit) -> {
     /// VC-flow API.
     vc_consent_message : (Icrc21VcConsentMessageRequest) -> (variant { Ok : Icrc21ConsentInfo; Err : Icrc21Error;});
     prepare_credential : (PrepareCredentialRequest) -> (variant { Ok : PreparedCredentialData; Err : IssueCredentialError;});
@@ -205,7 +205,7 @@ service: (opt IssuerConfig) -> {
     derivation_origin : (DerivationOriginRequest) -> (variant {Ok: DerivationOriginData; Err: DerivationOriginError});
 
     /// Configure the issuer (e.g. set the root key), used for deployment/testing.
-    configure: (IssuerConfig) -> ();
+    configure: (IssuerInit) -> ();
 
     /// API for setting/getting information about users, groups and group membership.
     set_user : (SetUserRequest) -> (variant { Ok ; Err : GroupsError;}); /// authenticated

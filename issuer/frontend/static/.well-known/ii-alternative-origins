@@ -1,6 +1,6 @@
 {
   "alternativeOrigins": [
-    ISSUER_FE_HOSTNAME_PLACEHOLDER
+    "http://aovwi-4maaa-aaaaa-qaagq-cai.localhost:8080",
     "https://metaissuer.vc"
   ]
 }

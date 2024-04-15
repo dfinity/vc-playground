@@ -1,5 +1,14 @@
 export const idlFactory = ({ IDL }) => {
-  const RpConfig = IDL.Record({});
+  const IssuerData = IDL.Record({
+    'canister_id' : IDL.Principal,
+    'vc_url' : IDL.Text,
+  });
+  const RpInit = IDL.Record({
+    'ii_canister_id' : IDL.Principal,
+    'ic_root_key_der' : IDL.Vec(IDL.Nat8),
+    'issuers' : IDL.Vec(IssuerData),
+    'ii_vc_url' : IDL.Text,
+  });
   const AddExclusiveContentRequest = IDL.Record({
     'url' : IDL.Text,
     'content_name' : IDL.Text,
@@ -44,13 +53,25 @@ export const idlFactory = ({ IDL }) => {
   const ImageData = IDL.Record({ 'url' : IDL.Text });
   const ImagesList = IDL.Record({ 'images' : IDL.Vec(ImageData) });
   const UploadImagesRequest = IDL.Record({});
+  const ArgumentValue = IDL.Variant({ 'Int' : IDL.Int32, 'String' : IDL.Text });
+  const CredentialSpec = IDL.Record({
+    'arguments' : IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, ArgumentValue))),
+    'credential_type' : IDL.Text,
+  });
+  const ValidateVpRequest = IDL.Record({
+    'effective_vc_subject' : IDL.Principal,
+    'issuer_origin' : IDL.Text,
+    'issuer_canister_id' : IDL.Opt(IDL.Principal),
+    'vp_jwt' : IDL.Text,
+    'credential_spec' : CredentialSpec,
+  });
   return IDL.Service({
     'add_exclusive_content' : IDL.Func(
         [AddExclusiveContentRequest],
         [IDL.Variant({ 'Ok' : ContentData, 'Err' : ContentError })],
         [],
       ),
-    'configure' : IDL.Func([RpConfig], [], []),
+    'configure' : IDL.Func([RpInit], [], []),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
     'list_exclusive_content' : IDL.Func(
         [ListExclusiveContentRequest],
@@ -67,9 +88,23 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : ImagesList, 'Err' : ContentError })],
         [],
       ),
+    'validate_ii_vp' : IDL.Func(
+        [ValidateVpRequest],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : ContentError })],
+        [],
+      ),
   });
 };
 export const init = ({ IDL }) => {
-  const RpConfig = IDL.Record({});
-  return [IDL.Opt(RpConfig)];
+  const IssuerData = IDL.Record({
+    'canister_id' : IDL.Principal,
+    'vc_url' : IDL.Text,
+  });
+  const RpInit = IDL.Record({
+    'ii_canister_id' : IDL.Principal,
+    'ic_root_key_der' : IDL.Vec(IDL.Nat8),
+    'issuers' : IDL.Vec(IssuerData),
+    'ii_vc_url' : IDL.Text,
+  });
+  return [IDL.Opt(RpInit)];
 };

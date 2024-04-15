@@ -1,9 +1,10 @@
+import { validateCredentials } from '$lib/api/validateCredentials.api';
 import { credentialsStore } from '$lib/stores/credentials.store';
 import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import { nonNullish } from '$lib/utils/non-nullish';
 import type { Identity } from '@dfinity/agent';
-import type { Principal } from '@dfinity/principal';
+import { Principal } from '@dfinity/principal';
 import { decodeJwt } from 'jose';
 
 const II_URL = import.meta.env.VITE_INTERNET_IDENTITY_URL;
@@ -26,7 +27,7 @@ export const loadCredential = async ({
   if (isNullish(identity)) {
     return null;
   }
-  console.info("Loading credential for", groupName, owner.toText());
+  console.info('Loading credential for', groupName, owner.toText());
   return new Promise<null>((resolve) => {
     const startFlow = (evnt: MessageEvent) => {
       const principal = identity.getPrincipal().toText();
@@ -54,7 +55,7 @@ export const loadCredential = async ({
       window.removeEventListener('message', handleFlowReady);
       evnt.source?.postMessage(req, { targetOrigin: evnt.origin });
     };
-    const finishFlow = (evnt: MessageEvent) => {
+    const finishFlow = async (evnt: MessageEvent) => {
       try {
         if (nonNullish(evnt.data?.error)) {
           throw new Error(evnt.data.error);
@@ -69,13 +70,29 @@ export const loadCredential = async ({
             hasCredential: false,
           });
         } else {
-          /* eslint-disable-next-line */
-          decodeJwt(verifiablePresentation) as any;
-          // TODO: Validate the credential
+          const isValidCredential = await validateCredentials({
+            identity,
+            requestParams: {
+              vcSubject: identity.getPrincipal(),
+              // URL used by meta-issuer in the issued verifiable credentials (hard-coded in meta-issuer)
+              issuerOrigin: 'https://metaissuer.vc/',
+              issuerCanisterId: Principal.fromText(ISSUER_CANISTER_ID),
+              vpJwt: verifiablePresentation,
+              credentialSpec: {
+                credential_type: 'VerifiedMember',
+                arguments: [
+                  [
+                    ['groupName', { String: groupName }],
+                    ['owner', { String: owner.toText() }],
+                  ],
+                ],
+              },
+            },
+          });
           credentialsStore.setCredential({
             groupName,
             owner,
-            hasCredential: true,
+            hasCredential: isValidCredential,
           });
         }
       } catch (error) {
