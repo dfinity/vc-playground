@@ -6,8 +6,11 @@
   import NavBarItem from '$lib/ui-components/elements/NavBarItem.svelte';
   import { isNullish } from '$lib/utils/is-nullish.utils';
   import { goto } from '$app/navigation';
+  import { getToastStore } from '@skeletonlabs/skeleton';
 
   export let currentRole: 'User' | 'Issuer';
+
+  const toastStore = getToastStore();
 
   let principal: string;
   $: principal = $authStore.identity?.getPrincipal().toText() ?? '';
@@ -32,7 +35,7 @@
     </li>
     {#if isNullish($authStore.identity)}
       <li>
-        <NavBarItem on:click={login}>Login</NavBarItem>
+        <NavBarItem on:click={() => login(toastStore)}>Login</NavBarItem>
       </li>
     {:else}
       <li>

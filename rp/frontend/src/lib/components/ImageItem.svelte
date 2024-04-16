@@ -2,7 +2,7 @@
   import type { VisibleContentData } from '$lib/stores/content-data-visible.store';
   import { nanoSecondsToDateTime } from '$lib/utils/date.utils';
   import { nonNullish } from '$lib/utils/non-nullish';
-  import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import Button from './Button.svelte';
   import { authStore } from '$lib/stores/auth.store';
   import { login } from '$lib/services/auth.services';
@@ -10,6 +10,7 @@
   export let image: VisibleContentData;
 
   const modalStore = getModalStore();
+  const toastStore = getToastStore();
 
   const openModal = ({
     content,
@@ -30,7 +31,7 @@
     if (nonNullish($authStore.identity)) {
       openModal({ content, startFlow: true });
     } else {
-      login(() => openModal({ content, startFlow: false }));
+      login({ toastStore, cb: () => openModal({ content, startFlow: false }) });
     }
   };
 

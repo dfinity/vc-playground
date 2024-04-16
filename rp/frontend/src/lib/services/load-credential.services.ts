@@ -5,7 +5,7 @@ import { popupCenter } from '$lib/utils/login-popup.utils';
 import { nonNullish } from '$lib/utils/non-nullish';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import { decodeJwt } from 'jose';
+import type { ToastStore } from '@skeletonlabs/skeleton';
 
 const II_URL = import.meta.env.VITE_INTERNET_IDENTITY_URL;
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
@@ -18,10 +18,12 @@ export const loadCredential = async ({
   groupName,
   owner,
   identity,
+  toastStore,
 }: {
   groupName: string;
   owner: Principal;
   identity: Identity | undefined | null;
+  toastStore: ToastStore;
 }): Promise<null> => {
   nextFlowId += 1;
   if (isNullish(identity)) {
@@ -63,7 +65,7 @@ export const loadCredential = async ({
         // Make the presentation presentable
         const verifiablePresentation = evnt.data?.result?.verifiablePresentation;
         if (verifiablePresentation === undefined) {
-          console.error('No verifiable presentation found');
+          console.info('No verifiable presentation found');
           credentialsStore.setCredential({
             groupName,
             owner,
@@ -95,8 +97,12 @@ export const loadCredential = async ({
             hasCredential: isValidCredential,
           });
         }
-      } catch (error) {
-        console.error('Error verifying the credential', JSON.stringify(error));
+      } catch (err) {
+        console.error('Error verifying the credential', JSON.stringify(err));
+        toastStore.trigger({
+          message: `Oops! There was an error presenting the credential. Please try again. ${err}`,
+          background: 'variant-filled-error',
+        });
       } finally {
         iiWindow?.close();
         window.removeEventListener('message', handleFlowFinished);

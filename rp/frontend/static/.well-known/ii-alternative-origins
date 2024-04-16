@@ -1,5 +1,6 @@
 {
   "alternativeOrigins": [
-    "https://relyingparty.vc"
+    "https://relyingparty.vc",
+    "http://localhost:5173"
   ]
 }

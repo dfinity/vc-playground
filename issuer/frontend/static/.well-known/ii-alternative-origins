@@ -1,6 +1,6 @@
 {
   "alternativeOrigins": [
-    ISSUER_FE_HOSTNAME_PLACEHOLDER
+    "http://localhost:5173",
     "https://metaissuer.vc"
   ]
 }

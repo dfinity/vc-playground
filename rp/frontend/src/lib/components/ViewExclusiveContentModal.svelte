@@ -1,6 +1,6 @@
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { getModalStore } from '@skeletonlabs/skeleton';
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
   import Modal from './Modal.svelte';
   import Button from './Button.svelte';
   import { loadCredential } from '$lib/services/load-credential.services';
@@ -20,6 +20,7 @@
   });
 
   const modalStore = getModalStore();
+  const toastStore = getToastStore();
 
   let credentialName = '';
   $: credentialName = $modalStore[0]?.meta.issuerName;
@@ -35,7 +36,12 @@
   const startFlow = async () => {
     if (owner) {
       vcFlowLoading = true;
-      await loadCredential({ groupName: credentialName, owner, identity: $authStore.identity });
+      await loadCredential({
+        groupName: credentialName,
+        owner,
+        identity: $authStore.identity,
+        toastStore,
+      });
       vcFlowLoading = false;
     }
   };
