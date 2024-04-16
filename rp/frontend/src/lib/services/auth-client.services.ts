@@ -14,6 +14,16 @@ export const getAuthClient = async () => {
   return cachedClient;
 };
 
+type CredentialSpec = {
+  credentialType: string;
+  arguments: Record<string, string | number>;
+};
+
+type IssuerData = {
+  origin: string;
+  canisterId?: Principal;
+};
+
 /**
  * PROPOSAL OF HOW TO ADD VC FUNCTIONALITY TO THE AUTH CLIENT
  */
@@ -90,15 +100,9 @@ export class AuthClientNew {
   }: {
     onSuccess: (verifiablePresentation: string) => void | Promise<void>;
     onError: (err?: string) => void | Promise<void>;
-    credentialSpec: {
-      credentialType: string;
-      arguments: Record<string, string>;
-    };
+    credentialSpec: CredentialSpec;
     credentialSubject: Principal;
-    issuerData: {
-      origin: string;
-      canisterId: Principal;
-    };
+    issuerData: IssuerData;
     windowOpenerFeatures: string | undefined;
   }) {
     this.nextFlowId += 1;
@@ -139,7 +143,6 @@ export class AuthClientNew {
       }
     };
     const handleFlowFinished = (evnt: MessageEvent) => {
-      console.info('Message received in the finished flow handler', evnt);
       if (evnt.data?.method === 'vc-flow-ready') {
         startFlow(evnt);
       } else if (evnt.data?.id === String(this.nextFlowId)) {
@@ -147,7 +150,6 @@ export class AuthClientNew {
       }
     };
     const handleFlowReady = (evnt: MessageEvent) => {
-      console.info('Message received in the init flow handler', evnt);
       if (evnt.data?.method !== 'vc-flow-ready') {
         return;
       }
