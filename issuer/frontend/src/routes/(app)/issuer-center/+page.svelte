@@ -97,7 +97,9 @@
     </svelte:fragment>
     {#if $authStore.identity === null}
       <Stack align="center">
-        <Button testId="login-button" variant="primary" on:click={login}>Login</Button>
+        <Button testId="login-button" variant="primary" on:click={() => login(toastStore)}
+          >Login</Button
+        >
       </Stack>
     {:else if !isNullish($authStore.identity)}
       <ActionsWrapper>

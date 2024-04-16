@@ -21,7 +21,7 @@ export const createIssuer = async ({
     }
     validateText(issuerName);
     await addGroup({ identity, issuerName });
-    await loadIssuers({ identity });
+    await loadIssuers({ identity, toastStore });
   } catch (err: unknown) {
     console.error(err);
     toastStore.trigger({

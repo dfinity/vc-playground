@@ -4,10 +4,13 @@
   import Badge from '$lib/ui-components/elements/Badge.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import ListItem from '$lib/ui-components/elements/ListItem.svelte';
+  import { getToastStore } from '@skeletonlabs/skeleton';
   import type { MemberData } from '../../declarations/meta_issuer.did';
 
   export let issuerName: string;
   export let member: MemberData;
+
+  const toastStore = getToastStore();
 
   let status: 'pending' | 'approved' | 'revoked';
   $: status =
@@ -24,6 +27,7 @@
       identity: $authStore.identity,
       issuerName,
       member: member.member,
+      toastStore,
     });
     loadingAccept = false;
   };
@@ -35,6 +39,7 @@
       identity: $authStore.identity,
       issuerName,
       member: member.member,
+      toastStore,
     });
     loadingRevoke = false;
   };
@@ -44,8 +49,12 @@
   <svelte:fragment slot="main">{member.nickname}</svelte:fragment>
   <svelte:fragment slot="end">
     {#if status === 'pending'}
-      <Button testId="approve-button" variant="success" on:click={accept} loading={loadingAccept} disabled={loadingRevoke}
-        >Approve</Button
+      <Button
+        testId="approve-button"
+        variant="success"
+        on:click={accept}
+        loading={loadingAccept}
+        disabled={loadingRevoke}>Approve</Button
       >
       <Button variant="error" on:click={revoke} loading={loadingRevoke} disabled={loadingAccept}
         >Decline</Button

@@ -78,7 +78,9 @@
     </svelte:fragment>
     {#if $authStore.identity === null}
       <Stack align="center">
-        <Button testId="login-button" variant="primary" on:click={login}>Login</Button>
+        <Button testId="login-button" variant="primary" on:click={() => login(toastStore)}
+          >Login</Button
+        >
       </Stack>
     {/if}
     <IssuersList issuers={$allIssuersStore} noGroupsMessage="No credentials found.">

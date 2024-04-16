@@ -9,6 +9,9 @@
   import Button from '$lib/components/Button.svelte';
   import { nonNullish } from '$lib/utils/non-nullish';
   import { login } from '$lib/services/auth.services';
+  import { getToastStore } from '@skeletonlabs/skeleton';
+
+  const toastStore = getToastStore();
 
   let contentDataStore: Readable<VisibleContentData[]>;
   $: contentDataStore = getVisibleContentData($authStore.identity);
@@ -23,8 +26,11 @@
   {#if nonNullish($authStore.identity)}
     <Button variant="primary" href="/share">Publish Image</Button>
   {:else}
-    <Button testId="login-button" variant="secondary" on:click={() => login()} loading={$authStore.identity === undefined}
-      >Login</Button
+    <Button
+      testId="login-button"
+      variant="secondary"
+      on:click={() => login({ toastStore })}
+      loading={$authStore.identity === undefined}>Login</Button
     >
   {/if}
 </div>

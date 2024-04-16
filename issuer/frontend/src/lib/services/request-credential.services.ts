@@ -22,7 +22,7 @@ export const requestCredential = async ({
       throw new Error(NO_IDENTITY_MESSAGE);
     }
     await joinGroup({ identity, issuerName, owner });
-    await loadIssuers({ identity });
+    await loadIssuers({ identity, toastStore });
   } catch (err: unknown) {
     console.error(err);
     toastStore.trigger({
