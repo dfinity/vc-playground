@@ -117,4 +117,7 @@ if [ "$DFX_NETWORK" = "local" ]; then
   rm ./ii-alternative-origins-template
 fi
 
-# dfx deploy rp --network "$DFX_NETWORK" --argument '(opt record { issuers = vec{ record{ vc_url = "'"$ISSUER_VC_URL"'"; canister_id = principal "'"$ISSUER_CANISTER_ID"'" }}; ic_root_key_der = vec '"$rootkey_did"'; ii_vc_url = "'"$II_VC_URL"'"; ii_canister_id = principal"'"$II_CANISTER_ID"'"; })'
+dfx deploy rp --network "$DFX_NETWORK" --argument '(opt record { issuers = vec{ record{ vc_url = "'"$ISSUER_VC_URL"'"; canister_id = principal "'"$ISSUER_CANISTER_ID"'" }}; ic_root_key_der = vec '"$rootkey_did"'; ii_vc_url = "'"$II_VC_URL"'"; ii_canister_id = principal"'"$II_CANISTER_ID"'"; })'
+
+# Revert changes
+git checkout ./rp/frontend/static/.well-known/ii-alternative-origins

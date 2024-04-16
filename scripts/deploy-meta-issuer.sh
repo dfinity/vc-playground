@@ -128,3 +128,6 @@ cat ./ii-alternative-origins-template | sed "s+ISSUER_FE_HOSTNAME_PLACEHOLDER+$A
 rm ./ii-alternative-origins-template
 
 dfx deploy meta_issuer --network "$DFX_NETWORK" --argument '(opt record { idp_canister_ids = vec{ principal "'"$II_CANISTER_ID"'" }; ic_root_key_der = vec '"$rootkey_did"'; derivation_origin = "'"$ISSUER_DERIVATION_ORIGIN"'"; frontend_hostname = "'"$ISSUER_FRONTEND_HOSTNAME"'"; })'
+
+# Revert changes
+git checkout ./issuer/frontend/static/.well-known/ii-alternative-origins
