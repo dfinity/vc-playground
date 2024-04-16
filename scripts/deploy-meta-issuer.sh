@@ -114,10 +114,20 @@ echo "Parsed rootkey: ${rootkey_did:0:20}..." >&2
 
 echo "Using II canister: $II_CANISTER_ID" >&2
 
+# Add also dev server to alternative origins when deploying locally
+if [ "$DFX_NETWORK" = "local" ]; then
+  ALTERNATIVE_ORIGINS="\"$ISSUER_FRONTEND_HOSTNAME\",\"http://localhost:5173\","
+  else
+  ALTERNATIVE_ORIGINS="\"$ISSUER_FRONTEND_HOSTNAME\","
+fi
+
 # Adjust issuer's .well-known/ii-alternative-origins to contain FE-hostname of local/dev deployments.
 # We had a problem with `sed` command in CI. This is a hack to make it work locally and in CI.
 mv ./issuer/frontend/static/.well-known/ii-alternative-origins ./ii-alternative-origins-template
-cat ./ii-alternative-origins-template | sed "s+ISSUER_FE_HOSTNAME_PLACEHOLDER+\"$ISSUER_FRONTEND_HOSTNAME\",+g"  > ./issuer/frontend/static/.well-known/ii-alternative-origins
+cat ./ii-alternative-origins-template | sed "s+ISSUER_FE_HOSTNAME_PLACEHOLDER+$ALTERNATIVE_ORIGINS+g"  > ./issuer/frontend/static/.well-known/ii-alternative-origins
 rm ./ii-alternative-origins-template
 
 dfx deploy meta_issuer --network "$DFX_NETWORK" --argument '(opt record { idp_canister_ids = vec{ principal "'"$II_CANISTER_ID"'" }; ic_root_key_der = vec '"$rootkey_did"'; derivation_origin = "'"$ISSUER_DERIVATION_ORIGIN"'"; frontend_hostname = "'"$ISSUER_FRONTEND_HOSTNAME"'"; })'
+
+# Revert changes
+git checkout ./issuer/frontend/static/.well-known/ii-alternative-origins
