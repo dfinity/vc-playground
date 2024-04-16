@@ -4,5 +4,8 @@ A playground for Verifiable Credentials (VC) functionality on the Internet Compu
 
 ## Code structure
 
-- `issuer/..` contains an implementation of a VC issuer dapp
-- `rp/..` contains an implementation of a VC relying party 
+- `issuer/..` contains an implementation of a VC issuer dapp.
+- `rp/..` contains an implementation of a VC relying party.
+- `e2e-tests/..` contains an end to end test of a successful flow getting and proving a credential.
+- `.github/..` contains Github workflows such as running the e2e test on each pull request.
+- `scripts/..` contains utility scripts that help with devops.
