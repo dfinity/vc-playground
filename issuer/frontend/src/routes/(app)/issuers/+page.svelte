@@ -25,6 +25,7 @@
   import { onMount } from 'svelte';
   import { setTheme } from '$lib/services/set-theme';
   import NavBarItem from '$lib/ui-components/elements/NavBarItem.svelte';
+  import Breadcrumb from '$lib/ui-components/elements/Breadcrumb.svelte';
 
   onMount(() => {
     setTheme('issuer');
@@ -64,12 +65,13 @@
 
 <AuthGuard>
   <DefaultPage>
-    <!-- TODO: Create Breadcrumb ui-element -->
-    <ol class="breadcrumb" slot="nav">
-      <li class="crumb"><a class="anchor" href="/issuer-center">Issuer Control Center</a></li>
-      <li class="crumb-separator" aria-hidden>&rsaquo;</li>
-      <li>{$issuerStore?.group_name ?? ''}</li>
-    </ol>
+    <Breadcrumb
+      slot="nav"
+      paths={[
+        { name: 'Issuer Control Center', href: '/issuer-center' },
+        { name: $issuerStore?.group_name ?? '', href: undefined },
+      ]}
+    />
     <svelte:fragment slot="title">{$issuerStore?.group_name}</svelte:fragment>
     <svelte:fragment slot="subtitle">{`Issued by ${$issuerStore?.issuer_nickname}`}</svelte:fragment
     >
