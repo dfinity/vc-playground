@@ -104,4 +104,17 @@ rootkey_did=$(dfx ping "$DFX_NETWORK" \
 
 echo "Parsed rootkey: ${rootkey_did:0:20}..." >&2
 
-dfx deploy rp --network "$DFX_NETWORK" --argument '(opt record { issuers = vec{ record{ vc_url = "'"$ISSUER_VC_URL"'"; canister_id = principal "'"$ISSUER_CANISTER_ID"'" }}; ic_root_key_der = vec '"$rootkey_did"'; ii_vc_url = "'"$II_VC_URL"'"; ii_canister_id = principal"'"$II_CANISTER_ID"'"; })'
+# Add dev server to alternative origins when deploying locally
+if [ "$DFX_NETWORK" = "local" ]; then
+  # Adjust issuer's .well-known/ii-alternative-origins to contain FE-hostname of local/dev deployments.
+  # We had a problem with `sed` command in CI. This is a hack to make it work locally and in CI.
+  mv ./rp/frontend/static/.well-known/ii-alternative-origins ./ii-alternative-origins-template
+  cat ./ii-alternative-origins-template | sed "s+RP_FE_HOSTNAME_PLACEHOLDER+\"http://localhost:5173\",+g"  > ./rp/frontend/static/.well-known/ii-alternative-origins
+  rm ./ii-alternative-origins-template
+  else
+  mv ./rp/frontend/static/.well-known/ii-alternative-origins ./ii-alternative-origins-template
+  cat ./ii-alternative-origins-template | sed "s+RP_FE_HOSTNAME_PLACEHOLDER++g"  > ./rp/frontend/static/.well-known/ii-alternative-origins
+  rm ./ii-alternative-origins-template
+fi
+
+# dfx deploy rp --network "$DFX_NETWORK" --argument '(opt record { issuers = vec{ record{ vc_url = "'"$ISSUER_VC_URL"'"; canister_id = principal "'"$ISSUER_CANISTER_ID"'" }}; ic_root_key_der = vec '"$rootkey_did"'; ii_vc_url = "'"$II_VC_URL"'"; ii_canister_id = principal"'"$II_CANISTER_ID"'"; })'
