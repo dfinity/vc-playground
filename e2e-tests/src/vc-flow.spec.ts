@@ -142,8 +142,6 @@ test('verifieable credentials flow works end to end', async ({
 
   /**
    * VERIFY CREDENTIAL FLOW IN INTERNET IDENTITY
-   * 
-   * TODO: Move to helper?
    */
   const iiPagePromise = requesterContext.waitForEvent('page');
   await firstImage.locator("button").click();
