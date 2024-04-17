@@ -3,7 +3,7 @@ import { authStore } from '$lib/stores/auth.store';
 import { credentialsStore } from '$lib/stores/credentials.store';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { ToastStore } from '@skeletonlabs/skeleton';
-import { getAuthClient } from './auth-client.services';
+import { getAuthClient, resetCachedAuthClient } from './auth-client.services';
 
 export const login = async ({ toastStore, cb }: { toastStore: ToastStore; cb?: () => void }) => {
   // This service never fails. It will manage the error handling internally.
@@ -63,7 +63,7 @@ export const logout = async () => {
   } finally {
     // Always clear the cached client and the identity store.
     credentialsStore.reset();
-    cachedClient = undefined;
+    resetCachedAuthClient();
     authStore.set({ identity: null });
     goto('/');
   }

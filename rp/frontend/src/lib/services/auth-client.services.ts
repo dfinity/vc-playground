@@ -14,6 +14,10 @@ export const getAuthClient = async () => {
   return cachedClient;
 };
 
+export const resetCachedAuthClient = () => {
+  cachedClient = undefined;
+}
+
 type CredentialSpec = {
   credentialType: string;
   arguments: Record<string, string | number>;
