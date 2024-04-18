@@ -2,31 +2,24 @@ import { validateCredentials } from '$lib/api/validateCredentials.api';
 import { credentialsStore } from '$lib/stores/credentials.store';
 import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
-import { nonNullish } from '$lib/utils/non-nullish';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { getAuthClient } from './auth-client.services';
 
-const II_URL = import.meta.env.VITE_INTERNET_IDENTITY_URL;
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
 const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
-
-let iiWindow: Window | null = null;
-let nextFlowId = 0;
 
 export const loadCredential = async ({
   groupName,
   owner,
   identity,
-  toastStore,
 }: {
   groupName: string;
   owner: Principal;
   identity: Identity | undefined | null;
   toastStore: ToastStore;
 }): Promise<null> => {
-  nextFlowId += 1;
   if (isNullish(identity)) {
     return null;
   }
