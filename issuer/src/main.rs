@@ -1,3 +1,5 @@
+/// An implementation of a meta-issuer for demonstration purposes.
+/// See meta_issuer.did for more info about the architecture and conventions.
 use candid::{candid_method, CandidType, Deserialize, Principal};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
 use canister_sig_util::{extract_raw_root_pk_from_der, CanisterSigPublicKey, IC_ROOT_PK_DER};
@@ -61,6 +63,8 @@ struct GroupRecord {
     pub members: BTreeMap<Principal, MemberRecord>,
 }
 
+// Tuple that identifies any group.  Note that using owner's principal in a real-world
+// application would not be advisable, due to potential privacy breach.
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 struct GroupKey {
     group_name: String,
