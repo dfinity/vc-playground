@@ -1,3 +1,12 @@
+/// This is a demo relying party, that allows experimenting with two roles of the VC flow,
+/// namely creating gated content that requires VCs for accessing, and using VCs to access
+/// gated content created by others.
+/// As this is a demo dapp for the VC flow, users actually don't strictly "create" the content,
+/// but rather pick as content an image from a pool of predefined images, and specify
+/// the attribute required to access the content, where the attribute is identified
+/// by a tuple (<attribute's name>, <issuer's name>), cf. the specification of the meta-issuer.
+/// When trying to view a gated content, the user must present the corresponding VC
+/// to gain access.
 
 type TimestampNs = nat64;
 

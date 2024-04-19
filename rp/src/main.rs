@@ -1,3 +1,5 @@
+/// An implementation of a relying party for demonstration purposes.
+/// See rp.did for more info about the architecture and conventions.
 use candid::{candid_method, CandidType, Deserialize, Principal};
 use ic_cdk::api::{caller, set_certified_data, time};
 use ic_cdk_macros::{init, query, update};
