@@ -4,8 +4,7 @@ import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import type { ToastStore } from '@skeletonlabs/skeleton';
-import { getAuthClient } from './auth-client.services';
+import { requestCredential } from './auth-client.services';
 
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
 const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
@@ -18,15 +17,13 @@ export const loadCredential = async ({
   groupName: string;
   owner: Principal;
   identity: Identity | undefined | null;
-  toastStore: ToastStore;
 }): Promise<null> => {
   if (isNullish(identity)) {
     return null;
   }
   console.info('Loading credential for', groupName, owner.toText());
-  const authClient = await getAuthClient();
   return new Promise<null>((resolve) => {
-    authClient.requestCredential({
+    requestCredential({
       onSuccess: async (verifiablePresentation: string) => {
         const isValidCredential = await validateCredentials({
           identity,
@@ -75,6 +72,8 @@ export const loadCredential = async ({
       },
       credentialSubject: identity.getPrincipal(),
       windowOpenerFeatures: popupCenter(),
+      identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
+      derivationOrigin: import.meta.env.VITE_RP_DERIVATION_ORIGIN,
     });
   });
 };

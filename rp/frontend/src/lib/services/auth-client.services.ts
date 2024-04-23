@@ -28,15 +28,10 @@ type IssuerData = {
   canisterId?: Principal;
 };
 
-/**
- * PROPOSAL OF HOW TO ADD VC FUNCTIONALITY TO THE AUTH CLIENT
- */
 export class AuthClientNew {
   private client: AuthClient;
   private derivationOrigin: string;
   private identityProvider: string;
-  private iiWindow: Window | null = null;
-  private nextFlowId = 0;
   /**
    * New parameters to add when creating the client
    */
@@ -90,78 +85,84 @@ export class AuthClientNew {
   logout() {
     return this.client.logout();
   }
-
-  /**
-   * New Functionality
-   */
-  requestCredential({
-    onSuccess,
-    onError,
-    credentialSpec,
-    credentialSubject,
-    issuerData,
-    windowOpenerFeatures,
-  }: {
-    onSuccess: (verifiablePresentation: string) => void | Promise<void>;
-    onError: (err?: string) => void | Promise<void>;
-    credentialSpec: CredentialSpec;
-    credentialSubject: Principal;
-    issuerData: IssuerData;
-    windowOpenerFeatures: string | undefined;
-  }) {
-    this.nextFlowId += 1;
-    const startFlow = (evnt: MessageEvent) => {
-      const req = {
-        id: String(this.nextFlowId),
-        jsonrpc: '2.0',
-        method: 'request_credential',
-        params: {
-          issuer: issuerData,
-          credentialSpec,
-          credentialSubject: credentialSubject.toText(),
-          derivationOrigin: this.derivationOrigin,
-        },
-      };
-      window.addEventListener('message', handleFlowFinished);
-      window.removeEventListener('message', handleFlowReady);
-      evnt.source?.postMessage(req, { targetOrigin: evnt.origin });
-    };
-    const finishFlow = async (evnt: MessageEvent) => {
-      try {
-        if (nonNullish(evnt.data?.error)) {
-          throw new Error(evnt.data.error);
-        }
-        // Make the presentation presentable
-        const verifiablePresentation = evnt.data?.result?.verifiablePresentation;
-        if (verifiablePresentation === undefined) {
-          // This should never happen
-          onError("Couldn't get the verifiable credential");
-        } else {
-          onSuccess(verifiablePresentation);
-        }
-      } catch (err) {
-        onError(`Error getting the verifiable credential: ${err}`);
-      } finally {
-        this.iiWindow?.close();
-        window.removeEventListener('message', handleFlowFinished);
-      }
-    };
-    const handleFlowFinished = (evnt: MessageEvent) => {
-      if (evnt.data?.method === 'vc-flow-ready') {
-        startFlow(evnt);
-      } else if (evnt.data?.id === String(this.nextFlowId)) {
-        finishFlow(evnt);
-      }
-    };
-    const handleFlowReady = (evnt: MessageEvent) => {
-      if (evnt.data?.method !== 'vc-flow-ready') {
-        return;
-      }
-      startFlow(evnt);
-    };
-    window.addEventListener('message', handleFlowReady);
-    const url = new URL(this.identityProvider);
-    url.pathname = 'vc-flow/';
-    this.iiWindow = window.open(url, '_blank', windowOpenerFeatures);
-  }
 }
+
+let iiWindow: Window | null = null;
+let nextFlowId = 0;
+/**
+ * PROPOSAL OF HOW TO ADD VC FUNCTIONALITY v2
+ */
+export const requestCredential = ({
+  onSuccess,
+  onError,
+  credentialSpec,
+  credentialSubject,
+  issuerData,
+  windowOpenerFeatures,
+  derivationOrigin,
+  identityProvider,
+}: {
+  onSuccess: (verifiablePresentation: string) => void | Promise<void>;
+  onError: (err?: string) => void | Promise<void>;
+  credentialSpec: CredentialSpec;
+  credentialSubject: Principal;
+  issuerData: IssuerData;
+  windowOpenerFeatures: string | undefined;
+  derivationOrigin: string | undefined;
+  identityProvider: string;
+}) => {
+  nextFlowId += 1;
+  const startFlow = (evnt: MessageEvent) => {
+    const req = {
+      id: String(nextFlowId),
+      jsonrpc: '2.0',
+      method: 'request_credential',
+      params: {
+        issuer: issuerData,
+        credentialSpec,
+        credentialSubject: credentialSubject.toText(),
+        derivationOrigin: derivationOrigin,
+      },
+    };
+    window.addEventListener('message', handleFlowFinished);
+    window.removeEventListener('message', handleFlowReady);
+    evnt.source?.postMessage(req, { targetOrigin: evnt.origin });
+  };
+  const finishFlow = async (evnt: MessageEvent) => {
+    try {
+      if (nonNullish(evnt.data?.error)) {
+        throw new Error(evnt.data.error);
+      }
+      // Make the presentation presentable
+      const verifiablePresentation = evnt.data?.result?.verifiablePresentation;
+      if (verifiablePresentation === undefined) {
+        // This should never happen
+        onError("Couldn't get the verifiable credential");
+      } else {
+        onSuccess(verifiablePresentation);
+      }
+    } catch (err) {
+      onError(`Error getting the verifiable credential: ${err}`);
+    } finally {
+      iiWindow?.close();
+      window.removeEventListener('message', handleFlowFinished);
+    }
+  };
+  const handleFlowFinished = (evnt: MessageEvent) => {
+    if (evnt.data?.method === 'vc-flow-ready') {
+      startFlow(evnt);
+    } else if (evnt.data?.id === String(nextFlowId)) {
+      finishFlow(evnt);
+    }
+  };
+  const handleFlowReady = (evnt: MessageEvent) => {
+    if (evnt.data?.method !== 'vc-flow-ready') {
+      return;
+    }
+    startFlow(evnt);
+  };
+  window.addEventListener('message', handleFlowReady);
+  const url = new URL(identityProvider);
+  url.pathname = 'vc-flow/';
+  iiWindow = window.open(url, '_blank', windowOpenerFeatures);
+};
