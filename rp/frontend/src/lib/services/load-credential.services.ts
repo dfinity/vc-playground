@@ -4,8 +4,8 @@ import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import { requestCredential } from './auth-client.services';
 import { RP_DERIGATION_ORIGIN } from '$lib/constants.ts/env-vars';
+import { requestVerifiablePresentation } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
 
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
 const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
@@ -24,7 +24,7 @@ export const loadCredential = async ({
   }
   console.info('Loading credential for', groupName, owner.toText());
   return new Promise<null>((resolve) => {
-    requestCredential({
+    requestVerifiablePresentation({
       onSuccess: async (verifiablePresentation: string) => {
         const isValidCredential = await validateCredentials({
           identity,
@@ -64,14 +64,16 @@ export const loadCredential = async ({
         origin: ISSUER_ORIGIN,
         canisterId: ISSUER_CANISTER_ID,
       },
-      credentialSpec: {
-        credentialType: 'VerifiedMember',
-        arguments: {
-          groupName,
-          owner: owner.toText(),
+      credentialData: {
+        credentialSpec: {
+          credentialType: 'VerifiedMember',
+          arguments: {
+            groupName,
+            owner: owner.toText(),
+          },
         },
+        credentialSubject: identity.getPrincipal().toText(),
       },
-      credentialSubject: identity.getPrincipal(),
       windowOpenerFeatures: popupCenter(),
       identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
       derivationOrigin: RP_DERIGATION_ORIGIN,

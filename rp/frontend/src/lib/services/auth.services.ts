@@ -3,7 +3,19 @@ import { authStore } from '$lib/stores/auth.store';
 import { credentialsStore } from '$lib/stores/credentials.store';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { ToastStore } from '@skeletonlabs/skeleton';
-import { getAuthClient, resetCachedAuthClient } from './auth-client.services';
+import { AuthClient } from '@dfinity/auth-client';
+
+let cachedClient: AuthClient | undefined = undefined;
+const getAuthClient = async () => {
+  if (!cachedClient) {
+    cachedClient = await AuthClient.create();
+  }
+  return cachedClient;
+};
+
+const resetCachedAuthClient = () => {
+  cachedClient = undefined;
+};
 
 export const login = async ({ toastStore, cb }: { toastStore: ToastStore; cb?: () => void }) => {
   // This service never fails. It will manage the error handling internally.
@@ -32,6 +44,8 @@ export const login = async ({ toastStore, cb }: { toastStore: ToastStore; cb?: (
           resolve();
         },
         windowOpenerFeatures: popupCenter(),
+        identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
+        derivationOrigin: import.meta.env.VITE_RP_DERIVATION_ORIGIN,
         // One week
         maxTimeToLive: 7n * 24n * 3_600_000_000_000n,
       });
