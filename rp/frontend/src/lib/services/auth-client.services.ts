@@ -1,3 +1,4 @@
+import { RP_DERIGATION_ORIGIN } from '$lib/constants.ts/env-vars';
 import { nonNullish } from '$lib/utils/non-nullish';
 import type { Identity } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
@@ -8,7 +9,7 @@ export const getAuthClient = async () => {
   if (!cachedClient) {
     cachedClient = await AuthClientNew.create({
       identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
-      derivationOrigin: import.meta.env.VITE_RP_DERIVATION_ORIGIN,
+      derivationOrigin: RP_DERIGATION_ORIGIN,
     });
   }
   return cachedClient;
