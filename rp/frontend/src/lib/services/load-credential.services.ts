@@ -5,6 +5,7 @@ import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import { requestCredential } from './auth-client.services';
+import { RP_DERIGATION_ORIGIN } from '$lib/constants.ts/env-vars';
 
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
 const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
@@ -73,7 +74,7 @@ export const loadCredential = async ({
       credentialSubject: identity.getPrincipal(),
       windowOpenerFeatures: popupCenter(),
       identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
-      derivationOrigin: import.meta.env.VITE_RP_DERIVATION_ORIGIN,
+      derivationOrigin: RP_DERIGATION_ORIGIN,
     });
   });
 };

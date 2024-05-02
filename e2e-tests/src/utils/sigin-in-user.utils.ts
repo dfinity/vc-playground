@@ -15,7 +15,6 @@ export const signInWithAnchor = async ({
   
   const iiPage = await iiPagePromise;
   await expect(iiPage).toHaveTitle('Internet Identity');
-  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   await iiPage.locator(`[data-anchor-id='${anchor}']`).click();
   await iiPage.locator('[data-action=cancel]').click();
