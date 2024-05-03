@@ -4,8 +4,11 @@ import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import { requestCredential } from './auth-client.services';
-import { RP_DERIGATION_ORIGIN } from '$lib/constants.ts/env-vars';
+import { RP_DERIVATION_ORIGIN } from '$lib/constants.ts/env-vars';
+import {
+  requestVerifiablePresentation,
+  type VerifiablePresentationResponse,
+} from '@dfinity/verifiable-credentials/request-verifiable-presentation';
 
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
 const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
@@ -24,8 +27,18 @@ export const loadCredential = async ({
   }
   console.info('Loading credential for', groupName, owner.toText());
   return new Promise<null>((resolve) => {
-    requestCredential({
-      onSuccess: async (verifiablePresentation: string) => {
+    requestVerifiablePresentation({
+      onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
+        if ('Err' in verifiablePresentation) {
+          console.warn(verifiablePresentation.Err);
+          credentialsStore.setCredential({
+            groupName,
+            owner,
+            hasCredential: false,
+          });
+          resolve(null);
+          return;
+        }
         const isValidCredential = await validateCredentials({
           identity,
           requestParams: {
@@ -33,7 +46,7 @@ export const loadCredential = async ({
             // URL used by meta-issuer in the issued verifiable credentials (hard-coded in meta-issuer)
             issuerOrigin: 'https://metaissuer.vc/',
             issuerCanisterId: Principal.fromText(ISSUER_CANISTER_ID),
-            vpJwt: verifiablePresentation,
+            vpJwt: verifiablePresentation.Ok,
             credentialSpec: {
               credential_type: 'VerifiedMember',
               arguments: [
@@ -64,17 +77,19 @@ export const loadCredential = async ({
         origin: ISSUER_ORIGIN,
         canisterId: ISSUER_CANISTER_ID,
       },
-      credentialSpec: {
-        credentialType: 'VerifiedMember',
-        arguments: {
-          groupName,
-          owner: owner.toText(),
+      credentialData: {
+        credentialSpec: {
+          credentialType: 'VerifiedMember',
+          arguments: {
+            groupName,
+            owner: owner.toText(),
+          },
         },
+        credentialSubject: identity.getPrincipal().toText(),
       },
-      credentialSubject: identity.getPrincipal(),
       windowOpenerFeatures: popupCenter(),
       identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
-      derivationOrigin: RP_DERIGATION_ORIGIN,
+      derivationOrigin: RP_DERIVATION_ORIGIN,
     });
   });
 };
