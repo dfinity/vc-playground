@@ -10,6 +10,7 @@
   import TestIdWrapper from '$lib/components/TestIdWrapper.svelte';
   import {
     AGE_CREDENTIAL_GROUP,
+    CREDENTIALS_WITH_INPUT,
     CREDENTIALS_WITH_INPUT_NUMBER,
     CREDENTIALS_WITH_INPUT_TEXT,
     EMPLOYMENT_CREDENTIAL_GROUP,
@@ -46,8 +47,13 @@
     modalStore.trigger(modal);
   };
 
+  // Return `true` if:
+  // * selectedCredential doesn't need an input.
+  // * selectedCredential needs a text input and the predicateCredentialText is filled.
+  // * selectedCredential needs a number input and the predicateCredentialNumber is filled.
   let filledRequiredInput = false;
   $: filledRequiredInput =
+    !CREDENTIALS_WITH_INPUT.includes(selectedCredential ?? '') ||
     (CREDENTIALS_WITH_INPUT_NUMBER.includes(selectedCredential ?? '') &&
       predicateCredentialNumber !== undefined) ||
     (CREDENTIALS_WITH_INPUT_TEXT.includes(selectedCredential ?? '') &&
