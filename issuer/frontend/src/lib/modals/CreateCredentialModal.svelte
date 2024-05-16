@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AGE_CREDENTIAL_GROUP, CREDENTIALS } from '$lib/constants/credentials';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import { isNullish } from '$lib/utils/is-nullish.utils';
   import { getModalStore } from '@skeletonlabs/skeleton';
@@ -14,13 +15,6 @@
 
   let issuerNickname = '';
   $: issuerNickname = $modalStore[0]?.meta.issuerNickname;
-
-  const credentials = [
-    'Proof of humanity',
-    '18 or older',
-    'Lives in Switzerland',
-    'Works at DFINITY',
-  ];
 
   let selectedCredential: undefined | string;
 
@@ -50,7 +44,7 @@
       </label>
       <select bind:value={selectedCredential} id="choose-credential" class="select px-4">
         <option value="" disabled selected>Select a credential type</option>
-        {#each credentials as credential}
+        {#each CREDENTIALS as credential}
           <option value={credential} id={credential}>
             {credential}
           </option>

@@ -5,19 +5,25 @@ import { joinGroup } from '$lib/api/joinGroup.api';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { NO_IDENTITY_MESSAGE } from '$lib/constants/messages';
 import type { Principal } from '@dfinity/principal';
+import { validateText } from '$lib/utils/validate-text.utils';
 
 export const requestCredential = async ({
   identity,
   issuerName,
   owner,
   toastStore,
+  memberData,
 }: {
   identity: Identity | null | undefined;
   issuerName: string;
   owner: Principal;
   toastStore: ToastStore;
+  memberData?: string | number;
 }) => {
   try {
+    if (memberData && typeof memberData === 'string') {
+      validateText(memberData);
+    }
     if (isNullish(identity)) {
       throw new Error(NO_IDENTITY_MESSAGE);
     }
