@@ -8,6 +8,14 @@
   import type { ImageData } from '../../../declarations/rp/rp.did';
   import { shareContent } from '$lib/services/shareContent.services';
   import TestIdWrapper from '$lib/components/TestIdWrapper.svelte';
+  import {
+    AGE_CREDENTIAL_GROUP,
+    CREDENTIALS_WITH_INPUT,
+    CREDENTIALS_WITH_INPUT_NUMBER,
+    CREDENTIALS_WITH_INPUT_TEXT,
+    EMPLOYMENT_CREDENTIAL_GROUP,
+    RESIDENCE_CREDENTIAL_GROUP,
+  } from '$lib/constants/credentials';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
@@ -16,6 +24,14 @@
   let issuersToSelect: Issuer[] | undefined = [];
   $: issuersToSelect = $issuersStore[selectedCredential ?? ''];
   let selectedIssuer: Issuer | undefined;
+  let predicateCredentialText: string | undefined;
+  let predicateCredentialNumber: number | undefined;
+
+  const predicateTextMapper: Record<string, string> = {
+    [AGE_CREDENTIAL_GROUP]: 'Enter the minimum age required to view this image.',
+    [RESIDENCE_CREDENTIAL_GROUP]: 'Enter the country of residence required to view this image.',
+    [EMPLOYMENT_CREDENTIAL_GROUP]: 'Enter the employment status required to view this image.',
+  };
 
   let selectedImage: ImageData | undefined = undefined;
   const openChooseImageModal = () => {
@@ -31,8 +47,20 @@
     modalStore.trigger(modal);
   };
 
+  // Return `true` if:
+  // * selectedCredential doesn't need an input.
+  // * selectedCredential needs a text input and the predicateCredentialText is filled.
+  // * selectedCredential needs a number input and the predicateCredentialNumber is filled.
+  let filledRequiredInput = false;
+  $: filledRequiredInput =
+    !CREDENTIALS_WITH_INPUT.includes(selectedCredential ?? '') ||
+    (CREDENTIALS_WITH_INPUT_NUMBER.includes(selectedCredential ?? '') &&
+      predicateCredentialNumber !== undefined) ||
+    (CREDENTIALS_WITH_INPUT_TEXT.includes(selectedCredential ?? '') &&
+      predicateCredentialText !== undefined);
   let enableShareButton = false;
-  $: enableShareButton = (selectedCredential ?? '').length > 0 && selectedImage !== undefined;
+  $: enableShareButton =
+    (selectedCredential ?? '').length > 0 && selectedImage !== undefined && filledRequiredInput;
 
   let showSuccessfulMessage = false;
 
@@ -41,6 +69,7 @@
     selectedCredential = undefined;
     selectedIssuer = undefined;
     selectedImage = undefined;
+    predicateCredentialText = undefined;
   };
 
   let isLoading = false;
@@ -50,19 +79,23 @@
     if (!selectedCredential || !selectedImage || !selectedIssuer) {
       return;
     }
-    await shareContent({
+    const isSuccessful = await shareContent({
       issuerName: selectedCredential,
       image: selectedImage,
       owner: selectedIssuer.owner,
       identity: $authStore.identity,
       toastStore,
+      predicate: predicateCredentialText ?? predicateCredentialNumber,
     });
-    toastStore.trigger({
-      message: 'Content shared successfully!',
-      background: 'variant-filled-success',
-    });
-    showSuccessfulMessage = true;
+    if (isSuccessful) {
+      toastStore.trigger({
+        message: 'Content shared successfully!',
+        background: 'variant-filled-success',
+      });
+      showSuccessfulMessage = true;
+    }
     isLoading = false;
+    predicateCredentialText = undefined;
   };
 </script>
 
@@ -91,7 +124,7 @@
         {/each}
       </select>
     </div>
-  
+
     <div class="flex flex-col gap-4">
       <label for="credentials">
         <h5 class="h5">Choose the issuer that you trust.</h5>
@@ -105,7 +138,25 @@
         {/each}
       </select>
     </div>
-  
+
+    {#if nonNullish(selectedCredential) && CREDENTIALS_WITH_INPUT_TEXT.includes(selectedCredential)}
+      <div class="flex flex-col gap-4">
+        <label for="credentials">
+          <h5 class="h5">{predicateTextMapper[selectedCredential]}</h5>
+        </label>
+        <input type="text" class="input" bind:value={predicateCredentialText} />
+      </div>
+    {/if}
+
+    {#if nonNullish(selectedCredential) && CREDENTIALS_WITH_INPUT_NUMBER.includes(selectedCredential)}
+      <div class="flex flex-col gap-4">
+        <label for="credentials">
+          <h5 class="h5">{predicateTextMapper[selectedCredential]}</h5>
+        </label>
+        <input type="number" class="input" bind:value={predicateCredentialNumber} />
+      </div>
+    {/if}
+
     <div class="flex flex-col gap-4">
       <h5 class="h5">Choose an image to share</h5>
       {#if selectedImage}
@@ -118,13 +169,19 @@
         </div>
       {/if}
       <div class="flex justify-center">
-        <Button testId="choose-image" on:click={openChooseImageModal} variant="secondary">Choose Image</Button>
+        <Button testId="choose-image" on:click={openChooseImageModal} variant="secondary"
+          >Choose Image</Button
+        >
       </div>
     </div>
-  
+
     <div class="flex justify-end">
-      <Button testId="publish-button" on:click={share} variant="primary" disabled={!enableShareButton} loading={isLoading}
-        >Publish</Button
+      <Button
+        testId="publish-button"
+        on:click={share}
+        variant="primary"
+        disabled={!enableShareButton}
+        loading={isLoading}>Publish</Button
       >
     </div>
   {/if}
