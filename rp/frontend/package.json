@@ -44,6 +44,7 @@
     "@dfinity/auth-client": "^1.1.1",
     "@dfinity/principal": "^1.1.1",
     "@dfinity/verifiable-credentials": "^0.0.1",
-    "@floating-ui/dom": "^1.6.3"
+    "@floating-ui/dom": "^1.6.3",
+    "no-profanity": "^1.5.1"
   }
 }

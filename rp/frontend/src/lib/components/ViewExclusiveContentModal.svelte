@@ -1,13 +1,13 @@
 <script lang="ts">
   /* eslint-disable svelte/no-at-html-tags */
-  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+  import { getModalStore } from '@skeletonlabs/skeleton';
   import Modal from './Modal.svelte';
   import Button from './Button.svelte';
   import { loadCredential } from '$lib/services/load-credential.services';
   import { authStore } from '$lib/stores/auth.store';
   import { credentialsStore } from '$lib/stores/credentials.store';
   import { onMount } from 'svelte';
-  import { ISSUER_ORIGIN } from '$lib/constants.ts/env-vars';
+  import { ISSUER_ORIGIN } from '$lib/constants/env-vars';
   import type { Principal } from '@dfinity/principal';
 
   /* eslint-disable-next-line */
@@ -20,7 +20,6 @@
   });
 
   const modalStore = getModalStore();
-  const toastStore = getToastStore();
 
   let credentialName = '';
   $: credentialName = $modalStore[0]?.meta.issuerName;
@@ -40,7 +39,6 @@
         groupName: credentialName,
         owner,
         identity: $authStore.identity,
-        toastStore,
       });
       vcFlowLoading = false;
     }
