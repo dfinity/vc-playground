@@ -10,6 +10,12 @@
   import { getUserNickname } from '$lib/stores/user.store';
   import type { Readable } from 'svelte/store';
   import { isNullish } from '$lib/utils/is-nullish.utils';
+  import {
+    AGE_CREDENTIAL_GROUP,
+    EMPLOYMENT_CREDENTIAL_GROUP,
+    CREDENTIALS_WITH_INPUT,
+    RESIDENCE_CREDENTIAL_GROUP,
+  } from '$lib/constants/credentials';
 
   export let issuer: PublicGroupData;
   // Must be invoked at the top level: https://www.skeleton.dev/utilities/modals
@@ -81,18 +87,64 @@
     return () => openPendingMemberModal();
   };
 
+  const openRequestCredentialModal = () => {
+    const textMapper: Record<string, string> = {
+      [AGE_CREDENTIAL_GROUP]: 'Enter your current age.',
+      [RESIDENCE_CREDENTIAL_GROUP]: 'Enter your current country of residence.',
+      [EMPLOYMENT_CREDENTIAL_GROUP]: 'Enter your current employer.',
+    };
+    const inputTypeMapper: Record<string, 'number' | 'text'> = {
+      [AGE_CREDENTIAL_GROUP]: 'number',
+      [RESIDENCE_CREDENTIAL_GROUP]: 'text',
+      [EMPLOYMENT_CREDENTIAL_GROUP]: 'text',
+    };
+    const placeholderMapper: Record<string, string> = {
+      [AGE_CREDENTIAL_GROUP]: 'Age',
+      [RESIDENCE_CREDENTIAL_GROUP]: 'Country of residence',
+      [EMPLOYMENT_CREDENTIAL_GROUP]: 'Employer',
+    };
+    const modal: ModalSettings = {
+      type: 'prompt',
+      title: `Request Credential: ${issuer.group_name}`,
+      body: textMapper[issuer.group_name],
+      valueAttr: {
+        type: inputTypeMapper[issuer.group_name],
+        minlength: 2,
+        required: true,
+        placeholder: placeholderMapper[issuer.group_name],
+      },
+      response: async (userInput: string | false | number) => {
+        if (typeof userInput === 'number' || typeof userInput === 'string') {
+          await requestCredential({
+            identity: $authStore.identity,
+            issuerName: issuer.group_name,
+            owner: issuer.owner,
+            toastStore,
+            memberData: userInput,
+          });
+        }
+        loadingRequestCredential = false;
+      },
+    };
+    modalStore.trigger(modal);
+  };
+
   let userNickname: Readable<undefined | null | string>;
   $: userNickname = getUserNickname($authStore.identity);
   let loadingRequestCredential = false;
   const requestCredentialModal = async () => {
     loadingRequestCredential = true;
-    await requestCredential({
-      identity: $authStore.identity,
-      issuerName: issuer.group_name,
-      owner: issuer.owner,
-      toastStore,
-    });
-    loadingRequestCredential = false;
+    if (CREDENTIALS_WITH_INPUT.includes(issuer.group_name)) {
+      openRequestCredentialModal();
+    } else {
+      await requestCredential({
+        identity: $authStore.identity,
+        issuerName: issuer.group_name,
+        owner: issuer.owner,
+        toastStore,
+      });
+      loadingRequestCredential = false;
+    }
   };
 
   let onClick: (() => void) | undefined;
