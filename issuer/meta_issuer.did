@@ -180,6 +180,7 @@ type AddGroupRequest = record {
 type JoinGroupRequest = record {
     group_name : text;
     owner : principal;
+    vc_arguments: opt VcArguments;
 };
 
 type MembershipUpdate = record {
@@ -203,12 +204,24 @@ type MembershipStatus = variant {
     Rejected;
 };
 
+type VcArguments = vec record { text; ArgumentValue };
+
+type GroupType = record {
+    group_name: text;
+    credential_spec: CredentialSpec;
+};
+
+type GroupTypes = record {
+    types: vec GroupType;
+};
+
 type PublicGroupData = record {
    group_name : text;
    owner : principal;
    issuer_nickname : text;
    stats : GroupStats;
    membership_status: opt MembershipStatus;  // set only for authenticated calls
+   vc_arguments: opt VcArguments ;  // set only for authenticated calls
 };
 
 type MemberData = record {
@@ -216,6 +229,7 @@ type MemberData = record {
     nickname: text;
     joined_timestamp_ns : TimestampNs;
     membership_status: MembershipStatus;
+    vc_arguments: opt VcArguments;
 };
 
 type FullGroupData = record {
@@ -251,6 +265,7 @@ service: (opt IssuerInit) -> {
     /// API for setting/getting information about users, groups and group membership.
     set_user : (SetUserRequest) -> (variant { Ok ; Err : GroupsError;}); /// authenticated
     get_user : () -> (variant { Ok : UserData ; Err : GroupsError;}) query; /// authenticated
+    group_types : () -> (variant { Ok : GroupTypes; Err : GroupsError;}) query; /// public
     list_groups : (ListGroupsRequest) -> (variant { Ok : PublicGroupsData; Err : GroupsError;}) query;  /// public
     get_group : (GetGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;}) query;  /// authenticated, only for the owner
     add_group : (AddGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;});  /// authenticated

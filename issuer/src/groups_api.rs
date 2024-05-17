@@ -1,4 +1,25 @@
 use candid::{CandidType, Deserialize, Principal};
+use std::collections::BTreeMap;
+
+#[derive(Eq, PartialEq, Clone, Debug, CandidType, Deserialize, Ord, PartialOrd)]
+pub enum ArgumentValue {
+    String(String),
+    Int(i32),
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct CredentialSpec {
+    pub credential_type: String,
+    pub arguments: Option<VcArguments>,
+}
+
+pub type VcArguments = BTreeMap<String, ArgumentValue>;
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct GroupType {
+    pub group_name: String,
+    pub credential_spec: CredentialSpec,
+}
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
 pub struct UserData {
@@ -30,6 +51,7 @@ pub struct AddGroupRequest {
 pub struct JoinGroupRequest {
     pub group_name: String,
     pub owner: Principal,
+    pub vc_arguments: Option<VcArguments>,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -58,12 +80,18 @@ pub enum MembershipStatus {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct GroupTypes {
+    pub types: Vec<GroupType>,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PublicGroupData {
     pub group_name: String,
     pub owner: Principal,
     pub issuer_nickname: String,
     pub stats: GroupStats,
     pub membership_status: Option<MembershipStatus>,
+    pub vc_arguments: Option<VcArguments>,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -72,6 +100,7 @@ pub struct MemberData {
     pub nickname: String,
     pub joined_timestamp_ns: u64,
     pub membership_status: MembershipStatus,
+    pub vc_arguments: Option<VcArguments>,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -91,6 +120,7 @@ impl From<FullGroupData> for PublicGroupData {
             issuer_nickname: full_data.issuer_nickname,
             stats: full_data.stats,
             membership_status: None,
+            vc_arguments: None,
         }
     }
 }

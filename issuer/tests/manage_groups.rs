@@ -12,9 +12,39 @@ use std::time::Duration;
 #[allow(dead_code)]
 mod util;
 use crate::util::{
-    api, do_add_group, do_get_group, do_get_user, do_join_group, do_set_user, do_update_membership,
-    install_issuer,
+    api, do_add_group, do_get_group, do_get_user, do_group_types, do_join_group, do_set_user,
+    do_update_membership, install_issuer,
 };
+
+#[test]
+fn should_return_group_types() {
+    let env = env();
+    let canister_id = install_issuer(&env, None);
+    let caller = principal_1();
+
+    let group_types = do_group_types(caller, &env, canister_id);
+    assert_eq!(group_types.types.len(), 4);
+    assert_eq!(group_types.types[0].group_name, "Verified Residence");
+    assert_eq!(
+        group_types.types[0].credential_spec.credential_type,
+        "VerifiedResidence"
+    );
+    assert_eq!(group_types.types[1].group_name, "Verified Age");
+    assert_eq!(
+        group_types.types[1].credential_spec.credential_type,
+        "VerifiedAge"
+    );
+    assert_eq!(group_types.types[2].group_name, "Verified Employment");
+    assert_eq!(
+        group_types.types[2].credential_spec.credential_type,
+        "VerifiedEmployment"
+    );
+    assert_eq!(group_types.types[3].group_name, "Verified Humanity");
+    assert_eq!(
+        group_types.types[3].credential_spec.credential_type,
+        "VerifiedHumanity"
+    );
+}
 
 #[test]
 fn should_set_user() {

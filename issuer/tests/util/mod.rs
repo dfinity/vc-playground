@@ -6,7 +6,7 @@ use ic_test_state_machine_client::{
 };
 use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
-    AddGroupRequest, FullGroupData, GetGroupRequest, GroupsError, JoinGroupRequest,
+    AddGroupRequest, FullGroupData, GetGroupRequest, GroupTypes, GroupsError, JoinGroupRequest,
     ListGroupsRequest, MembershipStatus, MembershipUpdate, PublicGroupsData, SetUserRequest,
     UpdateMembershipRequest, UserData,
 };
@@ -132,6 +132,12 @@ pub fn do_get_user(caller: Principal, env: &StateMachine, canister_id: Principal
         .expect("Failed get_user")
 }
 
+pub fn do_group_types(caller: Principal, env: &StateMachine, canister_id: Principal) -> GroupTypes {
+    api::group_types(env, canister_id, caller)
+        .expect("API call failed")
+        .expect("Failed group_types")
+}
+
 pub fn add_group_with_member(
     group_name: &str,
     owner: Principal,
@@ -204,6 +210,7 @@ pub fn do_join_group(
         JoinGroupRequest {
             group_name: group_name.to_string(),
             owner,
+            vc_arguments: None,
         },
     )
     .expect("API call failed")
@@ -233,7 +240,7 @@ pub fn do_update_membership(
 /// Issuer API.
 pub mod api {
     use super::*;
-    use meta_issuer::groups_api::{SetUserRequest, UserData};
+    use meta_issuer::groups_api::{GroupTypes, SetUserRequest, UserData};
 
     pub fn configure(
         env: &StateMachine,
@@ -289,6 +296,14 @@ pub mod api {
             (get_credential_request,),
         )
         .map(|(x,)| x)
+    }
+
+    pub fn group_types(
+        env: &StateMachine,
+        canister_id: CanisterId,
+        sender: Principal,
+    ) -> Result<Result<GroupTypes, GroupsError>, CallError> {
+        query_candid_as(env, canister_id, sender, "group_types", ()).map(|(x,)| x)
     }
 
     pub fn get_user(

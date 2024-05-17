@@ -12,9 +12,10 @@ use ic_stable_structures::{DefaultMemoryImpl, RestrictedMemory, StableBTreeMap, 
 use include_dir::{include_dir, Dir};
 use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
-    AddGroupRequest, FullGroupData, GetGroupRequest, GroupStats, GroupsError, JoinGroupRequest,
-    ListGroupsRequest, MemberData, MembershipStatus, PublicGroupData, PublicGroupsData,
-    SetUserRequest, UpdateMembershipRequest, UserData,
+    AddGroupRequest, ArgumentValue as OrdArgumentValue, CredentialSpec as OrdCredentialSpec,
+    FullGroupData, GetGroupRequest, GroupStats, GroupType, GroupTypes, GroupsError,
+    JoinGroupRequest, ListGroupsRequest, MemberData, MembershipStatus, PublicGroupData,
+    PublicGroupsData, SetUserRequest, UpdateMembershipRequest, UserData, VcArguments,
 };
 use serde_bytes::ByteBuf;
 use sha2::{Digest, Sha256};
@@ -75,6 +76,7 @@ struct GroupKey {
 struct MemberRecord {
     joined_timestamp_ns: u64,
     membership_status: MembershipStatus,
+    vc_arguments: Option<VcArguments>,
 }
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -316,35 +318,101 @@ fn set_user(req: SetUserRequest) -> Result<(), GroupsError> {
 }
 
 /// API for obtaining information about groups and group membership.
+/// API for setting/getting user data.
+
+#[query]
+#[candid_method(query)]
+fn group_types() -> Result<GroupTypes, GroupsError> {
+    Ok(GroupTypes {
+        types: vec![
+            GroupType {
+                group_name: "Verified Residence".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedResidence".to_string(),
+                    arguments: Some(
+                        vec![(
+                            "countryName".to_string(),
+                            OrdArgumentValue::String("<country>".to_string()),
+                        )]
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone()))
+                        .collect(),
+                    ),
+                },
+            },
+            GroupType {
+                group_name: "Verified Age".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedAge".to_string(),
+                    arguments: Some(
+                        vec![("ageAtLeast".to_string(), OrdArgumentValue::Int(18))]
+                            .iter()
+                            .map(|(k, v)| (k.clone(), v.clone()))
+                            .collect(),
+                    ),
+                },
+            },
+            GroupType {
+                group_name: "Verified Employment".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedEmployment".to_string(),
+                    arguments: Some(
+                        vec![(
+                            "employerName".to_string(),
+                            OrdArgumentValue::String("<employer>".to_string()),
+                        )]
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone()))
+                        .collect(),
+                    ),
+                },
+            },
+            GroupType {
+                group_name: "Verified Humanity".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedHumanity".to_string(),
+                    arguments: None,
+                },
+            },
+        ],
+    })
+}
+
 #[query]
 #[candid_method(query)]
 fn list_groups(req: ListGroupsRequest) -> Result<PublicGroupsData, GroupsError> {
     let anonymous = caller() == Principal::anonymous();
     GROUPS.with_borrow(|groups| {
         let mut list = vec![];
-        for (key, record) in groups.iter() {
+        for (key, group_rec) in groups.iter() {
             if let Some(substring) = &req.group_name_substring {
                 if !key.group_name.contains(substring) {
                     break;
                 }
             }
-            let membership_status = if anonymous {
-                None
+            let (membership_status, vc_arguments) = if anonymous {
+                (None, None)
             } else {
-                record
+                group_rec
                     .members
                     .get(&caller())
-                    .map(|member_record| member_record.membership_status.clone())
+                    .map_or((None, None), |member_rec| {
+                        (
+                            Some(member_rec.membership_status.clone()),
+                            member_rec.vc_arguments.clone(),
+                        )
+                    })
             };
             list.push(PublicGroupData {
                 group_name: key.group_name,
                 owner: key.owner,
                 issuer_nickname: maybe_issuer_nickname(&key.owner).unwrap_or("".to_string()),
                 stats: GroupStats {
-                    member_count: record.members.len() as u32,
-                    created_timestamp_ns: record.created_timestamp_ns,
+                    member_count: group_rec.members.len() as u32,
+                    created_timestamp_ns: group_rec.created_timestamp_ns,
                 },
                 membership_status,
+                vc_arguments,
             })
         }
         Ok(PublicGroupsData { groups: list })
@@ -379,11 +447,12 @@ fn get_group(req: GetGroupRequest) -> Result<FullGroupData, GroupsError> {
             let members: Vec<MemberData> = group_record
                 .members
                 .iter()
-                .map(|(member, record)| MemberData {
+                .map(|(member, member_rec)| MemberData {
                     member: *member,
                     nickname: maybe_user_nickname(member).unwrap_or("".to_string()),
-                    joined_timestamp_ns: record.joined_timestamp_ns,
-                    membership_status: record.membership_status.clone(),
+                    joined_timestamp_ns: member_rec.joined_timestamp_ns,
+                    membership_status: member_rec.membership_status.clone(),
+                    vc_arguments: member_rec.vc_arguments.clone(),
                 })
                 .collect();
             Ok(FullGroupData {
@@ -450,13 +519,14 @@ fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
         if let Some(mut group_record) = groups.get(&(req.group_name.clone(), req.owner).into()) {
             if let Some(member_record) = group_record.members.get(&caller()) {
                 // If a record exists and has `Rejected`-status,
-                // switch to `PendingReview` and update timestamp, otherwise do nothing.
+                // switch to `PendingReview` and update vc_arguments and timestamp, otherwise do nothing.
                 if member_record.membership_status == MembershipStatus::Rejected {
                     group_record.members.insert(
                         caller(),
                         MemberRecord {
                             joined_timestamp_ns: time(),
                             membership_status: MembershipStatus::PendingReview,
+                            vc_arguments: req.vc_arguments.clone(),
                         },
                     );
                 }
@@ -466,6 +536,7 @@ fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
                     MemberRecord {
                         joined_timestamp_ns: time(),
                         membership_status: MembershipStatus::PendingReview,
+                        vc_arguments: req.vc_arguments.clone(),
                     },
                 );
             }
@@ -492,6 +563,7 @@ fn update_membership(req: UpdateMembershipRequest) -> Result<(), GroupsError> {
                         MemberRecord {
                             joined_timestamp_ns: member_record.joined_timestamp_ns,
                             membership_status: update.new_status,
+                            vc_arguments: member_record.vc_arguments.clone(),
                         },
                     );
                 } else {
