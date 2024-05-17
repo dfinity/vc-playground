@@ -3,7 +3,11 @@
   import { authStore } from '$lib/stores/auth.store';
   import Badge from '$lib/ui-components/elements/Badge.svelte';
   import Button from '$lib/ui-components/elements/Button.svelte';
-  import type { MembershipStatus, PublicGroupData } from '../../declarations/meta_issuer.did';
+  import type {
+    GroupType,
+    MembershipStatus,
+    PublicGroupData,
+  } from '../../declarations/meta_issuer.did';
   import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { RP_ORIGIN } from '$lib/constants/env-vars';
   import IssuerItem from '$lib/components/IssuerItem.svelte';
@@ -13,9 +17,10 @@
   import {
     AGE_CREDENTIAL_GROUP,
     EMPLOYMENT_CREDENTIAL_GROUP,
-    CREDENTIALS_WITH_INPUT,
     RESIDENCE_CREDENTIAL_GROUP,
   } from '$lib/constants/credentials';
+  import { getAllIssuerTypesStore } from '$lib/stores/issyer-types.store';
+  import { inputTypeCredentialSpec } from '$lib/utils/input-type-credential-spec.utils';
 
   export let issuer: PublicGroupData;
   // Must be invoked at the top level: https://www.skeleton.dev/utilities/modals
@@ -87,17 +92,13 @@
     return () => openPendingMemberModal();
   };
 
-  const openRequestCredentialModal = () => {
+  const openRequestCredentialModal = (issuerType: GroupType) => {
     const textMapper: Record<string, string> = {
       [AGE_CREDENTIAL_GROUP]: 'Enter your current age.',
       [RESIDENCE_CREDENTIAL_GROUP]: 'Enter your current country of residence.',
       [EMPLOYMENT_CREDENTIAL_GROUP]: 'Enter your current employer.',
     };
-    const inputTypeMapper: Record<string, 'number' | 'text'> = {
-      [AGE_CREDENTIAL_GROUP]: 'number',
-      [RESIDENCE_CREDENTIAL_GROUP]: 'text',
-      [EMPLOYMENT_CREDENTIAL_GROUP]: 'text',
-    };
+    const inputType = inputTypeCredentialSpec(issuerType.credential_spec);
     const placeholderMapper: Record<string, string> = {
       [AGE_CREDENTIAL_GROUP]: 'Age',
       [RESIDENCE_CREDENTIAL_GROUP]: 'Country of residence',
@@ -108,18 +109,19 @@
       title: `Request Credential: ${issuer.group_name}`,
       body: textMapper[issuer.group_name],
       valueAttr: {
-        type: inputTypeMapper[issuer.group_name],
+        type: inputType,
         minlength: 2,
         required: true,
         placeholder: placeholderMapper[issuer.group_name],
       },
-      response: async (userInput: string | false | number) => {
-        if (typeof userInput === 'number' || typeof userInput === 'string') {
+      response: async (userInput: string | false) => {
+        if (typeof userInput === 'string') {
           await requestCredential({
             identity: $authStore.identity,
             issuerName: issuer.group_name,
             owner: issuer.owner,
             toastStore,
+            credentialSpec: issuerType.credential_spec,
             memberData: userInput,
           });
         }
@@ -129,13 +131,20 @@
     modalStore.trigger(modal);
   };
 
+  let issuerTypes: Readable<GroupType[] | undefined>;
+  $: issuerTypes = getAllIssuerTypesStore($authStore.identity);
+
   let userNickname: Readable<undefined | null | string>;
   $: userNickname = getUserNickname($authStore.identity);
   let loadingRequestCredential = false;
   const requestCredentialModal = async () => {
     loadingRequestCredential = true;
-    if (CREDENTIALS_WITH_INPUT.includes(issuer.group_name)) {
-      openRequestCredentialModal();
+    const issuerTypeWithArgs = $issuerTypes?.find(
+      ({ group_name, credential_spec }) =>
+        issuer.group_name === group_name && credential_spec.arguments.length > 0
+    );
+    if (issuerTypeWithArgs !== undefined) {
+      openRequestCredentialModal(issuerTypeWithArgs);
     } else {
       await requestCredential({
         identity: $authStore.identity,
