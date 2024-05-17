@@ -318,7 +318,6 @@ fn set_user(req: SetUserRequest) -> Result<(), GroupsError> {
 }
 
 /// API for obtaining information about groups and group membership.
-/// API for setting/getting user data.
 
 #[query]
 #[candid_method(query)]
