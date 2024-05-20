@@ -14,11 +14,6 @@
   import { getUserNickname } from '$lib/stores/user.store';
   import type { Readable } from 'svelte/store';
   import { isNullish } from '$lib/utils/is-nullish.utils';
-  import {
-    AGE_CREDENTIAL_GROUP,
-    EMPLOYMENT_CREDENTIAL_GROUP,
-    RESIDENCE_CREDENTIAL_GROUP,
-  } from '$lib/constants/credentials';
   import { getAllIssuerTypesStore } from '$lib/stores/issyer-types.store';
   import { inputTypeCredentialSpec } from '$lib/utils/input-type-credential-spec.utils';
 
@@ -29,6 +24,11 @@
 
   let canJoin: boolean;
   $: canJoin = issuer.membership_status.length === 0 || 'Rejected' in issuer.membership_status[0];
+
+  // Used to render a user friendly description and placeholder texts in the modal.
+  const AGE_CREDENTIAL_GROUP = 'Verified Age';
+  const RESIDENCE_CREDENTIAL_GROUP = 'Verified Residence';
+  const EMPLOYMENT_CREDENTIAL_GROUP = 'Verified Employment';
 
   const statusVariant = (status: MembershipStatus | undefined): 'success' | 'default' => {
     if (status === undefined || 'Rejected' in status) {
