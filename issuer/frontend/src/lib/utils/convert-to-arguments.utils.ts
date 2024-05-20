@@ -2,33 +2,35 @@ import type { CredentialSpec, VcArguments } from '../../declarations/meta_issuer
 
 export const convertToArguments = ({
   credentialSpec,
-  userInput,
+  credentialArgument,
 }: {
   credentialSpec?: CredentialSpec;
-  userInput: number | string | undefined;
+  credentialArgument: number | string | undefined;
 }): VcArguments | undefined => {
-  if (credentialSpec === undefined || credentialSpec.arguments.length === 0 || !userInput) {
+  if (
+    credentialSpec === undefined ||
+    credentialSpec.arguments.length === 0 ||
+    !credentialArgument
+  ) {
     return undefined;
   }
-  if (credentialSpec.arguments.length > 1) {
-    throw new Error('Only one argument is supported');
-  }
+  // We have already checked that the arguments array is not empty.
   const specArguments = credentialSpec.arguments[0];
-  if (specArguments.length > 1) {
-    throw new Error('Only one argument is supported');
-  }
-  const [[key, argumentValue]] = specArguments;
-  if ('Int' in argumentValue) {
-    const numberValue = Number(userInput);
-    if (Number.isNaN(numberValue)) {
-      throw new Error('Expected a number');
+  const vcArguments: VcArguments = [];
+  for (const [key, argumentValue] of specArguments) {
+    if ('Int' in argumentValue) {
+      const numberValue = Number(credentialArgument);
+      if (Number.isNaN(numberValue)) {
+        throw new Error('Expected a number');
+      }
+      vcArguments.push([key, { Int: numberValue }]);
     }
-    return [[key, { Int: numberValue }]];
-  }
-  if ('String' in argumentValue) {
-    if (typeof userInput !== 'string') {
-      throw new Error('Expected a string');
+    if ('String' in argumentValue) {
+      if (typeof credentialArgument !== 'string') {
+        throw new Error('Expected a string');
+      }
+      vcArguments.push([key, { String: credentialArgument }]);
     }
-    return [[key, { String: userInput }]];
   }
+  return vcArguments;
 };

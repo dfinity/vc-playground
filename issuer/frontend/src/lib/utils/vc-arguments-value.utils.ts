@@ -1,9 +1,10 @@
 import type { VcArguments } from '../../declarations/meta_issuer.did';
 
 export const vcArgumentsValue = (vcArguments: [VcArguments] | []): string | number | undefined => {
-  if (vcArguments.length === 0) return undefined;
+  const vcArgument = vcArguments[0];
+  if (vcArgument === undefined) return undefined;
   // Only support one argument for now
-  const [_key, argumentValue] = vcArguments[0][0];
+  const [_key, argumentValue] = vcArgument[0];
   if ('Int' in argumentValue) {
     return argumentValue.Int;
   }

@@ -122,7 +122,7 @@
             owner: issuer.owner,
             toastStore,
             credentialSpec: issuerType.credential_spec,
-            memberData: userInput,
+            credentialArgument: userInput,
           });
         }
         loadingRequestCredential = false;

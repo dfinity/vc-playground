@@ -14,24 +14,27 @@ export const requestCredential = async ({
   issuerName,
   owner,
   toastStore,
-  memberData,
+  credentialArgument,
   credentialSpec,
 }: {
   identity: Identity | null | undefined;
   issuerName: string;
   owner: Principal;
   toastStore: ToastStore;
-  memberData?: string;
+  credentialArgument?: string;
   credentialSpec?: CredentialSpec;
 }) => {
   try {
-    if (memberData && typeof memberData === 'string') {
-      validateText(memberData);
+    if (credentialArgument && typeof credentialArgument === 'string') {
+      validateText(credentialArgument);
     }
     if (isNullish(identity)) {
       throw new Error(NO_IDENTITY_MESSAGE);
     }
-    const vcArguments = convertToArguments({ credentialSpec, userInput: memberData });
+    const vcArguments = convertToArguments({
+      credentialSpec,
+      credentialArgument,
+    });
     await joinGroup({ identity, issuerName, owner, vcArguments });
     await loadIssuers({ identity, toastStore });
   } catch (err: unknown) {
