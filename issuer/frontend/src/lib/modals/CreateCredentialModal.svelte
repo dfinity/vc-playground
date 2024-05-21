@@ -3,7 +3,7 @@
   import { isNullish } from '$lib/utils/is-nullish.utils';
   import { getModalStore } from '@skeletonlabs/skeleton';
   import type { GroupType } from '../../declarations/meta_issuer.did';
-  import { getAllIssuerTypesStore } from '$lib/stores/issyer-types.store';
+  import { getAllIssuerTypesStore } from '$lib/stores/issuer-types.store';
   import { authStore } from '$lib/stores/auth.store';
   import type { Readable } from 'svelte/store';
 
