@@ -9,13 +9,9 @@
   import { shareContent } from '$lib/services/shareContent.services';
   import TestIdWrapper from '$lib/components/TestIdWrapper.svelte';
   import {
-    AGE_CREDENTIAL_GROUP,
-    CREDENTIALS_WITH_INPUT,
-    CREDENTIALS_WITH_INPUT_NUMBER,
-    CREDENTIALS_WITH_INPUT_TEXT,
-    EMPLOYMENT_CREDENTIAL_GROUP,
-    RESIDENCE_CREDENTIAL_GROUP,
-  } from '$lib/constants/credentials';
+    getIssuerInputTypesStore,
+    type IssuerInputTypeStore,
+  } from '$lib/stores/issyer-types.store';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
@@ -27,6 +23,9 @@
   let predicateCredentialText: string | undefined;
   let predicateCredentialNumber: number | undefined;
 
+  const AGE_CREDENTIAL_GROUP = 'Verified Age';
+  const RESIDENCE_CREDENTIAL_GROUP = 'Verified Residence';
+  const EMPLOYMENT_CREDENTIAL_GROUP = 'Verified Employment';
   const predicateTextMapper: Record<string, string> = {
     [AGE_CREDENTIAL_GROUP]: 'Enter the minimum age required to view this image.',
     [RESIDENCE_CREDENTIAL_GROUP]: 'Enter the country of residence required to view this image.',
@@ -47,17 +46,23 @@
     modalStore.trigger(modal);
   };
 
+  let selectedCredentialInputTypeStoreStore: IssuerInputTypeStore;
+  $: selectedCredentialInputTypeStoreStore = getIssuerInputTypesStore($authStore.identity);
+  let selectedCredentialInputTypeStore: 'text' | 'number' | undefined;
+  $: selectedCredentialInputTypeStore =
+    $selectedCredentialInputTypeStoreStore[selectedCredential ?? ''];
+
   // Return `true` if:
   // * selectedCredential doesn't need an input.
   // * selectedCredential needs a text input and the predicateCredentialText is filled.
   // * selectedCredential needs a number input and the predicateCredentialNumber is filled.
   let filledRequiredInput = false;
   $: filledRequiredInput =
-    !CREDENTIALS_WITH_INPUT.includes(selectedCredential ?? '') ||
-    (CREDENTIALS_WITH_INPUT_NUMBER.includes(selectedCredential ?? '') &&
-      predicateCredentialNumber !== undefined) ||
-    (CREDENTIALS_WITH_INPUT_TEXT.includes(selectedCredential ?? '') &&
-      predicateCredentialText !== undefined);
+    selectedCredentialInputTypeStore === undefined ||
+    (selectedCredentialInputTypeStore === 'number' && predicateCredentialNumber !== undefined) ||
+    (selectedCredentialInputTypeStore === 'text' &&
+      predicateCredentialText !== undefined &&
+      predicateCredentialText.length > 0);
   let enableShareButton = false;
   $: enableShareButton =
     (selectedCredential ?? '').length > 0 && selectedImage !== undefined && filledRequiredInput;
@@ -139,7 +144,7 @@
       </select>
     </div>
 
-    {#if nonNullish(selectedCredential) && CREDENTIALS_WITH_INPUT_TEXT.includes(selectedCredential)}
+    {#if nonNullish(selectedCredential) && selectedCredentialInputTypeStore === 'text'}
       <div class="flex flex-col gap-4">
         <label for="credentials">
           <h5 class="h5">{predicateTextMapper[selectedCredential]}</h5>
@@ -148,7 +153,7 @@
       </div>
     {/if}
 
-    {#if nonNullish(selectedCredential) && CREDENTIALS_WITH_INPUT_NUMBER.includes(selectedCredential)}
+    {#if nonNullish(selectedCredential) && selectedCredentialInputTypeStore === 'number'}
       <div class="flex flex-col gap-4">
         <label for="credentials">
           <h5 class="h5">{predicateTextMapper[selectedCredential]}</h5>
