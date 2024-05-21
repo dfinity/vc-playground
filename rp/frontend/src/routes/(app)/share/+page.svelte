@@ -11,7 +11,7 @@
   import {
     getIssuerInputTypesStore,
     type IssuerInputTypeStore,
-  } from '$lib/stores/issyer-types.store';
+  } from '$lib/stores/issuer-types.store';
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();

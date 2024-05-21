@@ -14,7 +14,7 @@
   import { getUserNickname } from '$lib/stores/user.store';
   import type { Readable } from 'svelte/store';
   import { isNullish } from '$lib/utils/is-nullish.utils';
-  import { getAllIssuerTypesStore } from '$lib/stores/issyer-types.store';
+  import { getAllIssuerTypesStore } from '$lib/stores/issuer-types.store';
   import { inputTypeCredentialSpec } from '$lib/utils/input-type-credential-spec.utils';
 
   export let issuer: PublicGroupData;
