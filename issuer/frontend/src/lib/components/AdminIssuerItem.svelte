@@ -11,4 +11,4 @@
   };
 </script>
 
-<IssuerItem {onClick} {issuer} />
+<IssuerItem {onClick} {issuer} isAdmin />

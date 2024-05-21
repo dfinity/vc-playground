@@ -1,13 +1,19 @@
 <script lang="ts">
-  import { AGE_CREDENTIAL_GROUP, CREDENTIALS } from '$lib/constants/credentials';
   import Button from '$lib/ui-components/elements/Button.svelte';
   import { isNullish } from '$lib/utils/is-nullish.utils';
   import { getModalStore } from '@skeletonlabs/skeleton';
+  import type { GroupType } from '../../declarations/meta_issuer.did';
+  import { getAllIssuerTypesStore } from '$lib/stores/issyer-types.store';
+  import { authStore } from '$lib/stores/auth.store';
+  import type { Readable } from 'svelte/store';
 
   /* eslint-disable-next-line */
   export let parent: any;
 
   const modalStore = getModalStore();
+
+  let issuerTypes: Readable<GroupType[] | undefined>;
+  $: issuerTypes = getAllIssuerTypesStore($authStore.identity);
 
   const close = () => {
     parent.onClose();
@@ -44,9 +50,9 @@
       </label>
       <select bind:value={selectedCredential} id="choose-credential" class="select px-4">
         <option value="" disabled selected>Select a credential type</option>
-        {#each CREDENTIALS as credential}
-          <option value={credential} id={credential}>
-            {credential}
+        {#each $issuerTypes ?? [] as issuerType}
+          <option value={issuerType.group_name} id={issuerType.group_name}>
+            {issuerType.group_name}
           </option>
         {/each}
       </select>

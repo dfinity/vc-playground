@@ -6,11 +6,15 @@
   import ListItem from '$lib/ui-components/elements/ListItem.svelte';
   import { getToastStore } from '@skeletonlabs/skeleton';
   import type { MemberData } from '../../declarations/meta_issuer.did';
+  import { vcArgumentsValue } from '$lib/utils/vc-arguments-value.utils';
 
   export let issuerName: string;
   export let member: MemberData;
 
   const toastStore = getToastStore();
+
+  let vcArgumentValue: string | number | undefined;
+  $: vcArgumentValue = vcArgumentsValue(member.vc_arguments);
 
   let status: 'pending' | 'approved' | 'revoked';
   $: status =
@@ -46,7 +50,12 @@
 </script>
 
 <ListItem testId={`member ${member.nickname}`}>
-  <svelte:fragment slot="main">{member.nickname}</svelte:fragment>
+  <svelte:fragment slot="main">
+    {member.nickname}
+    {#if vcArgumentValue !== undefined}
+      {` - ${vcArgumentValue}`}
+    {/if}
+  </svelte:fragment>
   <svelte:fragment slot="end">
     {#if status === 'pending'}
       <Button

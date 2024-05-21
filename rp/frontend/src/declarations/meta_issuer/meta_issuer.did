@@ -1,7 +1,48 @@
-/// Candid interface of the example VC issuer canister.
-/// The interface contains both the functionality required by the VC-spec
+/// Candid interface of the example verifiable credentials (VC) issuer, which implements
+/// a "meta-issuer" functionality.  This is a demo-issuer, that allows experimenting with
+/// two roles of the VC flow, namely issuing VCs, and using them for attribute sharing.
+/// The dapp allows any user become an issuer of VCs about about users' attributes,
+/// and to earn VCs issued by other users, for sharing with relying parties.
+/// For simplicity, meta-issuer issues credentials of a single type, `VerifiedMember`,
+/// that certify membership in a given group, and have the following spec:
+///
+///   CredentialSpec {
+///     credential_type: "VerifiedMember",
+///     arguments: {
+///       "groupName": ArgumentValue::String(<some group name>),
+///       "owner": ArgumentValue::String(<text-representation of user's principal>)
+///     },
+///   }
+///
+/// This structure allows then for simulating arbitrary credentials/attributes via
+/// appropriate naming of the group, e.g. "Verified Adult", or "Resident of Switzerland".
+/// Note that a real, non-demo, issuer would rather use a separate credential spec for each
+/// type of credential, that would allow also for additional, type-specific arguments,
+/// for example, for age verification one could use:
+///
+///   CredentialSpec {
+///     credential_type: "VerifiedAdult",
+///     arguments: {
+///       "minAge": ArgumentValue::Int(<min. age>),
+///     },
+///   }
+///
+/// Each user can create groups with arbitrary names, but any given user can create
+/// at most one group with a given group name.  In other words, every group is identified
+/// by a tuple (<group name>, <owner's principal>). Again, this is for simplicity only --
+/// in a real, non-demo issuer using user's principal for identifying a group would not advisable,
+/// as it could affect user's privacy.
+///
+/// The owner of a group manages the membership in the group (accepting or rejecting
+/// membership requests), which maps to obtaining (or not) the VC implied by the group's name.
+/// The owner of a group is perceived as "the issuer" of the corresponding VC.
+///
+/// Moreover, each user can request membership in any other group created in the dapp,
+/// which maps to applying for the VC implied by the group's name.
+///
+/// The interface below contains both the functionality required by the VC-spec
 /// (https://github.com/dfinity/internet-identity/blob/main/docs/vc-spec.md)
-/// and additional APIs for configuring the canister and using it for testing.
+/// and additional APIs for group management, and for configuring the canister.
 
 /// Specification of a requested credential.
 type CredentialSpec = record {
@@ -139,6 +180,7 @@ type AddGroupRequest = record {
 type JoinGroupRequest = record {
     group_name : text;
     owner : principal;
+    vc_arguments: opt VcArguments;
 };
 
 type MembershipUpdate = record {
@@ -162,12 +204,24 @@ type MembershipStatus = variant {
     Rejected;
 };
 
+type VcArguments = vec record { text; ArgumentValue };
+
+type GroupType = record {
+    group_name: text;
+    credential_spec: CredentialSpec;
+};
+
+type GroupTypes = record {
+    types: vec GroupType;
+};
+
 type PublicGroupData = record {
    group_name : text;
    owner : principal;
    issuer_nickname : text;
    stats : GroupStats;
    membership_status: opt MembershipStatus;  // set only for authenticated calls
+   vc_arguments: opt VcArguments ;  // set only for authenticated calls
 };
 
 type MemberData = record {
@@ -175,6 +229,7 @@ type MemberData = record {
     nickname: text;
     joined_timestamp_ns : TimestampNs;
     membership_status: MembershipStatus;
+    vc_arguments: opt VcArguments;
 };
 
 type FullGroupData = record {
@@ -210,6 +265,7 @@ service: (opt IssuerInit) -> {
     /// API for setting/getting information about users, groups and group membership.
     set_user : (SetUserRequest) -> (variant { Ok ; Err : GroupsError;}); /// authenticated
     get_user : () -> (variant { Ok : UserData ; Err : GroupsError;}) query; /// authenticated
+    group_types : () -> (variant { Ok : GroupTypes; Err : GroupsError;}) query; /// public
     list_groups : (ListGroupsRequest) -> (variant { Ok : PublicGroupsData; Err : GroupsError;}) query;  /// public
     get_group : (GetGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;}) query;  /// authenticated, only for the owner
     add_group : (AddGroupRequest) -> (variant { Ok : FullGroupData; Err : GroupsError;});  /// authenticated

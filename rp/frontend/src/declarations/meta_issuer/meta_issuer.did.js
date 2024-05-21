@@ -12,11 +12,14 @@ export const idlFactory = ({ IDL }) => {
     'Accepted' : IDL.Null,
   });
   const TimestampNs = IDL.Nat64;
+  const ArgumentValue = IDL.Variant({ 'Int' : IDL.Int32, 'String' : IDL.Text });
+  const VcArguments = IDL.Vec(IDL.Tuple(IDL.Text, ArgumentValue));
   const MemberData = IDL.Record({
     'member' : IDL.Principal,
     'membership_status' : MembershipStatus,
     'nickname' : IDL.Text,
     'joined_timestamp_ns' : TimestampNs,
+    'vc_arguments' : IDL.Opt(VcArguments),
   });
   const GroupStats = IDL.Record({
     'created_timestamp_ns' : TimestampNs,
@@ -45,7 +48,6 @@ export const idlFactory = ({ IDL }) => {
     'UnsupportedOrigin' : IDL.Text,
   });
   const SignedIdAlias = IDL.Record({ 'credential_jws' : IDL.Text });
-  const ArgumentValue = IDL.Variant({ 'Int' : IDL.Int32, 'String' : IDL.Text });
   const CredentialSpec = IDL.Record({
     'arguments' : IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, ArgumentValue))),
     'credential_type' : IDL.Text,
@@ -69,6 +71,11 @@ export const idlFactory = ({ IDL }) => {
     'user_nickname' : IDL.Opt(IDL.Text),
     'issuer_nickname' : IDL.Opt(IDL.Text),
   });
+  const GroupType = IDL.Record({
+    'group_name' : IDL.Text,
+    'credential_spec' : CredentialSpec,
+  });
+  const GroupTypes = IDL.Record({ 'types' : IDL.Vec(GroupType) });
   const HeaderField = IDL.Tuple(IDL.Text, IDL.Text);
   const HttpRequest = IDL.Record({
     'url' : IDL.Text,
@@ -84,6 +91,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const JoinGroupRequest = IDL.Record({
     'owner' : IDL.Principal,
+    'vc_arguments' : IDL.Opt(VcArguments),
     'group_name' : IDL.Text,
   });
   const ListGroupsRequest = IDL.Record({
@@ -92,6 +100,7 @@ export const idlFactory = ({ IDL }) => {
   const PublicGroupData = IDL.Record({
     'membership_status' : IDL.Opt(MembershipStatus),
     'owner' : IDL.Principal,
+    'vc_arguments' : IDL.Opt(VcArguments),
     'stats' : GroupStats,
     'issuer_nickname' : IDL.Text,
     'group_name' : IDL.Text,
@@ -166,6 +175,11 @@ export const idlFactory = ({ IDL }) => {
     'get_user' : IDL.Func(
         [],
         [IDL.Variant({ 'Ok' : UserData, 'Err' : GroupsError })],
+        ['query'],
+      ),
+    'group_types' : IDL.Func(
+        [],
+        [IDL.Variant({ 'Ok' : GroupTypes, 'Err' : GroupsError })],
         ['query'],
       ),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),

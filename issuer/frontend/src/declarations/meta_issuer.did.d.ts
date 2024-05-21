@@ -30,6 +30,11 @@ export interface GroupStats {
   'created_timestamp_ns' : TimestampNs,
   'member_count' : number,
 }
+export interface GroupType {
+  'group_name' : string,
+  'credential_spec' : CredentialSpec,
+}
+export interface GroupTypes { 'types' : Array<GroupType> }
 export type GroupsError = { 'Internal' : string } |
   { 'NotFound' : string } |
   { 'NotAuthorized' : string } |
@@ -76,13 +81,18 @@ export interface IssuerInit {
   'ic_root_key_der' : Uint8Array | number[],
   'frontend_hostname' : string,
 }
-export interface JoinGroupRequest { 'owner' : Principal, 'group_name' : string }
+export interface JoinGroupRequest {
+  'owner' : Principal,
+  'vc_arguments' : [] | [VcArguments],
+  'group_name' : string,
+}
 export interface ListGroupsRequest { 'group_name_substring' : [] | [string] }
 export interface MemberData {
   'member' : Principal,
   'membership_status' : MembershipStatus,
   'nickname' : string,
   'joined_timestamp_ns' : TimestampNs,
+  'vc_arguments' : [] | [VcArguments],
 }
 export type MembershipStatus = { 'PendingReview' : null } |
   { 'Rejected' : null } |
@@ -101,6 +111,7 @@ export interface PreparedCredentialData {
 export interface PublicGroupData {
   'membership_status' : [] | [MembershipStatus],
   'owner' : Principal,
+  'vc_arguments' : [] | [VcArguments],
   'stats' : GroupStats,
   'issuer_nickname' : string,
   'group_name' : string,
@@ -117,6 +128,7 @@ export interface UserData {
   'user_nickname' : [] | [string],
   'issuer_nickname' : [] | [string],
 }
+export type VcArguments = Array<[string, ArgumentValue]>;
 export interface _SERVICE {
   'add_group' : ActorMethod<
     [AddGroupRequest],
@@ -140,6 +152,11 @@ export interface _SERVICE {
       { 'Err' : GroupsError }
   >,
   'get_user' : ActorMethod<[], { 'Ok' : UserData } | { 'Err' : GroupsError }>,
+  'group_types' : ActorMethod<
+    [],
+    { 'Ok' : GroupTypes } |
+      { 'Err' : GroupsError }
+  >,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'join_group' : ActorMethod<
     [JoinGroupRequest],
