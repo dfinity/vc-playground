@@ -9,20 +9,25 @@ export const idlFactory = ({ IDL }) => {
     'issuers' : IDL.Vec(IssuerData),
     'ii_vc_url' : IDL.Text,
   });
+  const ArgumentValue = IDL.Variant({ 'Int' : IDL.Int32, 'String' : IDL.Text });
+  const CredentialSpec = IDL.Record({
+    'arguments' : IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, ArgumentValue))),
+    'credential_type' : IDL.Text,
+  });
   const AddExclusiveContentRequest = IDL.Record({
     'url' : IDL.Text,
+    'credential_issuer' : IDL.Principal,
     'content_name' : IDL.Text,
-    'credential_group_name' : IDL.Text,
-    'credential_group_owner' : IDL.Principal,
+    'credential_spec' : CredentialSpec,
   });
   const TimestampNs = IDL.Nat64;
   const ContentData = IDL.Record({
     'url' : IDL.Text,
+    'credential_issuer' : IDL.Principal,
     'owner' : IDL.Principal,
     'content_name' : IDL.Text,
-    'credential_group_name' : IDL.Text,
     'created_timestamp_ns' : TimestampNs,
-    'credential_group_owner' : IDL.Principal,
+    'credential_spec' : CredentialSpec,
   });
   const ContentError = IDL.Variant({
     'Internal' : IDL.Text,
@@ -53,11 +58,6 @@ export const idlFactory = ({ IDL }) => {
   const ImageData = IDL.Record({ 'url' : IDL.Text });
   const ImagesList = IDL.Record({ 'images' : IDL.Vec(ImageData) });
   const UploadImagesRequest = IDL.Record({});
-  const ArgumentValue = IDL.Variant({ 'Int' : IDL.Int32, 'String' : IDL.Text });
-  const CredentialSpec = IDL.Record({
-    'arguments' : IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, ArgumentValue))),
-    'credential_type' : IDL.Text,
-  });
   const ValidateVpRequest = IDL.Record({
     'effective_vc_subject' : IDL.Principal,
     'issuer_origin' : IDL.Text,
