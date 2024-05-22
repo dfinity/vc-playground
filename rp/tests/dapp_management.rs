@@ -138,7 +138,6 @@ fn should_retain_data_after_upgrade() -> Result<(), CallError> {
     let caller = principal_1();
     let credential_issuer = principal_2();
 
-    let group_name = "Verified Data";
     let content_name = "Some content name";
     let credential_spec = CredentialSpec {
         credential_type: "VerifiedData".to_string(),
@@ -149,7 +148,6 @@ fn should_retain_data_after_upgrade() -> Result<(), CallError> {
         content_name,
         url,
         &credential_spec,
-        group_name,
         credential_issuer,
         caller,
         &env,

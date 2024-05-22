@@ -50,7 +50,6 @@ fn should_add_exclusive_content() {
     let caller = principal_1();
     let credential_issuer = principal_2();
 
-    let group_name = "Verified Data";
     let content_name = "Some content name";
     let credential_spec = CredentialSpec {
         credential_type: "VerifiedData".to_string(),
@@ -61,7 +60,6 @@ fn should_add_exclusive_content() {
         content_name,
         url,
         &credential_spec,
-        group_name,
         credential_issuer,
         caller,
         &env,
@@ -85,7 +83,6 @@ fn should_list_exclusive_content() {
     let caller = principal_1();
     let credential_issuer = principal_2();
 
-    let group_name = "Verified Data";
     let content_name = "Some content name";
     let credential_spec = CredentialSpec {
         credential_type: "VerifiedData".to_string(),
@@ -96,7 +93,6 @@ fn should_list_exclusive_content() {
         content_name,
         url,
         &credential_spec,
-        group_name,
         credential_issuer,
         caller,
         &env,
@@ -142,7 +138,6 @@ fn should_list_exclusive_content_multiple_items() {
         },
     ];
 
-    let group_name = "Verified Data";
     let url = ["http://example_1.com", "other.url", "another url"];
     let mut expected_list = HashMap::new();
     for i in 0..3 {
@@ -150,7 +145,6 @@ fn should_list_exclusive_content_multiple_items() {
             content_name[i],
             url[i],
             &credential_spec[i],
-            group_name,
             credential_issuer,
             caller[i],
             &env,
