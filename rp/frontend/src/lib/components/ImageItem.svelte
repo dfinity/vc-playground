@@ -13,9 +13,6 @@
   const modalStore = getModalStore();
   const toastStore = getToastStore();
 
-  let credentialType: string;
-  $: credentialType = image.credential_spec.credential_type;
-
   let credentialPredicate: string | number | undefined;
   $: credentialPredicate = credentialSpecPredicate(image.credential_spec);
 
@@ -56,7 +53,7 @@
   `;
 </script>
 
-<article class="card" data-tid="image-item" data-credential-type={credentialType}>
+<article class="card" data-tid="image-item" data-credential-name={image.credential_group_name}>
   <header class="p-2">
     <!-- TODO: Fix UI misaligment for titles with multiple lines -->
     <h5 class="h5 w-full">
