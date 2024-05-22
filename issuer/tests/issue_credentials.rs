@@ -427,7 +427,7 @@ fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
             credential_spec: CredentialSpec {
                 credential_type: "VerifiedData".to_string(),
                 arguments: None,
-            }
+            },
         },
     )
     .expect("API call failed")
