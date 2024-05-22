@@ -73,7 +73,6 @@ fn should_add_exclusive_content() {
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_spec,
-        credential_group_name: group_name.to_string(),
         credential_issuer,
     };
     assert_eq!(content_data, expected_content_data);
@@ -110,7 +109,6 @@ fn should_list_exclusive_content() {
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_spec,
-        credential_group_name: group_name.to_string(),
         credential_issuer,
     };
     assert_eq!(content_list.content_items.len(), 1);
@@ -164,7 +162,6 @@ fn should_list_exclusive_content_multiple_items() {
             created_timestamp_ns: content_data.created_timestamp_ns,
             url: url[i].to_string(),
             credential_spec: credential_spec[i].clone(),
-            credential_group_name: group_name.to_string(),
             credential_issuer,
         };
         expected_list.insert(content_name[i].to_string(), expected_content_data);

@@ -6,14 +6,12 @@ import type { Principal } from '@dfinity/principal';
 export const addExclusiveContent = async ({
   url,
   credentialSpec,
-  issuerName,
   owner,
   contentName,
   identity,
 }: {
   url: string;
   credentialSpec: CredentialSpec;
-  issuerName: string;
   owner: Principal;
   contentName: string;
   identity: Identity;
@@ -23,7 +21,6 @@ export const addExclusiveContent = async ({
     url,
     content_name: contentName,
     credential_spec: credentialSpec,
-    credential_group_name: issuerName,
     credential_issuer: owner,
   });
   if ('Ok' in response) {

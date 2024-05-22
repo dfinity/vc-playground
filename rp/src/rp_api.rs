@@ -32,7 +32,6 @@ pub struct ContentData {
     pub created_timestamp_ns: u64,
     pub url: String,
     pub credential_spec: CredentialSpec,
-    pub credential_group_name: String,
     pub credential_issuer: Principal,
 }
 
@@ -46,7 +45,6 @@ pub struct AddExclusiveContentRequest {
     pub content_name: String,
     pub url: String,
     pub credential_spec: CredentialSpec,
-    pub credential_group_name: String,
     pub credential_issuer: Principal,
 }
 

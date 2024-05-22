@@ -25,7 +25,7 @@
   let contentData: VisibleContentData | undefined;
   $: contentData = $modalStore[0]?.meta.content;
   let credentialName: string | undefined;
-  $: credentialName = contentData?.credential_group_name;
+  $: credentialName = $modalStore[0]?.meta.credentialGroupName;
   let owner: Principal | undefined;
   $: owner = contentData?.credential_issuer;
   let issuerName: string | undefined;

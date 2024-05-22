@@ -161,7 +161,6 @@ fn should_retain_data_after_upgrade() -> Result<(), CallError> {
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_spec,
-        credential_group_name: group_name.to_string(),
         credential_issuer,
     };
     let content_list = do_list_exclusive_content(&env, None, canister_id);

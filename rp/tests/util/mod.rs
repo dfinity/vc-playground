@@ -51,7 +51,6 @@ pub fn do_add_exclusive_content(
     content_name: &str,
     url: &str,
     credential_spec: &CredentialSpec,
-    credential_group_name: &str,
     credential_issuer: Principal,
     caller: Principal,
     env: &StateMachine,
@@ -65,7 +64,6 @@ pub fn do_add_exclusive_content(
             content_name: content_name.to_string(),
             url: url.to_string(),
             credential_spec: credential_spec.clone(),
-            credential_group_name: credential_group_name.to_string(),
             credential_issuer,
         },
     )

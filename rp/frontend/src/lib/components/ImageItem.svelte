@@ -7,6 +7,10 @@
   import { authStore } from '$lib/stores/auth.store';
   import { login } from '$lib/services/auth.services';
   import { credentialSpecPredicate } from '$lib/utils/credential-spec-predicate.utils';
+  import {
+    getIssuerGroupNameByCredTypeStore,
+    type IssuerGroupNameByCredTypeStore,
+  } from '$lib/stores/issuer-types.store';
 
   export let image: VisibleContentData;
 
@@ -16,8 +20,13 @@
   let credentialPredicate: string | number | undefined;
   $: credentialPredicate = credentialSpecPredicate(image.credential_spec);
 
+  let groupNameStore: IssuerGroupNameByCredTypeStore;
+  $: groupNameStore = getIssuerGroupNameByCredTypeStore($authStore.identity);
+  let groupName: string | undefined;
+  $: groupName = $groupNameStore[image.credential_spec.credential_type];
+
   let title: string;
-  $: title = `${image.credential_group_name}${credentialPredicate ? ` - ${credentialPredicate}` : ''}`;
+  $: title = `${groupName}${credentialPredicate ? ` - ${credentialPredicate}` : ''}`;
 
   const openModal = ({
     content,
@@ -31,6 +40,7 @@
       component: 'viewExclusiveContentModal',
       meta: {
         content,
+        credentialGroupName: groupName,
         startFlow,
       },
     };
@@ -53,7 +63,7 @@
   `;
 </script>
 
-<article class="card" data-tid="image-item" data-credential-name={image.credential_group_name}>
+<article class="card" data-tid="image-item" data-credential-name={groupName}>
   <header class="p-2">
     <!-- TODO: Fix UI misaligment for titles with multiple lines -->
     <h5 class="h5 w-full">

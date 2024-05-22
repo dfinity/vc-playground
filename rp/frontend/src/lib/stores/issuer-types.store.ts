@@ -38,3 +38,17 @@ export const getIssuerCredentialSpecsStore = (
     }
     return inputTypes;
   });
+
+// Record from credential_type to group_name
+type IssuerGroupNameByCredTypeStoreData = Record<string, string>;
+export type IssuerGroupNameByCredTypeStore = Readable<IssuerGroupNameByCredTypeStoreData>;
+export const getIssuerGroupNameByCredTypeStore = (
+  identity: Identity | undefined | null
+): IssuerGroupNameByCredTypeStore =>
+  derived(getIssuerTypesStore(identity), (issuerTypes) => {
+    const inputTypes: IssuerGroupNameByCredTypeStoreData = {};
+    for (const groupType of issuerTypes ?? []) {
+      inputTypes[groupType.credential_spec.credential_type] = groupType.group_name;
+    }
+    return inputTypes;
+  });
