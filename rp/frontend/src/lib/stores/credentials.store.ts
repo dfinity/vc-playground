@@ -1,42 +1,45 @@
 import type { Principal } from '@dfinity/principal';
 import { writable } from 'svelte/store';
+import type { CredentialSpec } from '../../declarations/rp/rp.did';
 
 type Credential = {
   groupName: string;
   owner: Principal;
+  credentialSpec: CredentialSpec;
   timestampMillis: number;
   hasCredential: boolean;
 };
-type CredentialsStoreData = Record<string, Credential>;
+type CredentialsStoreData = Credential[];
 
 const initStore = () => {
-  const { update, subscribe, set } = writable<CredentialsStoreData>({});
+  const { update, subscribe, set } = writable<CredentialsStoreData>([]);
 
   return {
     subscribe,
     reset: () => {
-      set({});
+      set([]);
     },
     setCredential: ({
       groupName,
       owner,
+      credentialSpec,
       hasCredential,
     }: {
       groupName: string;
       owner: Principal;
+      credentialSpec: CredentialSpec;
       hasCredential: boolean;
     }) =>
       update((storeData) => {
-        const key = `${groupName}-${owner.toText()}`;
-        return {
-          ...storeData,
-          [key]: {
+        return storeData.concat([
+          {
             groupName,
+            credentialSpec,
             owner,
             timestampMillis: Date.now(),
             hasCredential,
           },
-        };
+        ]);
       }),
   };
 };

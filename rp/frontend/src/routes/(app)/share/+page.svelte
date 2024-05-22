@@ -9,10 +9,11 @@
   import { shareContent } from '$lib/services/shareContent.services';
   import TestIdWrapper from '$lib/components/TestIdWrapper.svelte';
   import {
-    getIssuerInputTypesStore,
-    type IssuerInputTypeStore,
+    getIssuerCredentialSpecsStore,
+    type IssuerCredentialSpecStore,
   } from '$lib/stores/issuer-types.store';
-
+  import type { CredentialSpec } from '../../../declarations/meta_issuer/meta_issuer.did';
+  import { inputTypeCredentialSpec } from '$lib/utils/input-type-credential-spec.utils';
   const modalStore = getModalStore();
   const toastStore = getToastStore();
 
@@ -46,11 +47,14 @@
     modalStore.trigger(modal);
   };
 
-  let selectedCredentialInputTypeStoreStore: IssuerInputTypeStore;
-  $: selectedCredentialInputTypeStoreStore = getIssuerInputTypesStore($authStore.identity);
+  let selectedCredentialInputTypeStoreStore: IssuerCredentialSpecStore;
+  $: selectedCredentialInputTypeStoreStore = getIssuerCredentialSpecsStore($authStore.identity);
+  let selectedCredentialSpec: CredentialSpec | undefined;
+  $: selectedCredentialSpec = $selectedCredentialInputTypeStoreStore[selectedCredential ?? ''];
   let selectedCredentialInputTypeStore: 'text' | 'number' | undefined;
-  $: selectedCredentialInputTypeStore =
-    $selectedCredentialInputTypeStoreStore[selectedCredential ?? ''];
+  $: selectedCredentialInputTypeStore = selectedCredentialSpec
+    ? inputTypeCredentialSpec(selectedCredentialSpec)
+    : undefined;
 
   // Return `true` if:
   // * selectedCredential doesn't need an input.
@@ -81,7 +85,7 @@
   const share = async () => {
     isLoading = true;
     // Edge case, should never happen because button is disabled.
-    if (!selectedCredential || !selectedImage || !selectedIssuer) {
+    if (!selectedCredential || !selectedImage || !selectedIssuer || !selectedCredentialSpec) {
       return;
     }
     const isSuccessful = await shareContent({
@@ -91,6 +95,7 @@
       identity: $authStore.identity,
       toastStore,
       predicate: predicateCredentialText ?? predicateCredentialNumber,
+      credentialSpec: selectedCredentialSpec,
     });
     if (isSuccessful) {
       toastStore.trigger({

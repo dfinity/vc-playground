@@ -49,7 +49,11 @@
   };
 
   let hasCredential: boolean | undefined;
-  $: hasCredential = $credentialsStore[`${credentialName}-${owner?.toText()}`]?.hasCredential;
+  // TODO: Compare the whole credential spec instead of just the group name and issuer.
+  $: hasCredential = $credentialsStore.find(
+    (credential) =>
+      credential.groupName === credentialName && credential.owner.toText() === owner?.toText()
+  )?.hasCredential;
 </script>
 
 <Modal>

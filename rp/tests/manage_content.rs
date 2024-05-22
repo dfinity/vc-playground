@@ -50,6 +50,7 @@ fn should_add_exclusive_content() {
     let caller = principal_1();
     let credential_issuer = principal_2();
 
+    let group_name = "Verified Data";
     let content_name = "Some content name";
     let credential_spec = CredentialSpec {
         credential_type: "VerifiedData".to_string(),
@@ -60,6 +61,7 @@ fn should_add_exclusive_content() {
         content_name,
         url,
         &credential_spec,
+        group_name,
         credential_issuer,
         caller,
         &env,
@@ -71,6 +73,7 @@ fn should_add_exclusive_content() {
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_spec,
+        credential_group_name: group_name.to_string(),
         credential_issuer,
     };
     assert_eq!(content_data, expected_content_data);
@@ -83,6 +86,7 @@ fn should_list_exclusive_content() {
     let caller = principal_1();
     let credential_issuer = principal_2();
 
+    let group_name = "Verified Data";
     let content_name = "Some content name";
     let credential_spec = CredentialSpec {
         credential_type: "VerifiedData".to_string(),
@@ -93,6 +97,7 @@ fn should_list_exclusive_content() {
         content_name,
         url,
         &credential_spec,
+        group_name,
         credential_issuer,
         caller,
         &env,
@@ -105,6 +110,7 @@ fn should_list_exclusive_content() {
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
         credential_spec,
+        credential_group_name: group_name.to_string(),
         credential_issuer,
     };
     assert_eq!(content_list.content_items.len(), 1);
@@ -138,6 +144,7 @@ fn should_list_exclusive_content_multiple_items() {
         },
     ];
 
+    let group_name = "Verified Data";
     let url = ["http://example_1.com", "other.url", "another url"];
     let mut expected_list = HashMap::new();
     for i in 0..3 {
@@ -145,6 +152,7 @@ fn should_list_exclusive_content_multiple_items() {
             content_name[i],
             url[i],
             &credential_spec[i],
+            group_name,
             credential_issuer,
             caller[i],
             &env,
@@ -156,6 +164,7 @@ fn should_list_exclusive_content_multiple_items() {
             created_timestamp_ns: content_data.created_timestamp_ns,
             url: url[i].to_string(),
             credential_spec: credential_spec[i].clone(),
+            credential_group_name: group_name.to_string(),
             credential_issuer,
         };
         expected_list.insert(content_name[i].to_string(), expected_content_data);

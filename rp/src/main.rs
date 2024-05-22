@@ -45,6 +45,7 @@ struct ExclusiveContentRecord {
     created_timestamp_ns: u64,
     url: String,
     credential_spec: CredentialSpec,
+    credential_group_name: String,
     credential_issuer: Principal,
 }
 
@@ -222,6 +223,7 @@ fn list_exclusive_content(
                 url: record.url,
                 created_timestamp_ns: record.created_timestamp_ns,
                 credential_spec: record.credential_spec,
+                credential_group_name: record.credential_group_name,
                 credential_issuer: record.credential_issuer,
             })
         }
@@ -241,6 +243,7 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
             url: req.url,
             created_timestamp_ns: time(),
             credential_spec: req.credential_spec,
+            credential_group_name: req.credential_group_name,
             credential_issuer: req.credential_issuer,
         };
 
@@ -251,6 +254,7 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
                 created_timestamp_ns: data.created_timestamp_ns,
                 url: data.url.clone(),
                 credential_spec: data.credential_spec.clone(),
+                credential_group_name: data.credential_group_name.clone(),
                 credential_issuer: data.credential_issuer,
             },
         );

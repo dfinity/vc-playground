@@ -43,6 +43,7 @@ type ContentData = record {
     created_timestamp_ns: TimestampNs;
     url: text;
     credential_spec: CredentialSpec;
+    credential_group_name: text;
     credential_issuer: principal;
 };
 
@@ -54,6 +55,7 @@ type AddExclusiveContentRequest = record {
     content_name: text;
     url: text;
     credential_spec: CredentialSpec;
+    credential_group_name: text;
     credential_issuer: principal;
 };
 

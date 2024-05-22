@@ -18,6 +18,7 @@ export const idlFactory = ({ IDL }) => {
     'url' : IDL.Text,
     'credential_issuer' : IDL.Principal,
     'content_name' : IDL.Text,
+    'credential_group_name' : IDL.Text,
     'credential_spec' : CredentialSpec,
   });
   const TimestampNs = IDL.Nat64;
@@ -26,6 +27,7 @@ export const idlFactory = ({ IDL }) => {
     'credential_issuer' : IDL.Principal,
     'owner' : IDL.Principal,
     'content_name' : IDL.Text,
+    'credential_group_name' : IDL.Text,
     'created_timestamp_ns' : TimestampNs,
     'credential_spec' : CredentialSpec,
   });

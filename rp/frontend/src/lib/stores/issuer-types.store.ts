@@ -3,7 +3,7 @@ import type { GroupType } from '../../declarations/meta_issuer/meta_issuer.did';
 import { AnonymousIdentity, type Identity } from '@dfinity/agent';
 import { browser } from '$app/environment';
 import { queryGroupTypes } from '$lib/api/queryGroupTypes.api';
-import { inputTypeCredentialSpec } from '$lib/utils/input-type-credential-spec.utils';
+import type { CredentialSpec } from '../../declarations/rp/rp.did';
 
 const issuerTypes: Record<string, Writable<GroupType[] | undefined>> = {};
 export const getIssuerTypesStore = (
@@ -26,15 +26,15 @@ export const getIssuerTypesStore = (
 };
 
 // Record from group_name to input type
-type IssuerInputTypeStoreData = Record<string, 'text' | 'number' | undefined>;
-export type IssuerInputTypeStore = Readable<IssuerInputTypeStoreData>;
-export const getIssuerInputTypesStore = (
+type IssuerCredentialSpecStoreData = Record<string, CredentialSpec>;
+export type IssuerCredentialSpecStore = Readable<IssuerCredentialSpecStoreData>;
+export const getIssuerCredentialSpecsStore = (
   identity: Identity | undefined | null
-): IssuerInputTypeStore =>
+): IssuerCredentialSpecStore =>
   derived(getIssuerTypesStore(identity), (issuerTypes) => {
-    const inputTypes: IssuerInputTypeStoreData = {};
+    const inputTypes: IssuerCredentialSpecStoreData = {};
     for (const groupType of issuerTypes ?? []) {
-      inputTypes[groupType.group_name] = inputTypeCredentialSpec(groupType.credential_spec);
+      inputTypes[groupType.group_name] = groupType.credential_spec;
     }
     return inputTypes;
   });

@@ -6,11 +6,28 @@
   import Button from './Button.svelte';
   import { authStore } from '$lib/stores/auth.store';
   import { login } from '$lib/services/auth.services';
+  import { credentialSpecPredicate } from '$lib/utils/credential-spec-predicate.utils';
 
   export let image: VisibleContentData;
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
+
+  let credentialType: string;
+  $: credentialType = image.credential_spec.credential_type;
+
+  let credentialPredicate: string | number | undefined;
+  $: credentialPredicate = credentialSpecPredicate(image.credential_spec);
+
+  const credentialTypeToGroupName: Record<string, string> = {
+    VerifiedAge: 'Verified Age',
+    VerifiedHumanity: 'Verified Humanity',
+    VerifiedResidence: 'Verified Residence',
+    VerifiedEmployment: 'Verified Employment',
+  };
+
+  let title: string;
+  $: title = `${image.credential_group_name}${credentialPredicate ? ` - ${credentialPredicate}` : ''}`;
 
   const openModal = ({
     content,
@@ -19,10 +36,12 @@
     content: VisibleContentData;
     startFlow: boolean;
   }) => {
+    const credentialType = content.credential_spec.credential_type;
+    // TODO: Remove and use the credential type directly once the backend supports new credential types
     const modal: ModalSettings = {
       type: 'component',
       component: 'viewExclusiveContentModal',
-      meta: { content, issuerName: content.credential_group_name, startFlow },
+      meta: { content, issuerName: credentialTypeToGroupName[credentialType], startFlow },
     };
     modalStore.trigger(modal);
   };
@@ -43,9 +62,11 @@
   `;
 </script>
 
-<article class="card" data-tid="image-item" data-credential-name={image.credential_group_name}>
+<article class="card" data-tid="image-item" data-credential-type={credentialType}>
   <header class="p-2">
-    <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
+    <h5 class="h5 w-full">
+      {title}
+    </h5>
     <p class="text-sm text-surface-600-300-token truncate">
       {`Trusted Issuer: ${image.issuer_nickname}`}
     </p>

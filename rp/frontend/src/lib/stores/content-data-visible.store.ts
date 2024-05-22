@@ -4,6 +4,7 @@ import { getExclusiveContentDataSortedByCreatedTimestamp } from './content-data.
 import type { Identity } from '@dfinity/agent';
 import { credentialsStore } from './credentials.store';
 import { groupsStore } from './issuers.store';
+import { equalCredentials } from '$lib/utils/equal-credentials.utils';
 
 export type VisibleContentData = ContentData & {
   visible: boolean;
@@ -20,13 +21,15 @@ export const getVisibleContentData = (
       return $contentData.map((contentData) => ({
         ...contentData,
         visible:
-          credentials[
-            `${contentData.credential_group_name}-${contentData.credential_group_owner.toText()}`
-          ]?.hasCredential ?? false,
+          credentials.find(
+            (credential) =>
+              equalCredentials(credential.credentialSpec, contentData.credential_spec) &&
+              credential.owner.compareTo(contentData.credential_issuer) === 'eq'
+          )?.hasCredential ?? false,
         issuer_nickname: groups?.find((group) => {
           return (
             group.group_name === contentData.credential_group_name &&
-            group.owner.compareTo(contentData.credential_group_owner) === 'eq'
+            group.owner.compareTo(contentData.credential_issuer) === 'eq'
           );
         })?.issuer_nickname,
       }));

@@ -6,6 +6,7 @@ export interface AddExclusiveContentRequest {
   'url' : string,
   'credential_issuer' : Principal,
   'content_name' : string,
+  'credential_group_name' : string,
   'credential_spec' : CredentialSpec,
 }
 export type ArgumentValue = { 'Int' : number } |
@@ -15,6 +16,7 @@ export interface ContentData {
   'credential_issuer' : Principal,
   'owner' : Principal,
   'content_name' : string,
+  'credential_group_name' : string,
   'created_timestamp_ns' : TimestampNs,
   'credential_spec' : CredentialSpec,
 }
