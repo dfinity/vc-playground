@@ -11,6 +11,7 @@ use internet_identity_interface::http_gateway::{HttpRequest, HttpResponse};
 use relying_party::rp_api::ContentData;
 use serde_bytes::ByteBuf;
 use std::time::Duration;
+use vc_util::issuer_api::CredentialSpec;
 
 #[allow(dead_code)]
 mod util;
@@ -135,16 +136,19 @@ fn should_retain_data_after_upgrade() -> Result<(), CallError> {
     let env = env();
     let canister_id = install_rp(&env, None);
     let caller = principal_1();
-    let group_owner = principal_2();
+    let credential_issuer = principal_2();
 
     let content_name = "Some content name";
-    let group_name = "Some group name";
+    let credential_spec = CredentialSpec {
+        credential_type: "VerifiedData".to_string(),
+        arguments: None,
+    };
     let url = "http://example.com";
     let content_data = do_add_exclusive_content(
         content_name,
         url,
-        group_name,
-        group_owner,
+        &credential_spec,
+        credential_issuer,
         caller,
         &env,
         canister_id,
@@ -154,8 +158,8 @@ fn should_retain_data_after_upgrade() -> Result<(), CallError> {
         content_name: content_name.to_string(),
         created_timestamp_ns: content_data.created_timestamp_ns,
         url: url.to_string(),
-        credential_group_name: group_name.to_string(),
-        credential_group_owner: group_owner,
+        credential_spec,
+        credential_issuer,
     };
     let content_list = do_list_exclusive_content(&env, None, canister_id);
     assert_eq!(content_list.content_items.len(), 1);

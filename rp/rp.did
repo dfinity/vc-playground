@@ -42,20 +42,19 @@ type ContentData = record {
     owner: principal;
     created_timestamp_ns: TimestampNs;
     url: text;
-    credential_group_name: text;
-    credential_group_owner: principal;
+    credential_spec: CredentialSpec;
+    credential_issuer: principal;
 };
 
 type ExclusiveContentList = record {
     content_items: vec ContentData;
 };
 
-
 type AddExclusiveContentRequest = record {
     content_name: text;
     url: text;
-    credential_group_name: text;
-    credential_group_owner: principal;
+    credential_spec: CredentialSpec;
+    credential_issuer: principal;
 };
 
 type CredentialSpec = record {

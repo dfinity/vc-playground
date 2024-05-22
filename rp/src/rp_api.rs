@@ -31,8 +31,8 @@ pub struct ContentData {
     pub content_name: String,
     pub created_timestamp_ns: u64,
     pub url: String,
-    pub credential_group_name: String,
-    pub credential_group_owner: Principal,
+    pub credential_spec: CredentialSpec,
+    pub credential_issuer: Principal,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -44,8 +44,8 @@ pub struct ExclusiveContentList {
 pub struct AddExclusiveContentRequest {
     pub content_name: String,
     pub url: String,
-    pub credential_group_name: String,
-    pub credential_group_owner: Principal,
+    pub credential_spec: CredentialSpec,
+    pub credential_issuer: Principal,
 }
 
 // Types related to HTTP-endpoint.

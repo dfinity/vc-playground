@@ -164,7 +164,8 @@ test("verifieable credentials flow works end to end", async ({ browser }) => {
   const firstImage = await requesterPage
     .locator("[data-tid=image-item]")
     .first();
-  await expect(await firstImage.getAttribute("data-credential-name")).toBe(
+  await expect(await firstImage).toHaveAttribute(
+    "data-credential-name",
     credentialName
   );
   await expect(firstImage.locator("button")).toBeEnabled();

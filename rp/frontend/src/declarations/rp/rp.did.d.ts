@@ -4,19 +4,19 @@ import type { IDL } from '@dfinity/candid';
 
 export interface AddExclusiveContentRequest {
   'url' : string,
+  'credential_issuer' : Principal,
   'content_name' : string,
-  'credential_group_name' : string,
-  'credential_group_owner' : Principal,
+  'credential_spec' : CredentialSpec,
 }
 export type ArgumentValue = { 'Int' : number } |
   { 'String' : string };
 export interface ContentData {
   'url' : string,
+  'credential_issuer' : Principal,
   'owner' : Principal,
   'content_name' : string,
-  'credential_group_name' : string,
   'created_timestamp_ns' : TimestampNs,
-  'credential_group_owner' : Principal,
+  'credential_spec' : CredentialSpec,
 }
 export type ContentError = { 'Internal' : string } |
   { 'NotFound' : string } |

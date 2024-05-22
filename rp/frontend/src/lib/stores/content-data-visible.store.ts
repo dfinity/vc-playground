@@ -4,6 +4,8 @@ import { getExclusiveContentDataSortedByCreatedTimestamp } from './content-data.
 import type { Identity } from '@dfinity/agent';
 import { credentialsStore } from './credentials.store';
 import { groupsStore } from './issuers.store';
+import { equalCredentials } from '$lib/utils/equal-credentials.utils';
+import { getIssuerGroupNameByCredTypeStore } from './issuer-types.store';
 
 export type VisibleContentData = ContentData & {
   visible: boolean;
@@ -14,19 +16,26 @@ export const getVisibleContentData = (
   identity: Identity | null | undefined
 ): Readable<VisibleContentData[]> =>
   derived(
-    [getExclusiveContentDataSortedByCreatedTimestamp(identity), credentialsStore, groupsStore],
-    ([$contentData, credentials, groups]) => {
+    [
+      getExclusiveContentDataSortedByCreatedTimestamp(identity),
+      credentialsStore,
+      groupsStore,
+      getIssuerGroupNameByCredTypeStore(identity),
+    ],
+    ([$contentData, credentials, groups, groupTypesMap]) => {
       if (!$contentData) return [];
       return $contentData.map((contentData) => ({
         ...contentData,
         visible:
-          credentials[
-            `${contentData.credential_group_name}-${contentData.credential_group_owner.toText()}`
-          ]?.hasCredential ?? false,
+          credentials.find(
+            (credential) =>
+              equalCredentials(credential.credentialSpec, contentData.credential_spec) &&
+              credential.owner.compareTo(contentData.credential_issuer) === 'eq'
+          )?.hasCredential ?? false,
         issuer_nickname: groups?.find((group) => {
           return (
-            group.group_name === contentData.credential_group_name &&
-            group.owner.compareTo(contentData.credential_group_owner) === 'eq'
+            group.group_name === groupTypesMap[contentData.credential_spec.credential_type] &&
+            group.owner.compareTo(contentData.credential_issuer) === 'eq'
           );
         })?.issuer_nickname,
       }));

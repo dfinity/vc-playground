@@ -9,6 +9,7 @@ import {
   requestVerifiablePresentation,
   type VerifiablePresentationResponse,
 } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
+import type { CredentialSpec } from '../../declarations/rp/rp.did';
 
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
 const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
@@ -16,10 +17,12 @@ const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
 export const loadCredential = async ({
   groupName,
   owner,
+  credentialSpec,
   identity,
 }: {
   groupName: string;
   owner: Principal;
+  credentialSpec: CredentialSpec;
   identity: Identity | undefined | null;
 }): Promise<null> => {
   if (isNullish(identity)) {
@@ -34,6 +37,7 @@ export const loadCredential = async ({
           credentialsStore.setCredential({
             groupName,
             owner,
+            credentialSpec,
             hasCredential: false,
           });
           resolve(null);
@@ -61,6 +65,7 @@ export const loadCredential = async ({
         credentialsStore.setCredential({
           groupName,
           owner,
+          credentialSpec,
           hasCredential: isValidCredential,
         });
         resolve(null);
@@ -69,6 +74,7 @@ export const loadCredential = async ({
         credentialsStore.setCredential({
           groupName,
           owner,
+          credentialSpec,
           hasCredential: false,
         });
         resolve(null);
