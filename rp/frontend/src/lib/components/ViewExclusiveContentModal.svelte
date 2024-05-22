@@ -9,9 +9,12 @@
   import { onMount } from 'svelte';
   import { ISSUER_ORIGIN } from '$lib/constants/env-vars';
   import type { Principal } from '@dfinity/principal';
+  import type { VisibleContentData } from '$lib/stores/content-data-visible.store';
 
   /* eslint-disable-next-line */
   export let parent: any;
+
+  const modalStore = getModalStore();
 
   onMount(() => {
     if ($modalStore[0]?.meta.startFlow) {
@@ -19,25 +22,26 @@
     }
   });
 
-  const modalStore = getModalStore();
-
-  let credentialName = '';
-  $: credentialName = $modalStore[0]?.meta.issuerName;
+  let contentData: VisibleContentData | undefined;
+  $: contentData = $modalStore[0]?.meta.content;
+  let credentialName: string | undefined;
+  $: credentialName = contentData?.credential_group_name;
   let owner: Principal | undefined;
-  $: owner = $modalStore[0]?.meta.content.credential_group_owner;
-  let issuerName = '';
-  $: issuerName = $modalStore[0]?.meta.content.issuer_nickname;
-  let imageUrl = '';
-  $: imageUrl = $modalStore[0]?.meta.content.url;
+  $: owner = contentData?.credential_issuer;
+  let issuerName: string | undefined;
+  $: issuerName = contentData?.issuer_nickname;
+  let imageUrl: string | undefined;
+  $: imageUrl = contentData?.url ?? '';
 
   // `undefined` means the flow has not started yet.
   let vcFlowLoading: undefined | boolean = undefined;
   const startFlow = async () => {
-    if (owner) {
+    if (owner && credentialName && contentData?.credential_spec) {
       vcFlowLoading = true;
       await loadCredential({
         groupName: credentialName,
         owner,
+        credentialSpec: contentData?.credential_spec,
         identity: $authStore.identity,
       });
       vcFlowLoading = false;

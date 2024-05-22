@@ -19,13 +19,6 @@
   let credentialPredicate: string | number | undefined;
   $: credentialPredicate = credentialSpecPredicate(image.credential_spec);
 
-  const credentialTypeToGroupName: Record<string, string> = {
-    VerifiedAge: 'Verified Age',
-    VerifiedHumanity: 'Verified Humanity',
-    VerifiedResidence: 'Verified Residence',
-    VerifiedEmployment: 'Verified Employment',
-  };
-
   let title: string;
   $: title = `${image.credential_group_name}${credentialPredicate ? ` - ${credentialPredicate}` : ''}`;
 
@@ -36,12 +29,13 @@
     content: VisibleContentData;
     startFlow: boolean;
   }) => {
-    const credentialType = content.credential_spec.credential_type;
-    // TODO: Remove and use the credential type directly once the backend supports new credential types
     const modal: ModalSettings = {
       type: 'component',
       component: 'viewExclusiveContentModal',
-      meta: { content, issuerName: credentialTypeToGroupName[credentialType], startFlow },
+      meta: {
+        content,
+        startFlow,
+      },
     };
     modalStore.trigger(modal);
   };
@@ -64,6 +58,7 @@
 
 <article class="card" data-tid="image-item" data-credential-type={credentialType}>
   <header class="p-2">
+    <!-- TODO: Fix UI misaligment for titles with multiple lines -->
     <h5 class="h5 w-full">
       {title}
     </h5>
