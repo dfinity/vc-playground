@@ -1,17 +1,17 @@
-import type { ContentData } from '../../declarations/rp/rp.did';
+import type { ContentData, CredentialSpec } from '../../declarations/rp/rp.did';
 import type { Identity } from '@dfinity/agent';
 import { getRpCanister } from '$lib/utils/actor.utils';
 import type { Principal } from '@dfinity/principal';
 
 export const addExclusiveContent = async ({
   url,
-  issuerName,
+  credentialSpec,
   owner,
   contentName,
   identity,
 }: {
   url: string;
-  issuerName: string;
+  credentialSpec: CredentialSpec;
   owner: Principal;
   contentName: string;
   identity: Identity;
@@ -20,8 +20,8 @@ export const addExclusiveContent = async ({
   const response = await actor.add_exclusive_content({
     url,
     content_name: contentName,
-    credential_group_name: issuerName,
-    credential_group_owner: owner,
+    credential_spec: credentialSpec,
+    credential_issuer: owner,
   });
   if ('Ok' in response) {
     return response.Ok;

@@ -20,6 +20,7 @@ use std::collections::BTreeMap;
 use asset_util::{collect_assets, CertifiedAssets};
 use canister_sig_util::extract_raw_root_pk_from_der;
 use ic_cdk_macros::post_upgrade;
+use vc_util::issuer_api::CredentialSpec;
 use vc_util::{validate_ii_presentation_and_claims, VcFlowSigners};
 
 /// We use restricted memory in order to ensure the separation between non-managed config memory (first page)
@@ -43,8 +44,8 @@ struct ExclusiveContentRecord {
     owner: Principal,
     created_timestamp_ns: u64,
     url: String,
-    credential_group_name: String,
-    credential_group_owner: Principal,
+    credential_spec: CredentialSpec,
+    credential_issuer: Principal,
 }
 
 impl Storable for ImageRecord {
@@ -220,8 +221,8 @@ fn list_exclusive_content(
                 owner: record.owner,
                 url: record.url,
                 created_timestamp_ns: record.created_timestamp_ns,
-                credential_group_name: record.credential_group_name,
-                credential_group_owner: record.credential_group_owner,
+                credential_spec: record.credential_spec,
+                credential_issuer: record.credential_issuer,
             })
         }
         Ok(ExclusiveContentList {
@@ -239,8 +240,8 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
             owner: caller(),
             url: req.url,
             created_timestamp_ns: time(),
-            credential_group_name: req.credential_group_name,
-            credential_group_owner: req.credential_group_owner,
+            credential_spec: req.credential_spec,
+            credential_issuer: req.credential_issuer,
         };
 
         content.insert(
@@ -249,8 +250,8 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
                 owner: data.owner,
                 created_timestamp_ns: data.created_timestamp_ns,
                 url: data.url.clone(),
-                credential_group_name: data.credential_group_name.clone(),
-                credential_group_owner: data.credential_group_owner,
+                credential_spec: data.credential_spec.clone(),
+                credential_issuer: data.credential_issuer,
             },
         );
         Ok(data)

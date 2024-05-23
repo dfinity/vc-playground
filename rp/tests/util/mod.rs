@@ -8,6 +8,7 @@ use relying_party::rp_api::{
     ListExclusiveContentRequest, ListImagesRequest, RpInit,
 };
 use std::path::PathBuf;
+use vc_util::issuer_api::CredentialSpec;
 
 lazy_static! {
     /// Gzipped Wasm module for the current VC Playground RP build, i.e. the one we're testing
@@ -49,8 +50,8 @@ pub fn install_rp(env: &StateMachine, maybe_init: Option<RpInit>) -> CanisterId 
 pub fn do_add_exclusive_content(
     content_name: &str,
     url: &str,
-    credential_group_name: &str,
-    credential_group_owner: Principal,
+    credential_spec: &CredentialSpec,
+    credential_issuer: Principal,
     caller: Principal,
     env: &StateMachine,
     canister_id: Principal,
@@ -62,8 +63,8 @@ pub fn do_add_exclusive_content(
         AddExclusiveContentRequest {
             content_name: content_name.to_string(),
             url: url.to_string(),
-            credential_group_name: credential_group_name.to_string(),
-            credential_group_owner,
+            credential_spec: credential_spec.clone(),
+            credential_issuer,
         },
     )
     .expect("API call failed")

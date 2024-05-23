@@ -6,11 +6,27 @@
   import Button from './Button.svelte';
   import { authStore } from '$lib/stores/auth.store';
   import { login } from '$lib/services/auth.services';
+  import { credentialSpecPredicate } from '$lib/utils/credential-spec-predicate.utils';
+  import {
+    getIssuerGroupNameByCredTypeStore,
+    type IssuerGroupNameByCredTypeStore,
+  } from '$lib/stores/issuer-types.store';
 
   export let image: VisibleContentData;
 
   const modalStore = getModalStore();
   const toastStore = getToastStore();
+
+  let credentialPredicate: string | number | undefined;
+  $: credentialPredicate = credentialSpecPredicate(image.credential_spec);
+
+  let groupNameStore: IssuerGroupNameByCredTypeStore;
+  $: groupNameStore = getIssuerGroupNameByCredTypeStore($authStore.identity);
+  let groupName: string | undefined;
+  $: groupName = $groupNameStore[image.credential_spec.credential_type];
+
+  let title: string;
+  $: title = `${groupName}${credentialPredicate ? ` - ${credentialPredicate}` : ''}`;
 
   const openModal = ({
     content,
@@ -22,7 +38,11 @@
     const modal: ModalSettings = {
       type: 'component',
       component: 'viewExclusiveContentModal',
-      meta: { content, issuerName: content.credential_group_name, startFlow },
+      meta: {
+        content,
+        credentialGroupName: groupName,
+        startFlow,
+      },
     };
     modalStore.trigger(modal);
   };
@@ -43,9 +63,12 @@
   `;
 </script>
 
-<article class="card" data-tid="image-item" data-credential-name={image.credential_group_name}>
+<article class="card" data-tid="image-item" data-credential-name={groupName}>
   <header class="p-2">
-    <h5 class="h5 truncate w-full">{image.credential_group_name}</h5>
+    <!-- TODO: Fix UI misaligment for titles with multiple lines -->
+    <h5 class="h5 w-full">
+      {title}
+    </h5>
     <p class="text-sm text-surface-600-300-token truncate">
       {`Trusted Issuer: ${image.issuer_nickname}`}
     </p>

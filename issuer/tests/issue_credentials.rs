@@ -512,8 +512,11 @@ fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
         AddExclusiveContentRequest {
             content_name: "restricted content".to_string(),
             url: content_url.to_string(),
-            credential_group_name: DUMMY_GROUP_NAME.to_string(),
-            credential_group_owner: owner,
+            credential_issuer: owner,
+            credential_spec: CredentialSpec {
+                credential_type: "VerifiedData".to_string(),
+                arguments: None,
+            },
         },
     )
     .expect("API call failed")
