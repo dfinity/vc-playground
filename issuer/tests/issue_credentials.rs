@@ -492,95 +492,101 @@ fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
     // Add a group to the meta issuer with the expected member.
     let authorized_principal = alias_tuple.id_dapp;
     let owner = principal_1();
-    add_group_with_member(
-        DUMMY_GROUP_NAME,
-        owner,
-        authorized_principal,
-        &env,
-        issuer_id,
-    );
+    for spec in vec![
+        verified_age_credential_spec(18),
+        verified_humanity_credential_spec(),
+        verified_employment_credential_spec("DFINITY Foundation"),
+        verified_residence_credential_spec("Switzerland"),
+    ] {
+        let spec_with_owner = add_owner(&spec, owner);
+        add_group_with_member(
+            &group_name_for_credential_type(&spec.credential_type),
+            owner,
+            authorized_principal,
+            &env,
+            issuer_id,
+        );
 
-    let credential_spec = verified_member_credential_spec(DUMMY_GROUP_NAME, owner);
+        // Add an exclusive content to the rp, gated by a VC.
+        let content_url = "http://example.com";
 
-    // Add an exclusive content to the rp, gated by a VC.
-    let content_url = "http://example.com";
-
-    rp_add_exclusive_content(
-        &env,
-        rp_id,
-        principal_1(),
-        AddExclusiveContentRequest {
-            content_name: "restricted content".to_string(),
-            url: content_url.to_string(),
-            credential_issuer: owner,
-            credential_spec: CredentialSpec {
-                credential_type: "VerifiedData".to_string(),
-                arguments: None,
+        rp_add_exclusive_content(
+            &env,
+            rp_id,
+            principal_1(),
+            AddExclusiveContentRequest {
+                content_name: "restricted content".to_string(),
+                url: content_url.to_string(),
+                credential_issuer: owner,
+                credential_spec: spec.clone(),
             },
-        },
-    )
-    .expect("API call failed")
-    .expect("Failed add_exclusive_content");
+        )
+        .expect("API call failed")
+        .expect("Failed add_exclusive_content");
 
-    // Request the credential.
-    let prepared_credential = api::prepare_credential(
-        &env,
-        issuer_id,
-        alias_tuple.id_dapp,
-        &PrepareCredentialRequest {
-            credential_spec: credential_spec.clone(),
-            signed_id_alias: SignedIssuerIdAlias {
-                credential_jws: id_alias_credentials
-                    .issuer_id_alias_credential
-                    .credential_jws
-                    .clone(),
+        // Request the credential.
+        let prepared_credential = api::prepare_credential(
+            &env,
+            issuer_id,
+            alias_tuple.id_dapp,
+            &PrepareCredentialRequest {
+                credential_spec: spec_with_owner.clone(),
+                signed_id_alias: SignedIssuerIdAlias {
+                    credential_jws: id_alias_credentials
+                        .issuer_id_alias_credential
+                        .credential_jws
+                        .clone(),
+                },
             },
-        },
-    )?
-    .expect("failed to prepare credential");
+        )?
+        .expect("failed to prepare credential");
 
-    let get_credential_response = api::get_credential(
-        &env,
-        issuer_id,
-        alias_tuple.id_dapp,
-        &GetCredentialRequest {
-            credential_spec: credential_spec.clone(),
-            signed_id_alias: SignedIssuerIdAlias {
-                credential_jws: id_alias_credentials
-                    .issuer_id_alias_credential
-                    .credential_jws
-                    .clone(),
+        let get_credential_response = api::get_credential(
+            &env,
+            issuer_id,
+            alias_tuple.id_dapp,
+            &GetCredentialRequest {
+                credential_spec: spec_with_owner.clone(),
+                signed_id_alias: SignedIssuerIdAlias {
+                    credential_jws: id_alias_credentials
+                        .issuer_id_alias_credential
+                        .credential_jws
+                        .clone(),
+                },
+                prepared_context: prepared_credential.prepared_context,
             },
-            prepared_context: prepared_credential.prepared_context,
-        },
-    )?;
-    let requested_vc_jws = get_credential_response
-        .expect("failed get_credential")
-        .vc_jws;
-    let claims = verify_credential_jws_with_canister_id(
-        &requested_vc_jws,
-        &issuer_id,
-        &root_pk_raw,
-        env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
-    )
-    .expect("credential verification failed");
-    let vc_claims = claims.vc().expect("missing VC claims");
-    validate_claims_match_spec(vc_claims, &credential_spec).expect("Clam validation failed");
-    // Request credential validation from RP's backend.
-    let vp_jwt = build_ii_verifiable_presentation_jwt(
-        id_alias_credentials.rp_id_alias_credential.id_dapp,
-        id_alias_credentials.rp_id_alias_credential.credential_jws,
-        requested_vc_jws,
-    )
-    .expect("failed building VP");
-    let validate_vp_request = ValidateVpRequest {
-        vp_jwt,
-        effective_vc_subject: id_alias_credentials.rp_id_alias_credential.id_dapp,
-        credential_spec,
-        issuer_origin: issuer_url.to_string(),
-        issuer_canister_id: Some(issuer_id),
-    };
-    let result = rp_validate_ii_vp(&env, rp_id, principal_1(), validate_vp_request)?;
-    assert!(result.is_ok(), "{:?}", result);
+        )?;
+        let requested_vc_jws = get_credential_response
+            .expect("failed get_credential")
+            .vc_jws;
+        let claims = verify_credential_jws_with_canister_id(
+            &requested_vc_jws,
+            &issuer_id,
+            &root_pk_raw,
+            env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
+        )
+        .expect("credential verification failed");
+        let vc_claims = claims.vc().expect("missing VC claims");
+        validate_claims_match_spec(vc_claims, &spec).expect("Clam validation failed");
+        // Request credential validation from RP's backend.
+        let vp_jwt = build_ii_verifiable_presentation_jwt(
+            id_alias_credentials.rp_id_alias_credential.id_dapp,
+            id_alias_credentials
+                .rp_id_alias_credential
+                .credential_jws
+                .clone(),
+            requested_vc_jws,
+        )
+        .expect("failed building VP");
+        let validate_vp_request = ValidateVpRequest {
+            vp_jwt,
+            effective_vc_subject: id_alias_credentials.rp_id_alias_credential.id_dapp,
+            credential_spec: spec,
+            issuer_origin: issuer_url.to_string(),
+            issuer_canister_id: Some(issuer_id),
+        };
+        let result = rp_validate_ii_vp(&env, rp_id, principal_1(), validate_vp_request)?;
+        assert!(result.is_ok(), "{:?}", result);
+    }
     Ok(())
 }
