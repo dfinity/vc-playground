@@ -5,7 +5,7 @@ use candid::Principal;
 use canister_sig_util::{extract_raw_root_pk_from_der, CanisterSigPublicKey};
 use canister_tests::api::internet_identity::vc_mvp as ii_api;
 use canister_tests::flows;
-use canister_tests::framework::{env, principal_1, test_principal};
+use canister_tests::framework::{env, principal_1, principal_2, test_principal};
 
 use ic_cdk::api::management_canister::main::CanisterId;
 use ic_test_state_machine_client::{call_candid_as, CallError, StateMachine};
@@ -43,19 +43,24 @@ const DUMMY_GROUP_NAME: &str = "Dummy group";
 fn should_get_vc_consent_message() {
     let env = env();
     let canister_id = install_issuer(&env, None);
-
-    let consent_message_request = Icrc21VcConsentMessageRequest {
-        credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
-        preferences: Icrc21ConsentPreferences {
-            language: "en-US".to_string(),
-        },
-    };
-
-    let consent_info =
-        api::vc_consent_message(&env, canister_id, principal_1(), &consent_message_request)
-            .expect("API call failed")
-            .expect("Failed to obtain consent info");
-    assert!(consent_info.consent_message.contains(DUMMY_GROUP_NAME));
+    for spec in vec![
+        verified_age_credential_spec(18),
+        verified_humanity_credential_spec(),
+        verified_employment_credential_spec("DFINITY Foundation"),
+        verified_residence_credential_spec("Switzerland"),
+    ] {
+        let consent_message_request = Icrc21VcConsentMessageRequest {
+            credential_spec: add_owner(&spec, principal_2()),
+            preferences: Icrc21ConsentPreferences {
+                language: "en-US".to_string(),
+            },
+        };
+        let consent_info =
+            api::vc_consent_message(&env, canister_id, principal_1(), &consent_message_request)
+                .expect("API call failed")
+                .expect("Failed to obtain consent info");
+        assert!(consent_info.consent_message.contains(&spec.credential_type));
+    }
 }
 
 #[test]
@@ -137,21 +142,82 @@ fn verified_member_credential_spec(group_name: &str, owner: Principal) -> Creden
     }
 }
 
+fn verified_age_credential_spec(age_at_least: i32) -> CredentialSpec {
+    let mut args = HashMap::new();
+    args.insert("ageAtLeast".to_string(), ArgumentValue::Int(age_at_least));
+    CredentialSpec {
+        credential_type: "VerifiedAge".to_string(),
+        arguments: Some(args),
+    }
+}
+
+fn verified_residence_credential_spec(country_name: &str) -> CredentialSpec {
+    let mut args = HashMap::new();
+    args.insert(
+        "countryName".to_string(),
+        ArgumentValue::String(country_name.to_string()),
+    );
+    CredentialSpec {
+        credential_type: "VerifiedResidence".to_string(),
+        arguments: Some(args),
+    }
+}
+
+fn verified_employment_credential_spec(employer_name: &str) -> CredentialSpec {
+    let mut args = HashMap::new();
+    args.insert(
+        "employerName".to_string(),
+        ArgumentValue::String(employer_name.to_string()),
+    );
+    CredentialSpec {
+        credential_type: "VerifiedEmployment".to_string(),
+        arguments: Some(args),
+    }
+}
+
+fn verified_humanity_credential_spec() -> CredentialSpec {
+    CredentialSpec {
+        credential_type: "VerifiedHumanity".to_string(),
+        arguments: None,
+    }
+}
+
+fn add_owner(credential_spec: &CredentialSpec, owner: Principal) -> CredentialSpec {
+    let mut spec = credential_spec.to_owned();
+    if spec.arguments.is_none() {
+        spec.arguments = Some(HashMap::<String, ArgumentValue>::new());
+    }
+    spec.arguments
+        .as_mut()
+        .unwrap()
+        .insert("owner".to_string(), ArgumentValue::String(owner.to_text()));
+    spec
+}
+
 #[test]
 fn should_fail_prepare_credential_for_unauthorized_principal() {
     let env = env();
     let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
-    let response = api::prepare_credential(
-        &env,
-        issuer_id,
-        Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap(),
-        &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, principal_1()),
-            signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
-        },
-    )
-    .expect("API call failed");
-    assert_matches!(response, Err(e) if format!("{:?}", e).contains("is not a member of group"));
+    for spec in vec![
+        verified_age_credential_spec(18),
+        verified_humanity_credential_spec(),
+        verified_employment_credential_spec("DFINITY Foundation"),
+        verified_residence_credential_spec("Switzerland"),
+    ] {
+        let response = api::prepare_credential(
+            &env,
+            issuer_id,
+            Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap(),
+            &PrepareCredentialRequest {
+                credential_spec: add_owner(&spec, principal_2()),
+                signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
+            },
+        )
+        .expect("API call failed");
+        assert_matches!(response, Err(e) if
+            format!("{:?}", e).contains("has no credential") &&
+            format!("{:?}", e).contains(&spec.credential_type));
+    }
 }
 
 #[test]
@@ -182,41 +248,48 @@ fn should_fail_get_credential_for_wrong_sender() {
     let signed_id_alias = DUMMY_SIGNED_ID_ALIAS.clone();
     let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
     let owner = principal_1();
-    add_group_with_member(
-        DUMMY_GROUP_NAME,
-        owner,
-        authorized_principal,
-        &env,
-        issuer_id,
-    );
-    let unauthorized_principal = test_principal(2);
+    for spec in vec![
+        verified_age_credential_spec(18),
+        verified_humanity_credential_spec(),
+        verified_employment_credential_spec("DFINITY Foundation"),
+        verified_residence_credential_spec("Switzerland"),
+    ] {
+        add_group_with_member(
+            &group_name_for_credential_type(&spec.credential_type),
+            owner,
+            authorized_principal,
+            &env,
+            issuer_id,
+        );
+        let unauthorized_principal = test_principal(2);
 
-    let prepare_credential_response = api::prepare_credential(
-        &env,
-        issuer_id,
-        authorized_principal,
-        &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, owner),
-            signed_id_alias: signed_id_alias.clone(),
-        },
-    )
-    .expect("API call failed")
-    .expect("failed to prepare credential");
+        let prepare_credential_response = api::prepare_credential(
+            &env,
+            issuer_id,
+            authorized_principal,
+            &PrepareCredentialRequest {
+                credential_spec: add_owner(&spec, owner),
+                signed_id_alias: signed_id_alias.clone(),
+            },
+        )
+        .expect("API call failed")
+        .expect("failed to prepare credential");
 
-    let get_credential_response = api::get_credential(
-        &env,
-        issuer_id,
-        unauthorized_principal,
-        &GetCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, owner),
-            signed_id_alias,
-            prepared_context: prepare_credential_response.prepared_context,
-        },
-    )
-    .expect("API call failed");
-    assert_matches!(get_credential_response,
-        Err(IssueCredentialError::InvalidIdAlias(e)) if e.contains("id alias could not be verified")
-    );
+        let get_credential_response = api::get_credential(
+            &env,
+            issuer_id,
+            unauthorized_principal,
+            &GetCredentialRequest {
+                credential_spec: add_owner(&spec, owner),
+                signed_id_alias: signed_id_alias.clone(),
+                prepared_context: prepare_credential_response.prepared_context,
+            },
+        )
+        .expect("API call failed");
+        assert_matches!(get_credential_response,
+            Err(IssueCredentialError::InvalidIdAlias(e)) if e.contains("id alias could not be verified")
+        );
+    }
 }
 
 #[test]
@@ -283,6 +356,15 @@ fn should_fail_prepare_credential_for_wrong_idp_canister_id() {
     .expect("API call failed");
     assert_matches!(response, Err(IssueCredentialError::InvalidIdAlias(_)));
 }
+fn group_name_for_credential_type(credential_type: &str) -> String {
+    match credential_type {
+        "VerifiedResidence" => "Verified Residence".to_string(),
+        "VerifiedAge" => "Verified Age".to_string(),
+        "VerifiedEmployment" => "Verified Employment".to_string(),
+        "VerifiedHumanity" => "Verified Humanity".to_string(),
+        _ => panic!("unknown credential type: {}", credential_type),
+    }
+}
 
 #[test]
 fn should_prepare_verfied_member_credential_for_authorized_principal() {
@@ -290,24 +372,31 @@ fn should_prepare_verfied_member_credential_for_authorized_principal() {
     let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
     let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
     let owner = principal_1();
-    add_group_with_member(
-        DUMMY_GROUP_NAME,
-        owner,
-        authorized_principal,
-        &env,
-        issuer_id,
-    );
-    let response = api::prepare_credential(
-        &env,
-        issuer_id,
-        authorized_principal,
-        &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, owner),
-            signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
-        },
-    )
-    .expect("API call failed");
-    assert_matches!(response, Ok(_));
+    for spec in vec![
+        verified_age_credential_spec(18),
+        verified_humanity_credential_spec(),
+        verified_employment_credential_spec("DFINITY Foundation"),
+        verified_residence_credential_spec("Switzerland"),
+    ] {
+        add_group_with_member(
+            &group_name_for_credential_type(&spec.credential_type),
+            owner,
+            authorized_principal,
+            &env,
+            issuer_id,
+        );
+        let response = api::prepare_credential(
+            &env,
+            issuer_id,
+            authorized_principal,
+            &PrepareCredentialRequest {
+                credential_spec: add_owner(&spec, owner),
+                signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
+            },
+        )
+        .expect("API call failed");
+        assert_matches!(response, Ok(_));
+    }
 }
 
 fn rp_add_exclusive_content(
