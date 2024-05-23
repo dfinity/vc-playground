@@ -203,6 +203,21 @@ lazy_static! {
                     arguments: None,
                 },
             },
+            GroupType {
+                group_name: "Verified Member".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedMember".to_string(),
+                    arguments: Some(
+                        vec![(
+                            "groupName".to_string(),
+                            OrdArgumentValue::String("<name>".to_string()),
+                        )]
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone()))
+                        .collect(),
+                    ),
+                },
+            },
         ];
     static ref GROUP_NAME_FOR_CREDENTIAL_TYPE: BTreeMap<String, String> = {
         let mut map = BTreeMap::new();
@@ -773,7 +788,7 @@ fn args_to_string(spec: &CredentialSpec) -> String {
 pub fn get_vc_consent_message_en(
     credential_spec: &CredentialSpec,
 ) -> Result<Icrc21ConsentInfo, Icrc21Error> {
-    match verify_spec_and_get_group_name(credential_spec) {
+    match verify_spec_and_get_group_owner(credential_spec) {
         Err(err) => Err(Icrc21Error::ConsentMessageUnavailable(Icrc21ErrorInfo {
             description: err,
         })),
@@ -822,23 +837,26 @@ fn get_string_arg_value(arg_name: &str, spec: &CredentialSpec) -> Result<String,
     }
 }
 
-fn check_arg_number(expected_arg_number: usize, spec: &CredentialSpec) -> Result<(), String> {
+fn check_number_of_args(
+    expected_number_of_args: usize,
+    spec: &CredentialSpec,
+) -> Result<(), String> {
     let Some(arguments) = &spec.arguments else {
-        if expected_arg_number == 0 {
+        if expected_number_of_args == 0 {
             return Ok(());
         } else {
             return Err(format!(
                 "Credential spec has wrong number of arguments, expected {}, got none",
-                expected_arg_number
+                expected_number_of_args
             ));
         }
     };
-    if arguments.len() == expected_arg_number {
+    if arguments.len() == expected_number_of_args {
         return Ok(());
     } else {
         return Err(format!(
             "Credential spec has wrong number of arguments, expected {}, got {}",
-            expected_arg_number,
+            expected_number_of_args,
             arguments.len()
         ));
     }
@@ -857,25 +875,29 @@ fn get_owner_from_spec(spec: &CredentialSpec) -> Result<(CredentialSpec, Princip
     Ok((plain_spec, owner))
 }
 
-fn verify_spec_and_get_group_name(
+fn verify_spec_and_get_group_owner(
     spec: &CredentialSpec,
 ) -> Result<(CredentialSpec, Principal), String> {
     let (plain_spec, owner) = get_owner_from_spec(spec)?;
     match spec.credential_type.as_str() {
+        // TODO: remove VerifiedMember-support
+        "VerifiedMember" => {
+            let _group_name = get_string_arg_value("groupName", &plain_spec)?;
+        }
         "VerifiedResidence" => {
-            check_arg_number(1, &plain_spec)?;
+            check_number_of_args(1, &plain_spec)?;
             let _country_name = get_string_arg_value("countryName", &plain_spec)?;
         }
         "VerifiedAge" => {
-            check_arg_number(1, &plain_spec)?;
+            check_number_of_args(1, &plain_spec)?;
             let _age_at_least = get_int_arg_value("ageAtLeast", &plain_spec)?;
         }
         "VerifiedEmployment" => {
-            check_arg_number(1, &plain_spec)?;
+            check_number_of_args(1, &plain_spec)?;
             let _employer_name = get_string_arg_value("employerName", &plain_spec)?;
         }
         "VerifiedHumanity" => {
-            check_arg_number(0, &plain_spec)?;
+            check_number_of_args(0, &plain_spec)?;
         }
         _ => {
             return Err(format!(
@@ -954,12 +976,16 @@ fn prepare_credential_jwt(
     credential_spec: &CredentialSpec,
     alias_tuple: &AliasTuple,
 ) -> Result<String, IssueCredentialError> {
-    let (plain_spec, owner) = verify_spec_and_get_group_name(credential_spec)
+    let (plain_spec, owner) = verify_spec_and_get_group_owner(credential_spec)
         .map_err(IssueCredentialError::UnsupportedCredentialSpec)?;
     GROUPS.with_borrow(|groups| {
         verify_principal_owns_credential(alias_tuple.id_dapp, &plain_spec, owner, groups)
     })?;
-    Ok(verifiable_credential(alias_tuple.id_alias, &plain_spec))
+    if credential_spec.credential_type == "VerifiedMember" {
+        Ok(verifiable_credential(alias_tuple.id_alias, credential_spec))
+    } else {
+        Ok(verifiable_credential(alias_tuple.id_alias, &plain_spec))
+    }
 }
 
 fn group_name(credential_type: &str) -> Result<String, IssueCredentialError> {
@@ -975,7 +1001,11 @@ fn verify_principal_owns_credential(
     owner: Principal,
     groups: &GroupsMap,
 ) -> Result<(), IssueCredentialError> {
-    let group_name = group_name(&credential_spec.credential_type)?;
+    let mut group_name = group_name(&credential_spec.credential_type)?;
+    if credential_spec.credential_type == "VerifiedMember" {
+        group_name = get_string_arg_value("groupName", &credential_spec)
+            .map_err(IssueCredentialError::UnauthorizedSubject)?;
+    }
     if let Some(group_record) = groups.get(&(group_name.clone(), owner).into()) {
         if let Some(member_record) = group_record.members.get(&user) {
             if member_record.membership_status == MembershipStatus::Accepted {
