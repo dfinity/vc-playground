@@ -23,8 +23,7 @@ export const convertToArguments = ({
       if (Number.isNaN(numberValue)) {
         throw new Error('Expected a number');
       }
-      const finalKey = key === 'ageAtLeast' ? 'age' : key;
-      vcArguments.push([finalKey, { Int: numberValue }]);
+      vcArguments.push([key, { Int: numberValue }]);
     }
     if ('String' in argumentValue) {
       if (typeof credentialArgument !== 'string') {
