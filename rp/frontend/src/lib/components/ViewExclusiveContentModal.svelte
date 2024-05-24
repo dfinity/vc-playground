@@ -54,9 +54,11 @@
   };
 
   let hasCredential: boolean | undefined;
-  $: hasCredential = $credentialsStore.find(
-    findCredential({ owner, credentialSpec: contentData?.credential_spec })
-  )?.hasCredential;
+  $: hasCredential = findCredential({
+    owner,
+    credentialSpec: contentData?.credential_spec,
+    credentials: $credentialsStore,
+  })?.hasCredential;
 </script>
 
 <Modal>

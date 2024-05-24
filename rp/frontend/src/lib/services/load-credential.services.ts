@@ -29,7 +29,6 @@ export const loadCredential = async ({
   if (isNullish(identity)) {
     return null;
   }
-  const credArgsToObj = credentialArgsToObj(credentialSpec);
   console.info('Loading credential for', credentialSpec.credential_type, owner.toText());
   return new Promise<null>((resolve) => {
     requestVerifiablePresentation({
@@ -55,7 +54,6 @@ export const loadCredential = async ({
             vpJwt: verifiablePresentation.Ok,
             credentialSpec: {
               credential_type: credentialSpec.credential_type,
-              // The owner is not part of the given credentials.
               arguments: [credentialSpec.arguments[0] ?? []],
             },
           },
@@ -85,8 +83,10 @@ export const loadCredential = async ({
         credentialSpec: {
           credentialType: credentialSpec.credential_type,
           arguments: {
+            // We need to add the owner so that the issuer can identify which is the issuer
+            // from which the credential is being requested.
             owner: owner.toText(),
-            ...credArgsToObj,
+            ...credentialArgsToObj(credentialSpec),
           },
         },
         credentialSubject: identity.getPrincipal().toText(),
