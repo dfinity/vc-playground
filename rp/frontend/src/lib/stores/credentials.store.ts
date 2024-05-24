@@ -2,7 +2,7 @@ import type { Principal } from '@dfinity/principal';
 import { writable } from 'svelte/store';
 import type { CredentialSpec } from '../../declarations/rp/rp.did';
 
-type Credential = {
+export type Credential = {
   groupName: string;
   owner: Principal;
   credentialSpec: CredentialSpec;

@@ -10,6 +10,7 @@
   import { ISSUER_ORIGIN } from '$lib/constants/env-vars';
   import type { Principal } from '@dfinity/principal';
   import type { VisibleContentData } from '$lib/stores/content-data-visible.store';
+  import { findCredential } from '$lib/utils/find-credential.utils';
 
   /* eslint-disable-next-line */
   export let parent: any;
@@ -53,10 +54,8 @@
   };
 
   let hasCredential: boolean | undefined;
-  // TODO: Compare the whole credential spec instead of just the group name and issuer.
   $: hasCredential = $credentialsStore.find(
-    (credential) =>
-      credential.groupName === credentialName && credential.owner.toText() === owner?.toText()
+    findCredential({ owner, credentialSpec: contentData?.credential_spec })
   )?.hasCredential;
 </script>
 
