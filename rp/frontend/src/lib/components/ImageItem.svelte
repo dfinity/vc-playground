@@ -62,10 +62,10 @@
 
 <article class="card" data-tid="image-item" data-credential-name={groupName}>
   <header class="p-2">
-    <h5 class="h5 w-full">
+    <h5 class="h5 w-full truncate">
       {groupName}
     </h5>
-    <p>{credentialPredicate ?? '-'}</p>
+    <p class="truncate">{credentialPredicate ?? '-'}</p>
     <p class="text-sm text-surface-600-300-token truncate">
       {`Trusted Issuer: ${image.issuer_nickname}`}
     </p>
