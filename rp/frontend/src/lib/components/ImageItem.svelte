@@ -25,9 +25,6 @@
   let groupName: string | undefined;
   $: groupName = $groupNameStore[image.credential_spec.credential_type];
 
-  let title: string;
-  $: title = `${groupName}${credentialPredicate ? ` - ${credentialPredicate}` : ''}`;
-
   const openModal = ({
     content,
     startFlow,
@@ -65,10 +62,10 @@
 
 <article class="card" data-tid="image-item" data-credential-name={groupName}>
   <header class="p-2">
-    <!-- TODO: Fix UI misaligment for titles with multiple lines -->
     <h5 class="h5 w-full">
-      {title}
+      {groupName}
     </h5>
+    <p>{credentialPredicate ?? '-'}</p>
     <p class="text-sm text-surface-600-300-token truncate">
       {`Trusted Issuer: ${image.issuer_nickname}`}
     </p>
