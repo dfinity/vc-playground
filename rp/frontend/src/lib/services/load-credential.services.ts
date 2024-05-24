@@ -52,10 +52,7 @@ export const loadCredential = async ({
             issuerOrigin: 'https://metaissuer.vc/',
             issuerCanisterId: Principal.fromText(ISSUER_CANISTER_ID),
             vpJwt: verifiablePresentation.Ok,
-            credentialSpec: {
-              credential_type: credentialSpec.credential_type,
-              arguments: [credentialSpec.arguments[0] ?? []],
-            },
+            credentialSpec,
           },
         });
         credentialsStore.setCredential({
