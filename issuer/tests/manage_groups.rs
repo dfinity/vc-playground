@@ -23,7 +23,7 @@ fn should_return_group_types() {
     let caller = principal_1();
 
     let group_types = do_group_types(caller, &env, canister_id);
-    assert_eq!(group_types.types.len(), 4);
+    assert_eq!(group_types.types.len(), 5);
     assert_eq!(group_types.types[0].group_name, "Verified Residence");
     assert_eq!(
         group_types.types[0].credential_spec.credential_type,
@@ -43,6 +43,11 @@ fn should_return_group_types() {
     assert_eq!(
         group_types.types[3].credential_spec.credential_type,
         "VerifiedHumanity"
+    );
+    assert_eq!(group_types.types[4].group_name, "Verified Member");
+    assert_eq!(
+        group_types.types[4].credential_spec.credential_type,
+        "VerifiedMember"
     );
 }
 

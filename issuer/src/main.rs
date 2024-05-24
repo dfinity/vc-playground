@@ -151,6 +151,88 @@ lazy_static! {
     // Seed and public key used for signing the credentials.
     static ref CANISTER_SIG_SEED: Vec<u8> = hash_bytes("MetaIssuer").to_vec();
     static ref CANISTER_SIG_PK: CanisterSigPublicKey = CanisterSigPublicKey::new(ic_cdk::id(), CANISTER_SIG_SEED.clone());
+
+    // Supported group types/credential types.
+    static ref GROUP_TYPES: Vec<GroupType> = vec![
+            GroupType {
+                group_name: "Verified Residence".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedResidence".to_string(),
+                    arguments: Some(
+                        vec![(
+                            "countryName".to_string(),
+                            OrdArgumentValue::String("<country>".to_string()),
+                        )]
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone()))
+                        .collect(),
+                    ),
+                },
+            },
+            GroupType {
+                group_name: "Verified Age".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedAge".to_string(),
+                    arguments: Some(
+                        vec![("ageAtLeast".to_string(), OrdArgumentValue::Int(18))]
+                            .iter()
+                            .map(|(k, v)| (k.clone(), v.clone()))
+                            .collect(),
+                    ),
+                },
+            },
+            GroupType {
+                group_name: "Verified Employment".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedEmployment".to_string(),
+                    arguments: Some(
+                        vec![(
+                            "employerName".to_string(),
+                            OrdArgumentValue::String("<employer>".to_string()),
+                        )]
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone()))
+                        .collect(),
+                    ),
+                },
+            },
+            GroupType {
+                group_name: "Verified Humanity".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedHumanity".to_string(),
+                    arguments: None,
+                },
+            },
+            GroupType {
+                group_name: "Verified Member".to_string(),
+                credential_spec: OrdCredentialSpec {
+                    credential_type: "VerifiedMember".to_string(),
+                    arguments: Some(
+                        vec![(
+                            "groupName".to_string(),
+                            OrdArgumentValue::String("<name>".to_string()),
+                        )]
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone()))
+                        .collect(),
+                    ),
+                },
+            },
+        ];
+    static ref GROUP_NAME_FOR_CREDENTIAL_TYPE: BTreeMap<String, String> = {
+        let mut map = BTreeMap::new();
+        for group_type in GROUP_TYPES.iter() {
+            map.insert(group_type.credential_spec.credential_type.clone(), group_type.group_name.clone());
+        }
+        map
+    };
+    static ref CREDENTIAL_TYPE_FOR_GROUP_NAME: BTreeMap<String, String> = {
+        let mut map = BTreeMap::new();
+        for group_type in GROUP_TYPES.iter() {
+            map.insert(group_type.group_name.clone(), group_type.credential_spec.credential_type.clone());
+        }
+        map
+    };
 }
 
 /// Reserve the first stable memory page for the configuration stable cell.
@@ -323,57 +405,7 @@ fn set_user(req: SetUserRequest) -> Result<(), GroupsError> {
 #[candid_method(query)]
 fn group_types() -> Result<GroupTypes, GroupsError> {
     Ok(GroupTypes {
-        types: vec![
-            GroupType {
-                group_name: "Verified Residence".to_string(),
-                credential_spec: OrdCredentialSpec {
-                    credential_type: "VerifiedResidence".to_string(),
-                    arguments: Some(
-                        vec![(
-                            "countryName".to_string(),
-                            OrdArgumentValue::String("<country>".to_string()),
-                        )]
-                        .iter()
-                        .map(|(k, v)| (k.clone(), v.clone()))
-                        .collect(),
-                    ),
-                },
-            },
-            GroupType {
-                group_name: "Verified Age".to_string(),
-                credential_spec: OrdCredentialSpec {
-                    credential_type: "VerifiedAge".to_string(),
-                    arguments: Some(
-                        vec![("ageAtLeast".to_string(), OrdArgumentValue::Int(18))]
-                            .iter()
-                            .map(|(k, v)| (k.clone(), v.clone()))
-                            .collect(),
-                    ),
-                },
-            },
-            GroupType {
-                group_name: "Verified Employment".to_string(),
-                credential_spec: OrdCredentialSpec {
-                    credential_type: "VerifiedEmployment".to_string(),
-                    arguments: Some(
-                        vec![(
-                            "employerName".to_string(),
-                            OrdArgumentValue::String("<employer>".to_string()),
-                        )]
-                        .iter()
-                        .map(|(k, v)| (k.clone(), v.clone()))
-                        .collect(),
-                    ),
-                },
-            },
-            GroupType {
-                group_name: "Verified Humanity".to_string(),
-                credential_spec: OrdCredentialSpec {
-                    credential_type: "VerifiedHumanity".to_string(),
-                    arguments: None,
-                },
-            },
-        ],
+        types: GROUP_TYPES.clone(),
     })
 }
 
@@ -628,10 +660,6 @@ fn authorize_vc_request(
 async fn prepare_credential(
     req: PrepareCredentialRequest,
 ) -> Result<PreparedCredentialData, IssueCredentialError> {
-    println!(
-        "*** id_alias VC JWS: {}",
-        req.signed_id_alias.credential_jws
-    );
     let alias_tuple = match authorize_vc_request(&req.signed_id_alias, &caller(), time().into()) {
         Ok(alias_tuple) => alias_tuple,
         Err(err) => return Err(err),
@@ -745,65 +773,140 @@ fn get_derivation_origin(_hostname: &str) -> Result<DerivationOriginData, Deriva
     })
 }
 
+fn args_to_string(spec: &CredentialSpec) -> String {
+    let mut args = String::new();
+    let Some(arguments) = &spec.arguments else {
+        return args;
+    };
+    for (key, value) in arguments.into_iter() {
+        let arg = format!("{}: {}\n", key, value);
+        args.push_str(&arg);
+    }
+    args
+}
+
 pub fn get_vc_consent_message_en(
     credential_spec: &CredentialSpec,
 ) -> Result<Icrc21ConsentInfo, Icrc21Error> {
-    match verify_spec_and_get_group_name(credential_spec) {
+    match verify_spec_and_get_group_owner(credential_spec) {
         Err(err) => Err(Icrc21Error::ConsentMessageUnavailable(Icrc21ErrorInfo {
             description: err,
         })),
-        Ok((group_name, _owner)) => Ok(Icrc21ConsentInfo {
-            consent_message: format!("# \"{}\"", group_name),
+        Ok((plain_spec, _owner)) => Ok(Icrc21ConsentInfo {
+            consent_message: format!(
+                "# \"{}\"\n{}",
+                plain_spec.credential_type,
+                args_to_string(&plain_spec)
+            ),
             language: "en".to_string(),
         }),
     }
 }
 
-fn verify_spec_and_get_group_name(spec: &CredentialSpec) -> Result<(String, Principal), String> {
-    if spec.credential_type.as_str() == "VerifiedMember" {
-        let Some(arguments) = &spec.arguments else {
-            return Err("Credential spec has no arguments".to_string());
-        };
-        if arguments.len() != 2 {
-            return Err("Credential spec has unexpected arguments".to_string());
-        }
-        let group_name_arg = "groupName";
-        let Some(value) = arguments.get(group_name_arg) else {
-            return Err(format!(
-                "Credential spec has no {}-argument",
-                group_name_arg
-            ));
-        };
-        let ArgumentValue::String(group_name) = value else {
-            return Err(format!(
-                "Credential spec has an unexpected value for {}-argument",
-                group_name_arg
-            ));
-        };
-
-        let owner_arg = "owner";
-        let Some(value) = arguments.get(owner_arg) else {
-            return Err(format!("Credential spec has no {}-argument", owner_arg));
-        };
-        let ArgumentValue::String(owner_text) = value else {
-            return Err(format!(
-                "Credential spec has an unexpected value for {}-argument",
-                owner_arg
-            ));
-        };
-        let Ok(owner) = Principal::from_text(owner_text) else {
-            return Err(format!(
-                "Credential spec has an invalid value for {}-argument",
-                owner_arg
-            ));
-        };
-        Ok((group_name.to_string(), owner))
+fn get_int_arg_value(arg_name: &str, spec: &CredentialSpec) -> Result<i32, String> {
+    let Some(arguments) = &spec.arguments else {
+        return Err("Credential spec has no arguments".to_string());
+    };
+    let Some(arg_value) = arguments.get(arg_name) else {
+        return Err(format!("Credential spec has no {}-argument", arg_name));
+    };
+    if let ArgumentValue::Int(int_value) = arg_value {
+        Ok(*int_value)
     } else {
         Err(format!(
-            "Credential {} is not supported",
-            spec.credential_type.as_str()
+            "Credential spec has an unexpected value for {}-argument",
+            arg_name
         ))
     }
+}
+
+fn get_string_arg_value(arg_name: &str, spec: &CredentialSpec) -> Result<String, String> {
+    let Some(arguments) = &spec.arguments else {
+        return Err("Credential spec has no arguments".to_string());
+    };
+    let Some(arg_value) = arguments.get(arg_name) else {
+        return Err(format!("Credential spec has no {}-argument", arg_name));
+    };
+    if let ArgumentValue::String(str_value) = arg_value {
+        Ok(str_value.clone())
+    } else {
+        Err(format!(
+            "Credential spec has an unexpected value for {}-argument",
+            arg_name
+        ))
+    }
+}
+
+fn check_number_of_args(
+    expected_number_of_args: usize,
+    spec: &CredentialSpec,
+) -> Result<(), String> {
+    let Some(arguments) = &spec.arguments else {
+        if expected_number_of_args == 0 {
+            return Ok(());
+        } else {
+            return Err(format!(
+                "Credential spec has wrong number of arguments, expected {}, got none",
+                expected_number_of_args
+            ));
+        }
+    };
+    if arguments.len() == expected_number_of_args {
+        return Ok(());
+    } else {
+        return Err(format!(
+            "Credential spec has wrong number of arguments, expected {}, got {}",
+            expected_number_of_args,
+            arguments.len()
+        ));
+    }
+}
+
+fn get_owner_from_spec(spec: &CredentialSpec) -> Result<(CredentialSpec, Principal), String> {
+    let owner = get_string_arg_value("owner", spec)?;
+    let mut plain_spec = spec.to_owned();
+    plain_spec
+        .arguments
+        .as_mut()
+        .unwrap()
+        .remove("owner")
+        .unwrap();
+    let owner = Principal::from_text(&owner).map_err(|e| format!("bad owner {}: {}", owner, e))?;
+    Ok((plain_spec, owner))
+}
+
+fn verify_spec_and_get_group_owner(
+    spec: &CredentialSpec,
+) -> Result<(CredentialSpec, Principal), String> {
+    let (plain_spec, owner) = get_owner_from_spec(spec)?;
+    match spec.credential_type.as_str() {
+        // TODO: remove VerifiedMember-support
+        "VerifiedMember" => {
+            let _group_name = get_string_arg_value("groupName", &plain_spec)?;
+        }
+        "VerifiedResidence" => {
+            check_number_of_args(1, &plain_spec)?;
+            let _country_name = get_string_arg_value("countryName", &plain_spec)?;
+        }
+        "VerifiedAge" => {
+            check_number_of_args(1, &plain_spec)?;
+            let _age_at_least = get_int_arg_value("ageAtLeast", &plain_spec)?;
+        }
+        "VerifiedEmployment" => {
+            check_number_of_args(1, &plain_spec)?;
+            let _employer_name = get_string_arg_value("employerName", &plain_spec)?;
+        }
+        "VerifiedHumanity" => {
+            check_number_of_args(0, &plain_spec)?;
+        }
+        _ => {
+            return Err(format!(
+                "Credential {} is not supported",
+                spec.credential_type.as_str()
+            ))
+        }
+    };
+    Ok((plain_spec, owner))
 }
 
 #[query]
@@ -842,10 +945,7 @@ fn static_headers() -> Vec<(String, String)> {
 
 fn main() {}
 
-fn verified_member_credential(
-    subject_principal: Principal,
-    credential_spec: &CredentialSpec,
-) -> String {
+fn verifiable_credential(subject_principal: Principal, credential_spec: &CredentialSpec) -> String {
     let params = CredentialParams {
         spec: credential_spec.clone(),
         subject_id: did_for_principal(subject_principal),
@@ -876,23 +976,36 @@ fn prepare_credential_jwt(
     credential_spec: &CredentialSpec,
     alias_tuple: &AliasTuple,
 ) -> Result<String, IssueCredentialError> {
-    let (group_name, owner) = verify_spec_and_get_group_name(credential_spec)
+    let (plain_spec, owner) = verify_spec_and_get_group_owner(credential_spec)
         .map_err(IssueCredentialError::UnsupportedCredentialSpec)?;
     GROUPS.with_borrow(|groups| {
-        verify_principal_is_member(alias_tuple.id_dapp, group_name, owner, groups)
+        verify_principal_owns_credential(alias_tuple.id_dapp, &plain_spec, owner, groups)
     })?;
-    Ok(verified_member_credential(
-        alias_tuple.id_alias,
-        credential_spec,
-    ))
+    if credential_spec.credential_type == "VerifiedMember" {
+        Ok(verifiable_credential(alias_tuple.id_alias, credential_spec))
+    } else {
+        Ok(verifiable_credential(alias_tuple.id_alias, &plain_spec))
+    }
 }
 
-fn verify_principal_is_member(
+fn group_name(credential_type: &str) -> Result<String, IssueCredentialError> {
+    let name = GROUP_NAME_FOR_CREDENTIAL_TYPE.get(credential_type).ok_or(
+        IssueCredentialError::UnsupportedCredentialSpec(credential_type.to_string()),
+    )?;
+    Ok(name.clone())
+}
+
+fn verify_principal_owns_credential(
     user: Principal,
-    group_name: String,
+    credential_spec: &CredentialSpec,
     owner: Principal,
     groups: &GroupsMap,
 ) -> Result<(), IssueCredentialError> {
+    let mut group_name = group_name(&credential_spec.credential_type)?;
+    if credential_spec.credential_type == "VerifiedMember" {
+        group_name = get_string_arg_value("groupName", &credential_spec)
+            .map_err(IssueCredentialError::UnauthorizedSubject)?;
+    }
     if let Some(group_record) = groups.get(&(group_name.clone(), owner).into()) {
         if let Some(member_record) = group_record.members.get(&user) {
             if member_record.membership_status == MembershipStatus::Accepted {
@@ -901,8 +1014,8 @@ fn verify_principal_is_member(
         }
     }
     Err(IssueCredentialError::UnauthorizedSubject(format!(
-        "user {} is not a member of group [{}]",
-        user, group_name
+        "user {} has no credential [{}] from issuer {}",
+        user, credential_spec.credential_type, owner
     )))
 }
 
