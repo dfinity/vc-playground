@@ -159,7 +159,7 @@ lazy_static! {
                 credential_spec: OrdCredentialSpec {
                     credential_type: "VerifiedResidence".to_string(),
                     arguments: Some(
-                        vec![(
+                        [(
                             "countryName".to_string(),
                             OrdArgumentValue::String("<country>".to_string()),
                         )]
@@ -174,7 +174,7 @@ lazy_static! {
                 credential_spec: OrdCredentialSpec {
                     credential_type: "VerifiedAge".to_string(),
                     arguments: Some(
-                        vec![("ageAtLeast".to_string(), OrdArgumentValue::Int(18))]
+                        [("ageAtLeast".to_string(), OrdArgumentValue::Int(18))]
                             .iter()
                             .map(|(k, v)| (k.clone(), v.clone()))
                             .collect(),
@@ -186,7 +186,7 @@ lazy_static! {
                 credential_spec: OrdCredentialSpec {
                     credential_type: "VerifiedEmployment".to_string(),
                     arguments: Some(
-                        vec![(
+                        [(
                             "employerName".to_string(),
                             OrdArgumentValue::String("<employer>".to_string()),
                         )]
@@ -208,7 +208,7 @@ lazy_static! {
                 credential_spec: OrdCredentialSpec {
                     credential_type: "VerifiedMember".to_string(),
                     arguments: Some(
-                        vec![(
+                        [(
                             "groupName".to_string(),
                             OrdArgumentValue::String("<name>".to_string()),
                         )]
@@ -226,10 +226,10 @@ lazy_static! {
         }
         map
     };
-    static ref CREDENTIAL_TYPE_FOR_GROUP_NAME: BTreeMap<String, String> = {
+    static ref CREDENTIAL_SPEC_FOR_GROUP_NAME: BTreeMap<String, OrdCredentialSpec> = {
         let mut map = BTreeMap::new();
         for group_type in GROUP_TYPES.iter() {
-            map.insert(group_type.group_name.clone(), group_type.credential_spec.credential_type.clone());
+            map.insert(group_type.credential_spec.credential_type.clone(), group_type.credential_spec.clone());
         }
         map
     };
@@ -543,11 +543,28 @@ fn add_group(req: AddGroupRequest) -> Result<FullGroupData, GroupsError> {
     })
 }
 
+fn verify_vc_arguments_match_spec(
+    group_name: &str,
+    maybe_args: &Option<VcArguments>,
+) -> Result<(), String> {
+    let Some(group_spec) = CREDENTIAL_SPEC_FOR_GROUP_NAME.get(group_name) else {
+        return Ok(()); // not a supported VC-group, nothing to verify
+    };
+    let derived_spec: CredentialSpec = OrdCredentialSpec {
+        credential_type: group_spec.credential_type.clone(),
+        arguments: maybe_args.clone(),
+    }
+    .into();
+    verify_vc_spec(&derived_spec)
+}
+
 #[update]
 #[candid_method]
 fn join_group(req: JoinGroupRequest) -> Result<(), GroupsError> {
     GROUPS.with_borrow_mut(|groups| {
         if let Some(mut group_record) = groups.get(&(req.group_name.clone(), req.owner).into()) {
+            verify_vc_arguments_match_spec(&req.group_name, &req.vc_arguments)
+                .map_err(GroupsError::Internal)?;
             if let Some(member_record) = group_record.members.get(&caller()) {
                 // If a record exists and has `Rejected`-status,
                 // switch to `PendingReview` and update vc_arguments and timestamp, otherwise do nothing.
@@ -778,7 +795,7 @@ fn args_to_string(spec: &CredentialSpec) -> String {
     let Some(arguments) = &spec.arguments else {
         return args;
     };
-    for (key, value) in arguments.into_iter() {
+    for (key, value) in arguments.iter() {
         let arg = format!("{}: {}\n", key, value);
         args.push_str(&arg);
     }
@@ -852,13 +869,13 @@ fn check_number_of_args(
         }
     };
     if arguments.len() == expected_number_of_args {
-        return Ok(());
+        Ok(())
     } else {
-        return Err(format!(
+        Err(format!(
             "Credential spec has wrong number of arguments, expected {}, got {}",
             expected_number_of_args,
             arguments.len()
-        ));
+        ))
     }
 }
 
@@ -875,29 +892,26 @@ fn get_owner_from_spec(spec: &CredentialSpec) -> Result<(CredentialSpec, Princip
     Ok((plain_spec, owner))
 }
 
-fn verify_spec_and_get_group_owner(
-    spec: &CredentialSpec,
-) -> Result<(CredentialSpec, Principal), String> {
-    let (plain_spec, owner) = get_owner_from_spec(spec)?;
+fn verify_vc_spec(spec: &CredentialSpec) -> Result<(), String> {
     match spec.credential_type.as_str() {
         // TODO: remove VerifiedMember-support
         "VerifiedMember" => {
-            let _group_name = get_string_arg_value("groupName", &plain_spec)?;
+            let _group_name = get_string_arg_value("groupName", spec)?;
         }
         "VerifiedResidence" => {
-            check_number_of_args(1, &plain_spec)?;
-            let _country_name = get_string_arg_value("countryName", &plain_spec)?;
+            check_number_of_args(1, spec)?;
+            let _country_name = get_string_arg_value("countryName", spec)?;
         }
         "VerifiedAge" => {
-            check_number_of_args(1, &plain_spec)?;
-            let _age_at_least = get_int_arg_value("ageAtLeast", &plain_spec)?;
+            check_number_of_args(1, spec)?;
+            let _age_at_least = get_int_arg_value("ageAtLeast", spec)?;
         }
         "VerifiedEmployment" => {
-            check_number_of_args(1, &plain_spec)?;
-            let _employer_name = get_string_arg_value("employerName", &plain_spec)?;
+            check_number_of_args(1, spec)?;
+            let _employer_name = get_string_arg_value("employerName", spec)?;
         }
         "VerifiedHumanity" => {
-            check_number_of_args(0, &plain_spec)?;
+            check_number_of_args(0, spec)?;
         }
         _ => {
             return Err(format!(
@@ -906,6 +920,14 @@ fn verify_spec_and_get_group_owner(
             ))
         }
     };
+    Ok(())
+}
+
+fn verify_spec_and_get_group_owner(
+    spec: &CredentialSpec,
+) -> Result<(CredentialSpec, Principal), String> {
+    let (plain_spec, owner) = get_owner_from_spec(spec)?;
+    verify_vc_spec(&plain_spec)?;
     Ok((plain_spec, owner))
 }
 
@@ -995,6 +1017,15 @@ fn group_name(credential_type: &str) -> Result<String, IssueCredentialError> {
     Ok(name.clone())
 }
 
+fn specs_are_equal(spec_1: &CredentialSpec, spec_2: &CredentialSpec) -> bool {
+    if spec_1.credential_type != spec_2.credential_type {
+        return false;
+    }
+    let args_1 = spec_1.arguments.clone().unwrap_or_default();
+    let args_2 = spec_2.arguments.clone().unwrap_or_default();
+    args_1 == args_2
+}
+
 fn verify_principal_owns_credential(
     user: Principal,
     credential_spec: &CredentialSpec,
@@ -1003,11 +1034,36 @@ fn verify_principal_owns_credential(
 ) -> Result<(), IssueCredentialError> {
     let mut group_name = group_name(&credential_spec.credential_type)?;
     if credential_spec.credential_type == "VerifiedMember" {
-        group_name = get_string_arg_value("groupName", &credential_spec)
+        group_name = get_string_arg_value("groupName", credential_spec)
             .map_err(IssueCredentialError::UnauthorizedSubject)?;
     }
     if let Some(group_record) = groups.get(&(group_name.clone(), owner).into()) {
         if let Some(member_record) = group_record.members.get(&user) {
+            let stored_spec: CredentialSpec = OrdCredentialSpec {
+                credential_type: credential_spec.credential_type.clone(),
+                arguments: member_record.vc_arguments.clone(),
+            }
+            .into();
+            if credential_spec.credential_type == "VerifiedAge" {
+                // For VerifiedAge we check that the stored age *implies* the requested spec.
+                let requested_min_age = get_int_arg_value("ageAtLeast", credential_spec)
+                    .map_err(IssueCredentialError::UnauthorizedSubject)?;
+                let stored_age = get_int_arg_value("ageAtLeast", &stored_spec)
+                    .map_err(IssueCredentialError::UnauthorizedSubject)?;
+                if requested_min_age > stored_age {
+                    return Err(IssueCredentialError::UnauthorizedSubject(
+                        "user's age doesn't match the requested spec".to_string(),
+                    ));
+                }
+            } else {
+                // For all other VCs, we require that stored args are *equal* to the spec's args.
+                if !specs_are_equal(credential_spec, &stored_spec) {
+                    return Err(IssueCredentialError::UnauthorizedSubject(format!(
+                        "user data doesn't match the requested spec:\n got: {:?}\n exp: {:?}:?",
+                        *credential_spec, stored_spec
+                    )));
+                }
+            }
             if member_record.membership_status == MembershipStatus::Accepted {
                 return Ok(());
             }

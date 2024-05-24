@@ -328,8 +328,8 @@ fn should_list_groups_authenticated() {
     do_add_group(group_3_owned, owner, &env, canister_id);
     do_add_group(group_2, not_owner, &env, canister_id);
 
-    do_join_group(group_1_owned, owner, owner, &env, canister_id);
-    do_join_group(group_3_owned, owner, owner, &env, canister_id);
+    do_join_group(group_1_owned, owner, owner, None, &env, canister_id);
+    do_join_group(group_3_owned, owner, owner, None, &env, canister_id);
     do_update_membership(
         group_3_owned,
         vec![MembershipUpdate {
@@ -340,7 +340,7 @@ fn should_list_groups_authenticated() {
         &env,
         canister_id,
     );
-    do_join_group(group_2, not_owner, owner, &env, canister_id);
+    do_join_group(group_2, not_owner, owner, None, &env, canister_id);
 
     let req = ListGroupsRequest {
         group_name_substring: None,
@@ -401,7 +401,7 @@ fn should_join_group() {
         &env,
         canister_id,
     );
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, principal_1(), &env, canister_id);
 
@@ -438,7 +438,7 @@ fn should_join_group_again_when_rejected() {
     );
 
     // Join group for the first time as "Alice"
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, owner, &env, canister_id);
 
@@ -469,7 +469,7 @@ fn should_join_group_again_when_rejected() {
     assert_eq!(member_data.member, alice_principal);
     assert_eq!(member_data.membership_status, MembershipStatus::Rejected);
 
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, owner, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
@@ -506,7 +506,7 @@ fn should_not_join_group_again_accepted_or_pending() {
     );
 
     // Join group for the first time as "Alice"
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, owner, &env, canister_id);
 
@@ -522,7 +522,7 @@ fn should_not_join_group_again_accepted_or_pending() {
 
     // Try joining again while still pending, should make no change.
     env.advance_time(Duration::from_secs(2));
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, owner, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
@@ -558,7 +558,7 @@ fn should_not_join_group_again_accepted_or_pending() {
 
     // Try joining again when accepted, should make no change.
     env.advance_time(Duration::from_secs(2));
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, owner, &env, canister_id);
     assert_eq!(group_data.group_name, group_name);
@@ -596,7 +596,7 @@ fn should_update_membership_single_member() {
         &env,
         canister_id,
     );
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, owner, &env, canister_id);
     let member_data_before = group_data.members[0].clone();
@@ -652,7 +652,7 @@ fn should_update_membership_multiple_members() {
         &env,
         canister_id,
     );
-    do_join_group(group_name, owner, bob_principal, &env, canister_id);
+    do_join_group(group_name, owner, bob_principal, None, &env, canister_id);
 
     env.advance_time(Duration::from_secs(2));
     let alice_nickname = "Alice";
@@ -666,7 +666,7 @@ fn should_update_membership_multiple_members() {
         &env,
         canister_id,
     );
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     env.advance_time(Duration::from_secs(2));
     let eve_nickname = "Eve";
@@ -680,7 +680,7 @@ fn should_update_membership_multiple_members() {
         &env,
         canister_id,
     );
-    do_join_group(group_name, owner, eve_principal, &env, canister_id);
+    do_join_group(group_name, owner, eve_principal, None, &env, canister_id);
 
     let mut timestamps: HashMap<Principal, u64> = HashMap::new();
 
@@ -761,7 +761,7 @@ fn should_update_membership_multiple_times() {
         &env,
         canister_id,
     );
-    do_join_group(group_name, owner, bob_principal, &env, canister_id);
+    do_join_group(group_name, owner, bob_principal, None, &env, canister_id);
 
     let alice_nickname = "Alice";
     let alice_principal = principal_2();
@@ -774,7 +774,7 @@ fn should_update_membership_multiple_times() {
         &env,
         canister_id,
     );
-    do_join_group(group_name, owner, alice_principal, &env, canister_id);
+    do_join_group(group_name, owner, alice_principal, None, &env, canister_id);
 
     let group_data = do_get_group(group_name, owner, &env, canister_id);
     let bob_data_before = group_data.members[0].clone();

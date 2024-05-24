@@ -258,6 +258,7 @@ fn should_fail_get_credential_for_wrong_sender() {
             &group_name_for_credential_type(&spec.credential_type),
             owner,
             authorized_principal,
+            spec.arguments.clone(),
             &env,
             issuer_id,
         );
@@ -368,7 +369,7 @@ fn group_name_for_credential_type(credential_type: &str) -> String {
 }
 
 #[test]
-fn should_prepare_verfied_member_credential_for_authorized_principal() {
+fn should_prepare_credentials_for_authorized_principal() {
     let env = env();
     let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
     let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
@@ -383,6 +384,7 @@ fn should_prepare_verfied_member_credential_for_authorized_principal() {
             &group_name_for_credential_type(&spec.credential_type),
             owner,
             authorized_principal,
+            spec.arguments.clone(),
             &env,
             issuer_id,
         );
@@ -401,15 +403,19 @@ fn should_prepare_verfied_member_credential_for_authorized_principal() {
 }
 
 #[test]
-fn should_prepare_verfied_member_credential_for_authorized_principal_legacy_test() {
+fn should_prepare_verified_age_vc_for_weaker_claim() {
     let env = env();
     let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
     let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
     let owner = principal_1();
+    let stored_spec = verified_age_credential_spec(21);
+    let requested_spec = verified_age_credential_spec(18);
+
     add_group_with_member(
-        DUMMY_GROUP_NAME,
+        &group_name_for_credential_type(&stored_spec.credential_type),
         owner,
         authorized_principal,
+        stored_spec.arguments.clone(),
         &env,
         issuer_id,
     );
@@ -418,7 +424,107 @@ fn should_prepare_verfied_member_credential_for_authorized_principal_legacy_test
         issuer_id,
         authorized_principal,
         &PrepareCredentialRequest {
-            credential_spec: verified_member_credential_spec(DUMMY_GROUP_NAME, owner),
+            credential_spec: add_owner(&requested_spec, owner),
+            signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
+        },
+    )
+    .expect("API call failed");
+    assert_matches!(response, Ok(_));
+}
+
+#[test]
+fn should_fail_prepare_verified_age_vc_for_stronger_claim() {
+    let env = env();
+    let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
+    let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
+    let owner = principal_1();
+    let stored_spec = verified_age_credential_spec(21);
+    let requested_spec = verified_age_credential_spec(25);
+
+    add_group_with_member(
+        &group_name_for_credential_type(&stored_spec.credential_type),
+        owner,
+        authorized_principal,
+        stored_spec.arguments.clone(),
+        &env,
+        issuer_id,
+    );
+    let response = api::prepare_credential(
+        &env,
+        issuer_id,
+        authorized_principal,
+        &PrepareCredentialRequest {
+            credential_spec: add_owner(&requested_spec, owner),
+            signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
+        },
+    )
+    .expect("API call failed");
+    assert_matches!(response,
+        Err(IssueCredentialError::UnauthorizedSubject(e)) if e.contains("age doesn't match the requested spec"));
+}
+
+#[test]
+fn should_fail_prepare_credential_for_differing_claims() {
+    let env = env();
+    let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
+    let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
+    let owner = principal_1();
+    for (stored_spec, requested_spec) in vec![
+        (
+            verified_employment_credential_spec("DFINITY Foundation"),
+            verified_employment_credential_spec("Google Switzerland"),
+        ),
+        (
+            verified_residence_credential_spec("Switzerland"),
+            verified_residence_credential_spec("Poland"),
+        ),
+    ] {
+        add_group_with_member(
+            &group_name_for_credential_type(&stored_spec.credential_type),
+            owner,
+            authorized_principal,
+            stored_spec.arguments.clone(),
+            &env,
+            issuer_id,
+        );
+        let response = api::prepare_credential(
+            &env,
+            issuer_id,
+            authorized_principal,
+            &PrepareCredentialRequest {
+                credential_spec: add_owner(&requested_spec, owner),
+                signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
+            },
+        )
+        .expect("API call failed");
+        assert_matches!(response,
+        Err(IssueCredentialError::UnauthorizedSubject(e)) if e.contains("doesn't match the requested spec"));
+    }
+}
+
+#[test]
+fn should_prepare_verfied_member_credential_for_authorized_principal_legacy_test() {
+    let env = env();
+    let issuer_id = install_issuer(&env, Some(DUMMY_ISSUER_INIT.clone()));
+    let authorized_principal = Principal::from_text(DUMMY_ALIAS_ID_DAPP_PRINCIPAL).unwrap();
+    let owner = principal_1();
+    let credential_spec = verified_member_credential_spec(DUMMY_GROUP_NAME, owner);
+    let mut vc_arguments = credential_spec.arguments.clone();
+    vc_arguments.as_mut().unwrap().remove("owner");
+    add_group_with_member(
+        DUMMY_GROUP_NAME,
+        owner,
+        authorized_principal,
+        vc_arguments,
+        &env,
+        issuer_id,
+    );
+    let response = api::prepare_credential(
+        &env,
+        issuer_id,
+        authorized_principal,
+        &PrepareCredentialRequest {
+            credential_spec,
             signed_id_alias: DUMMY_SIGNED_ID_ALIAS.clone(),
         },
     )
@@ -446,7 +552,7 @@ fn rp_validate_ii_vp(
 
 /// Verifies that credentials are being created including II interactions.
 #[test]
-fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
+fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
     let env = env();
     let ii_url = FrontendHostname::from(vc_util::II_ISSUER_URL);
     let issuer_url = FrontendHostname::from("https://metaissuer.vc/");
@@ -530,6 +636,7 @@ fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
             &group_name_for_credential_type(&spec.credential_type),
             owner,
             authorized_principal,
+            spec.arguments.clone(),
             &env,
             issuer_id,
         );
@@ -619,7 +726,7 @@ fn should_issue_share_and_validate_e2e() -> Result<(), CallError> {
 }
 
 #[test]
-fn should_issue_share_and_validate_e2e_legacy_test() -> Result<(), CallError> {
+fn should_issue_vc_and_validate_e2e_legacy_test() -> Result<(), CallError> {
     let env = env();
     let ii_url = FrontendHostname::from(vc_util::II_ISSUER_URL);
     let issuer_url = FrontendHostname::from("https://metaissuer.vc/");
@@ -692,15 +799,17 @@ fn should_issue_share_and_validate_e2e_legacy_test() -> Result<(), CallError> {
     // Add a group to the meta issuer with the expected member.
     let authorized_principal = alias_tuple.id_dapp;
     let owner = principal_1();
+    let credential_spec = verified_member_credential_spec(DUMMY_GROUP_NAME, owner);
+    let mut vc_arguments = credential_spec.arguments.clone();
+    vc_arguments.as_mut().unwrap().remove("owner");
     add_group_with_member(
         DUMMY_GROUP_NAME,
         owner,
         authorized_principal,
+        vc_arguments,
         &env,
         issuer_id,
     );
-
-    let credential_spec = verified_member_credential_spec(DUMMY_GROUP_NAME, owner);
 
     // Add an exclusive content to the rp, gated by a VC.
     let content_url = "http://example.com";
