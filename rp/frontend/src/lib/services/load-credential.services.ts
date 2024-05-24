@@ -10,6 +10,7 @@ import {
   type VerifiablePresentationResponse,
 } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
 import type { CredentialSpec } from '../../declarations/rp/rp.did';
+import { credentialArgsToObj } from '$lib/utils/credential-args-to-obj.utils';
 
 const ISSUER_ORIGIN = import.meta.env.VITE_ISSUER_ORIGIN;
 const ISSUER_CANISTER_ID = import.meta.env.VITE_ISSUER_CANISTER_ID;
@@ -28,7 +29,7 @@ export const loadCredential = async ({
   if (isNullish(identity)) {
     return null;
   }
-  console.info('Loading credential for', groupName, owner.toText());
+  console.info('Loading credential for', credentialSpec.credential_type, owner.toText());
   return new Promise<null>((resolve) => {
     requestVerifiablePresentation({
       onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
@@ -51,15 +52,7 @@ export const loadCredential = async ({
             issuerOrigin: 'https://metaissuer.vc/',
             issuerCanisterId: Principal.fromText(ISSUER_CANISTER_ID),
             vpJwt: verifiablePresentation.Ok,
-            credentialSpec: {
-              credential_type: 'VerifiedMember',
-              arguments: [
-                [
-                  ['groupName', { String: groupName }],
-                  ['owner', { String: owner.toText() }],
-                ],
-              ],
-            },
+            credentialSpec,
           },
         });
         credentialsStore.setCredential({
@@ -85,10 +78,12 @@ export const loadCredential = async ({
       },
       credentialData: {
         credentialSpec: {
-          credentialType: 'VerifiedMember',
+          credentialType: credentialSpec.credential_type,
           arguments: {
-            groupName,
+            // We need to add the owner so that the issuer can identify which is the issuer
+            // from which the credential is being requested.
             owner: owner.toText(),
+            ...credentialArgsToObj(credentialSpec),
           },
         },
         credentialSubject: identity.getPrincipal().toText(),
