@@ -4,7 +4,6 @@ import { isNullish } from '$lib/utils/is-nullish.utils';
 import { popupCenter } from '$lib/utils/login-popup.utils';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import { RP_DERIVATION_ORIGIN } from '$lib/constants/env-vars';
 import {
   requestVerifiablePresentation,
   type VerifiablePresentationResponse,
@@ -90,7 +89,7 @@ export const loadCredential = async ({
       },
       windowOpenerFeatures: popupCenter(),
       identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
-      derivationOrigin: RP_DERIVATION_ORIGIN,
+      derivationOrigin: undefined,
     });
   });
 };
