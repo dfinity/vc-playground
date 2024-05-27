@@ -120,6 +120,7 @@ fn should_retain_groups_upgrade() -> Result<(), CallError> {
         group_name,
         authorized_principal,
         authorized_principal,
+        None,
         &env,
         issuer_id,
     );

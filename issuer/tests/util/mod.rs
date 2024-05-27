@@ -10,11 +10,12 @@ use meta_issuer::groups_api::{
     ListGroupsRequest, MembershipStatus, MembershipUpdate, PublicGroupsData, SetUserRequest,
     UpdateMembershipRequest, UserData,
 };
+use std::collections::HashMap;
 use std::path::PathBuf;
 use vc_util::issuer_api::{
-    GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error, Icrc21VcConsentMessageRequest,
-    IssueCredentialError, IssuedCredentialData, PrepareCredentialRequest, PreparedCredentialData,
-    SignedIdAlias as SignedIssuerIdAlias,
+    ArgumentValue, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error,
+    Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
+    PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias as SignedIssuerIdAlias,
 };
 
 pub const DUMMY_ROOT_KEY: &str ="308182301d060d2b0601040182dc7c0503010201060c2b0601040182dc7c05030201036100adf65638a53056b2222c91bb2457b0274bca95198a5acbdadfe7fd72178f069bdea8d99e9479d8087a2686fc81bf3c4b11fe275570d481f1698f79d468afe0e57acc1e298f8b69798da7a891bbec197093ec5f475909923d48bfed6843dbed1f";
@@ -142,11 +143,12 @@ pub fn add_group_with_member(
     group_name: &str,
     owner: Principal,
     member: Principal,
+    vc_arguments: Option<HashMap<String, ArgumentValue>>,
     env: &StateMachine,
     canister_id: Principal,
 ) {
     do_add_group(group_name, owner, env, canister_id);
-    do_join_group(group_name, owner, member, env, canister_id);
+    do_join_group(group_name, owner, member, vc_arguments, env, canister_id);
     do_update_membership(
         group_name,
         vec![MembershipUpdate {
@@ -200,6 +202,7 @@ pub fn do_join_group(
     group_name: &str,
     owner: Principal,
     caller: Principal,
+    vc_arguments: Option<HashMap<String, ArgumentValue>>,
     env: &StateMachine,
     canister_id: Principal,
 ) {
@@ -210,7 +213,11 @@ pub fn do_join_group(
         JoinGroupRequest {
             group_name: group_name.to_string(),
             owner,
-            vc_arguments: None,
+            vc_arguments: vc_arguments.map(|args| {
+                args.into_iter()
+                    .map(|(k, v)| (k, meta_issuer::groups_api::ArgumentValue::from(v)))
+                    .collect()
+            }),
         },
     )
     .expect("API call failed")

@@ -1,10 +1,42 @@
 use candid::{CandidType, Deserialize, Principal};
 use std::collections::BTreeMap;
 
+// "Copies" of ArgumentValue and CredentialSpec which are defined in `vc_util`-crate,
+//  but with VcArguments as HashMap, which does not implement `Ord` and `PartialOrd` (unlike `BTreeMap`)
+// TODO: change the definitions in `vc_util` and remove the copies below.
 #[derive(Eq, PartialEq, Clone, Debug, CandidType, Deserialize, Ord, PartialOrd)]
 pub enum ArgumentValue {
     String(String),
     Int(i32),
+}
+
+impl From<crate::groups_api::CredentialSpec> for vc_util::issuer_api::CredentialSpec {
+    fn from(spec: crate::groups_api::CredentialSpec) -> Self {
+        vc_util::issuer_api::CredentialSpec {
+            credential_type: spec.credential_type,
+            arguments: spec
+                .arguments
+                .map(|vc_args| vc_args.into_iter().map(|(k, v)| (k, v.into())).collect()),
+        }
+    }
+}
+
+impl From<crate::groups_api::ArgumentValue> for vc_util::issuer_api::ArgumentValue {
+    fn from(value: crate::groups_api::ArgumentValue) -> Self {
+        match value {
+            ArgumentValue::String(s) => vc_util::issuer_api::ArgumentValue::String(s),
+            ArgumentValue::Int(i) => vc_util::issuer_api::ArgumentValue::Int(i),
+        }
+    }
+}
+
+impl From<vc_util::issuer_api::ArgumentValue> for crate::groups_api::ArgumentValue {
+    fn from(value: vc_util::issuer_api::ArgumentValue) -> Self {
+        match value {
+            vc_util::issuer_api::ArgumentValue::String(s) => ArgumentValue::String(s),
+            vc_util::issuer_api::ArgumentValue::Int(i) => ArgumentValue::Int(i),
+        }
+    }
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
