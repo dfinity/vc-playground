@@ -7,6 +7,7 @@
   import { isNullish } from '$lib/utils/is-nullish.utils';
   import { goto } from '$app/navigation';
   import { getToastStore } from '@skeletonlabs/skeleton';
+  import GithubIcon from './GithubIcon.svelte';
 
   export let currentRole: 'User' | 'Issuer';
 
@@ -48,5 +49,13 @@
         <NavBarItem on:click={logout}>Logout</NavBarItem>
       </li>
     {/if}
+    <li>
+      <a
+        class="btn bg-initial w-full justify-start gap-2"
+        href="https://github.com/dfinity/vc-playground"
+      >
+        <GithubIcon /> Visit repo
+      </a>
+    </li>
   </ul>
 </PopoverDropdown>
