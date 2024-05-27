@@ -57,6 +57,9 @@ const PROD_II_CANISTER_ID: &str = "rdmx6-jaaaa-aaaaa-aaadq-cai";
 // The expiration of issued verifiable credentials.
 const VC_EXPIRATION_PERIOD_NS: u64 = 15 * MINUTE_NS;
 
+// VerifiedAge-credentials need special handling.
+const VERIFIED_AGE_CREDENTIAL_TYPE: &str = "VerifiedAge";
+
 // Internal container of per-group data.
 #[derive(CandidType, Clone, Deserialize)]
 struct GroupRecord {
@@ -172,7 +175,7 @@ lazy_static! {
             GroupType {
                 group_name: "Verified Age".to_string(),
                 credential_spec: OrdCredentialSpec {
-                    credential_type: "VerifiedAge".to_string(),
+                    credential_type: VERIFIED_AGE_CREDENTIAL_TYPE.to_string(),
                     arguments: Some(
                         [("ageAtLeast".to_string(), OrdArgumentValue::Int(18))]
                             .iter()
@@ -902,7 +905,7 @@ fn verify_vc_spec(spec: &CredentialSpec) -> Result<(), String> {
             check_number_of_args(1, spec)?;
             let _country_name = get_string_arg_value("countryName", spec)?;
         }
-        "VerifiedAge" => {
+        VERIFIED_AGE_CREDENTIAL_TYPE => {
             check_number_of_args(1, spec)?;
             let _age_at_least = get_int_arg_value("ageAtLeast", spec)?;
         }
@@ -1044,7 +1047,7 @@ fn verify_principal_owns_credential(
                 arguments: member_record.vc_arguments.clone(),
             }
             .into();
-            if credential_spec.credential_type == "VerifiedAge" {
+            if credential_spec.credential_type == VERIFIED_AGE_CREDENTIAL_TYPE {
                 // For VerifiedAge we check that the stored age *implies* the requested spec.
                 let requested_min_age = get_int_arg_value("ageAtLeast", credential_spec)
                     .map_err(IssueCredentialError::UnauthorizedSubject)?;

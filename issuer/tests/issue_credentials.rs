@@ -402,6 +402,8 @@ fn should_prepare_credentials_for_authorized_principal() {
     }
 }
 
+// Test that a VerifiedAge VC is issued for a lower bound implied by the actual age.
+// (specifically: if a user is 21, his/her age is at least 18).
 #[test]
 fn should_prepare_verified_age_vc_for_weaker_claim() {
     let env = env();
@@ -432,6 +434,8 @@ fn should_prepare_verified_age_vc_for_weaker_claim() {
     assert_matches!(response, Ok(_));
 }
 
+// Test that a VerifiedAge VC is NOT issued for a lower bound NOT implied by the actual age.
+// (specifically: if a user is 21, his/her age is NOT at least 25).
 #[test]
 fn should_fail_prepare_verified_age_vc_for_stronger_claim() {
     let env = env();
