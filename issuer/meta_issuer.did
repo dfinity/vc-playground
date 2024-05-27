@@ -127,8 +127,6 @@ type IssuerInit = record {
     idp_canister_ids : vec principal;
     /// The derivation origin to be used by the issuer.
     derivation_origin : text;
-    /// Frontend hostname be used by the issuer.
-    frontend_hostname : text;
 };
 
 /// Options related to HTTP handling

@@ -259,8 +259,6 @@ struct IssuerConfig {
     idp_canister_ids: Vec<Principal>,
     /// The derivation origin to be used by the issuer.
     derivation_origin: String,
-    /// Frontend hostname to be used by the issuer.
-    frontend_hostname: String,
 }
 
 impl Storable for IssuerConfig {
@@ -281,7 +279,6 @@ impl Default for IssuerConfig {
                 .expect("failed to extract raw root pk from der"),
             idp_canister_ids: vec![Principal::from_text(PROD_II_CANISTER_ID).unwrap()],
             derivation_origin: derivation_origin.clone(),
-            frontend_hostname: derivation_origin, // by default, use DERIVATION_ORIGIN as frontend-hostname
         }
     }
 }
@@ -293,7 +290,6 @@ impl From<IssuerInit> for IssuerConfig {
                 .expect("failed to extract raw root pk from der"),
             idp_canister_ids: init.idp_canister_ids,
             derivation_origin: init.derivation_origin,
-            frontend_hostname: init.frontend_hostname,
         }
     }
 }
@@ -306,8 +302,6 @@ struct IssuerInit {
     idp_canister_ids: Vec<Principal>,
     /// The derivation origin to be used by the issuer.
     derivation_origin: String,
-    /// Frontend hostname to be used by the issuer.
-    frontend_hostname: String,
 }
 
 fn check_authenticated() -> Result<(), GroupsError> {
