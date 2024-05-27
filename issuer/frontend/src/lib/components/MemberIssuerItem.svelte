@@ -104,30 +104,51 @@
       [RESIDENCE_CREDENTIAL_GROUP]: 'Country of residence',
       [EMPLOYMENT_CREDENTIAL_GROUP]: 'Employer',
     };
-    const modal: ModalSettings = {
-      type: 'prompt',
-      title: `Request Credential: ${issuer.group_name}`,
-      body: textMapper[issuer.group_name],
-      valueAttr: {
-        type: inputType,
-        minlength: 2,
-        required: true,
-        placeholder: placeholderMapper[issuer.group_name],
-      },
-      response: async (userInput: string | false) => {
-        if (typeof userInput === 'string') {
-          await requestCredential({
-            identity: $authStore.identity,
-            issuerName: issuer.group_name,
-            owner: issuer.owner,
-            toastStore,
-            credentialSpec: issuerType.credential_spec,
-            credentialArgument: userInput,
-          });
-        }
-        loadingRequestCredential = false;
-      },
-    };
+    let modal: ModalSettings;
+    if (inputType === 'countries') {
+      modal = {
+        type: 'component',
+        component: 'requestVerifiedResidenceModal',
+        response: async (userInput: string | false) => {
+          if (typeof userInput === 'string') {
+            await requestCredential({
+              identity: $authStore.identity,
+              issuerName: issuer.group_name,
+              owner: issuer.owner,
+              toastStore,
+              credentialSpec: issuerType.credential_spec,
+              credentialArgument: userInput,
+            });
+          }
+          loadingRequestCredential = false;
+        },
+      };
+    } else {
+      modal = {
+        type: 'prompt',
+        title: `Request Credential: ${issuer.group_name}`,
+        body: textMapper[issuer.group_name],
+        valueAttr: {
+          type: inputType,
+          minlength: 2,
+          required: true,
+          placeholder: placeholderMapper[issuer.group_name],
+        },
+        response: async (userInput: string | false) => {
+          if (typeof userInput === 'string') {
+            await requestCredential({
+              identity: $authStore.identity,
+              issuerName: issuer.group_name,
+              owner: issuer.owner,
+              toastStore,
+              credentialSpec: issuerType.credential_spec,
+              credentialArgument: userInput,
+            });
+          }
+          loadingRequestCredential = false;
+        },
+      };
+    }
     modalStore.trigger(modal);
   };
 

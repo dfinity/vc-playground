@@ -14,6 +14,7 @@
   } from '$lib/stores/issuer-types.store';
   import type { CredentialSpec } from '../../../declarations/meta_issuer/meta_issuer.did';
   import { inputTypeCredentialSpec } from '$lib/utils/input-type-credential-spec.utils';
+  import CountriesSelect from '$lib/components/CountriesSelect.svelte';
   const modalStore = getModalStore();
   const toastStore = getToastStore();
 
@@ -47,12 +48,12 @@
     modalStore.trigger(modal);
   };
 
-  let selectedCredentialInputTypeStoreStore: IssuerCredentialSpecStore;
-  $: selectedCredentialInputTypeStoreStore = getIssuerCredentialSpecsStore($authStore.identity);
+  let selectedCredentialInputTypeStore: IssuerCredentialSpecStore;
+  $: selectedCredentialInputTypeStore = getIssuerCredentialSpecsStore($authStore.identity);
   let selectedCredentialSpec: CredentialSpec | undefined;
-  $: selectedCredentialSpec = $selectedCredentialInputTypeStoreStore[selectedCredential ?? ''];
-  let selectedCredentialInputTypeStore: 'text' | 'number' | undefined;
-  $: selectedCredentialInputTypeStore = selectedCredentialSpec
+  $: selectedCredentialSpec = $selectedCredentialInputTypeStore[selectedCredential ?? ''];
+  let selectedCredentialInputType: 'text' | 'number' | 'countries' | undefined;
+  $: selectedCredentialInputType = selectedCredentialSpec
     ? inputTypeCredentialSpec(selectedCredentialSpec)
     : undefined;
 
@@ -62,9 +63,9 @@
   // * selectedCredential needs a number input and the predicateCredentialNumber is filled.
   let filledRequiredInput = false;
   $: filledRequiredInput =
-    selectedCredentialInputTypeStore === undefined ||
-    (selectedCredentialInputTypeStore === 'number' && predicateCredentialNumber !== undefined) ||
-    (selectedCredentialInputTypeStore === 'text' &&
+    selectedCredentialInputType === undefined ||
+    (selectedCredentialInputType === 'number' && predicateCredentialNumber !== undefined) ||
+    ((selectedCredentialInputType === 'text' || selectedCredentialInputType === 'countries') &&
       predicateCredentialText !== undefined &&
       predicateCredentialText.length > 0);
   let enableShareButton = false;
@@ -149,7 +150,7 @@
       </select>
     </div>
 
-    {#if nonNullish(selectedCredential) && selectedCredentialInputTypeStore === 'text'}
+    {#if nonNullish(selectedCredential) && selectedCredentialInputType === 'text'}
       <div class="flex flex-col gap-4">
         <label for="credentials">
           <h5 class="h5">{predicateTextMapper[selectedCredential]}</h5>
@@ -158,7 +159,16 @@
       </div>
     {/if}
 
-    {#if nonNullish(selectedCredential) && selectedCredentialInputTypeStore === 'number'}
+    {#if nonNullish(selectedCredential) && selectedCredentialInputType === 'countries'}
+      <div class="flex flex-col gap-4">
+        <label for="credentials">
+          <h5 class="h5">{predicateTextMapper[selectedCredential]}</h5>
+        </label>
+        <CountriesSelect bind:selectedCountry={predicateCredentialText} />
+      </div>
+    {/if}
+
+    {#if nonNullish(selectedCredential) && selectedCredentialInputType === 'number'}
       <div class="flex flex-col gap-4">
         <label for="credentials">
           <h5 class="h5">{predicateTextMapper[selectedCredential]}</h5>

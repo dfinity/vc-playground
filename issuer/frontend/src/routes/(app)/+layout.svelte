@@ -10,6 +10,7 @@
   import CreateCredentialModal from '$lib/modals/CreateCredentialModal.svelte';
   import Header from '$lib/ui-components/elements/Header.svelte';
   import Footer from '$lib/ui-components/elements/Footer.svelte';
+  import RequestVerifiedResidenceModal from '$lib/modals/RequestVerifiedResidenceModal.svelte';
 
   storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 
@@ -17,6 +18,7 @@
 
   const modalRegistry: Record<string, ModalComponent> = {
     createCredentialModal: { ref: CreateCredentialModal },
+    requestVerifiedResidenceModal: { ref: RequestVerifiedResidenceModal },
   };
 
   onMount(() => {
