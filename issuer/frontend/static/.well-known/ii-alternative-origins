@@ -1,6 +1,5 @@
 {
   "alternativeOrigins": [
-    ISSUER_FE_HOSTNAME_PLACEHOLDER
     "https://metaissuer.vc"
   ]
 }

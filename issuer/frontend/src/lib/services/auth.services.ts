@@ -27,7 +27,6 @@ export const login = async (toastStore: ToastStore) => {
           authStore.set({ identity });
           resolve();
         },
-        derivationOrigin: import.meta.env.VITE_ISSUER_DERIVATION_ORIGIN,
         onError: (err) => {
           authStore.set({ identity: null });
           if (err === 'UserInterrupt') {

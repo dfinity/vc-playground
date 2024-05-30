@@ -45,7 +45,6 @@ export const login = async ({ toastStore, cb }: { toastStore: ToastStore; cb?: (
         },
         windowOpenerFeatures: popupCenter(),
         identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
-        derivationOrigin: import.meta.env.VITE_RP_DERIVATION_ORIGIN,
         // One week
         maxTimeToLive: 7n * 24n * 3_600_000_000_000n,
       });
