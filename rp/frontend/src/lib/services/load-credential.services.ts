@@ -73,7 +73,7 @@ export const loadCredential = async ({
       },
       issuerData: {
         origin: ISSUER_ORIGIN,
-        canisterId: ISSUER_CANISTER_ID,
+        canisterId: Principal.fromText(ISSUER_CANISTER_ID),
       },
       credentialData: {
         credentialSpec: {
@@ -85,11 +85,10 @@ export const loadCredential = async ({
             ...credentialArgsToObj(credentialSpec),
           },
         },
-        credentialSubject: identity.getPrincipal().toText(),
+        credentialSubject: identity.getPrincipal(),
       },
       windowOpenerFeatures: popupCenter(),
-      identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL,
-      derivationOrigin: undefined,
+      identityProvider: new URL(import.meta.env.VITE_INTERNET_IDENTITY_URL),
     });
   });
 };
