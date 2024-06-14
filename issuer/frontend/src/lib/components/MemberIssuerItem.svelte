@@ -134,8 +134,8 @@
           required: true,
           placeholder: placeholderMapper[issuer.group_name],
         },
-        response: async (userInput: string | false) => {
-          if (typeof userInput === 'string') {
+        response: async (userInput: string | number | false) => {
+          if (typeof userInput === 'string' || typeof userInput === 'number') {
             await requestCredential({
               identity: $authStore.identity,
               issuerName: issuer.group_name,
