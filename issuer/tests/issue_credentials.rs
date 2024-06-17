@@ -344,7 +344,6 @@ fn should_fail_prepare_credential_for_wrong_idp_canister_id() {
 }
 fn group_name_for_credential_type(credential_type: &str) -> String {
     match credential_type {
-        "VerifiedMember" => "Verified Member".to_string(),
         "VerifiedResidence" => "Verified Residence".to_string(),
         "VerifiedAge" => "Verified Age".to_string(),
         "VerifiedEmployment" => "Verified Employment".to_string(),
