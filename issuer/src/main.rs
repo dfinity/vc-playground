@@ -206,21 +206,6 @@ lazy_static! {
                     arguments: None,
                 },
             },
-            GroupType {
-                group_name: "Verified Member".to_string(),
-                credential_spec: OrdCredentialSpec {
-                    credential_type: "VerifiedMember".to_string(),
-                    arguments: Some(
-                        [(
-                            "groupName".to_string(),
-                            OrdArgumentValue::String("<name>".to_string()),
-                        )]
-                        .iter()
-                        .map(|(k, v)| (k.clone(), v.clone()))
-                        .collect(),
-                    ),
-                },
-            },
         ];
     static ref GROUP_NAME_FOR_CREDENTIAL_TYPE: BTreeMap<String, String> = {
         let mut map = BTreeMap::new();
@@ -891,10 +876,6 @@ fn get_owner_from_spec(spec: &CredentialSpec) -> Result<(CredentialSpec, Princip
 
 fn verify_vc_spec(spec: &CredentialSpec) -> Result<(), String> {
     match spec.credential_type.as_str() {
-        // TODO: remove VerifiedMember-support
-        "VerifiedMember" => {
-            let _group_name = get_string_arg_value("groupName", spec)?;
-        }
         "VerifiedResidence" => {
             check_number_of_args(1, spec)?;
             let _country_name = get_string_arg_value("countryName", spec)?;
@@ -1000,11 +981,7 @@ fn prepare_credential_jwt(
     GROUPS.with_borrow(|groups| {
         verify_principal_owns_credential(alias_tuple.id_dapp, &plain_spec, owner, groups)
     })?;
-    if credential_spec.credential_type == "VerifiedMember" {
-        Ok(verifiable_credential(alias_tuple.id_alias, credential_spec))
-    } else {
-        Ok(verifiable_credential(alias_tuple.id_alias, &plain_spec))
-    }
+    Ok(verifiable_credential(alias_tuple.id_alias, &plain_spec))
 }
 
 fn group_name(credential_type: &str) -> Result<String, IssueCredentialError> {
@@ -1029,11 +1006,7 @@ fn verify_principal_owns_credential(
     owner: Principal,
     groups: &GroupsMap,
 ) -> Result<(), IssueCredentialError> {
-    let mut group_name = group_name(&credential_spec.credential_type)?;
-    if credential_spec.credential_type == "VerifiedMember" {
-        group_name = get_string_arg_value("groupName", credential_spec)
-            .map_err(IssueCredentialError::UnauthorizedSubject)?;
-    }
+    let group_name = group_name(&credential_spec.credential_type)?;
     if let Some(group_record) = groups.get(&(group_name.clone(), owner).into()) {
         if let Some(member_record) = group_record.members.get(&user) {
             let stored_spec: CredentialSpec = OrdCredentialSpec {

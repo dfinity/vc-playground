@@ -3,35 +3,14 @@
 /// two roles of the VC flow, namely issuing VCs, and using them for attribute sharing.
 /// The dapp allows any user become an issuer of VCs about about users' attributes,
 /// and to earn VCs issued by other users, for sharing with relying parties.
-/// For simplicity, meta-issuer issues credentials of a single type, `VerifiedMember`,
-/// that certify membership in a given group, and have the following spec:
+/// The types of VCs supported by the issuer can be obtained by querying `group_types()`-endpoint.
 ///
-///   CredentialSpec {
-///     credential_type: "VerifiedMember",
-///     arguments: {
-///       "groupName": ArgumentValue::String(<some group name>),
-///       "owner": ArgumentValue::String(<text-representation of user's principal>)
-///     },
-///   }
-///
-/// This structure allows then for simulating arbitrary credentials/attributes via
-/// appropriate naming of the group, e.g. "Verified Adult", or "Resident of Switzerland".
-/// Note that a real, non-demo, issuer would rather use a separate credential spec for each
-/// type of credential, that would allow also for additional, type-specific arguments,
-/// for example, for age verification one could use:
-///
-///   CredentialSpec {
-///     credential_type: "VerifiedAdult",
-///     arguments: {
-///       "minAge": ArgumentValue::Int(<min. age>),
-///     },
-///   }
-///
-/// Each user can create groups with arbitrary names, but any given user can create
-/// at most one group with a given group name.  In other words, every group is identified
-/// by a tuple (<group name>, <owner's principal>). Again, this is for simplicity only --
-/// in a real, non-demo issuer using user's principal for identifying a group would not advisable,
-/// as it could affect user's privacy.
+/// Any user can become an issuer of any supported VC type, but a given user can be an issuer
+/// of a specific VC type only once.  This stems from the fact that being an issuer of a VC-type
+/// is implemented as being an owner of a group whose name identifies the VC-type, and every group
+/// is identified by a tuple `(<group name>, <owner's principal>)`.
+/// This is for simplicity only -- in a real, non-demo issuer using user's principal for identifying
+/// a group would not advisable, as it could affect user's privacy.
 ///
 /// The owner of a group manages the membership in the group (accepting or rejecting
 /// membership requests), which maps to obtaining (or not) the VC implied by the group's name.
