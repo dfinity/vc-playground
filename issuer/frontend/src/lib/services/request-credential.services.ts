@@ -21,7 +21,7 @@ export const requestCredential = async ({
   issuerName: string;
   owner: Principal;
   toastStore: ToastStore;
-  credentialArgument?: string;
+  credentialArgument?: string | number;
   credentialSpec?: CredentialSpec;
 }) => {
   try {
