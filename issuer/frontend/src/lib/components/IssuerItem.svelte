@@ -38,8 +38,8 @@
     {/if}
     {#if isAdmin}
       <div>
-        <Badge variant="success">Approved: {approvedCredentials}</Badge>
-        <Badge variant="default">Pending: {pendingCredentials}</Badge>
+        <Badge variant="success">{`🪪 Approved: ${approvedCredentials}`}</Badge>
+        <Badge variant="default">{`📤 Pending: ${pendingCredentials}`}</Badge>
       </div>
     {/if}
   </svelte:fragment>
