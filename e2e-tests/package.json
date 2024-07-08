@@ -1,6 +1,7 @@
 {
   "name": "vc-playground-e2e-test",
   "version": "1.0.0",
+  "type": "module",
   "description": "End-to-end tests for the VC playground",
   "scripts": {
     "test:e2e": "playwright test"
@@ -9,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@dfinity/internet-identity-playwright": "^0.0.1",
     "@playwright/test": "^1.43.0",
     "@types/node": "^20.11.30"
   }

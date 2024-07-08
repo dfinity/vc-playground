@@ -1,8 +1,7 @@
-import { test, expect } from "@playwright/test";
 import {
-  signInWithAnchor,
-  signInWithNewUser,
-} from "./utils/sigin-in-user.utils";
+  testWithII as test,
+  expect,
+} from "@dfinity/internet-identity-playwright";
 
 const ISSUER_URL = process.env.ISSUER_URL;
 const RP_URL = process.env.RP_URL;
@@ -11,7 +10,10 @@ const RP_URL = process.env.RP_URL;
 // Maybe we can split it into multiple tests in the future.
 // But the dependencies between them make it tricky to split.
 test.setTimeout(120_000);
-test("verifieable credentials flow works end to end", async ({ browser }) => {
+test("verifieable credentials flow works end to end", async ({
+  browser,
+  iiPage,
+}) => {
   if (!ISSUER_URL || !RP_URL) {
     throw new Error("ISSUER_URL and RP_URL must be set in the environment");
   }
@@ -28,9 +30,8 @@ test("verifieable credentials flow works end to end", async ({ browser }) => {
   await expect(issuerPage.getByTestId("issuer-center-route")).toBeVisible();
 
   await expect(issuerPage.getByTestId("login-button")).toBeVisible();
-  const issuerAnchor = await signInWithNewUser({
-    page: issuerPage,
-    context: issuerContext,
+  const issuerAnchor = await iiPage.signInWithNewIdentity({
+    selector: "[data-tid=login-button]",
   });
   await expect(issuerPage.getByTestId("login-button")).not.toBeVisible();
 
@@ -96,9 +97,8 @@ test("verifieable credentials flow works end to end", async ({ browser }) => {
   await expect(requesterPage.getByTestId("credentials-page")).toBeVisible();
 
   await expect(requesterPage.getByTestId("login-button")).toBeVisible();
-  const requesterAnchor = await signInWithNewUser({
-    page: requesterPage,
-    context: requesterContext,
+  const requesterAnchor = await iiPage.signInWithNewIdentity({
+    selector: "[data-tid=login-button]",
   });
   await expect(requesterPage.getByTestId("login-button")).not.toBeVisible();
 
@@ -154,10 +154,9 @@ test("verifieable credentials flow works end to end", async ({ browser }) => {
   await expect(requesterPage.getByTestId("feed-page")).toBeVisible();
 
   await expect(requesterPage.getByTestId("login-button")).toBeVisible();
-  await signInWithAnchor({
-    page: requesterPage,
-    context: requesterContext,
-    anchor: requesterAnchor,
+  await iiPage.signInWithIdentity({
+    selector: "[data-tid=login-button]",
+    identity: requesterAnchor,
   });
   await expect(requesterPage.getByTestId("login-button")).not.toBeVisible();
 
@@ -179,12 +178,12 @@ test("verifieable credentials flow works end to end", async ({ browser }) => {
   const iiPagePromise = requesterContext.waitForEvent("page");
   await firstImage.locator("button").click();
 
-  const iiPage = await iiPagePromise;
-  await expect(iiPage).toHaveTitle("Internet Identity");
+  const iiVcPage = await iiPagePromise;
+  await expect(iiVcPage).toHaveTitle("Internet Identity");
 
-  await iiPage.locator("[data-action=allow]").click();
-  await iiPage.waitForEvent("close");
-  await expect(iiPage.isClosed()).toBe(true);
+  await iiVcPage.locator("[data-action=allow]").click();
+  await iiVcPage.waitForEvent("close");
+  await expect(iiVcPage.isClosed()).toBe(true);
 
   /**
    * BACK TO VIEW IMAGE WITH CREDENTIAL
