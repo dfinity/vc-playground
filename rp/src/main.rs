@@ -1,7 +1,7 @@
 /// An implementation of a relying party for demonstration purposes.
 /// See rp.did for more info about the architecture and conventions.
 use candid::{candid_method, CandidType, Deserialize, Principal};
-use ic_canister_sig_creation::extract_raw_canister_sig_pk_from_der;
+use ic_canister_sig_creation::extract_raw_root_pk_from_der;
 use ic_cdk::api::{caller, set_certified_data, time};
 use ic_cdk_macros::{init, query, update};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
@@ -122,7 +122,7 @@ struct RpConfig {
 impl From<RpInit> for RpConfig {
     fn from(init: RpInit) -> Self {
         Self {
-            ic_root_key_raw: extract_raw_canister_sig_pk_from_der(&init.ic_root_key_der)
+            ic_root_key_raw: extract_raw_root_pk_from_der(&init.ic_root_key_der)
                 .expect("failed to extract raw root pk from der"),
             ii_origin: init.ii_vc_url,
             ii_canister_id: init.ii_canister_id,

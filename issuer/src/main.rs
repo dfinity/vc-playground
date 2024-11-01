@@ -29,7 +29,7 @@ use ic_verifiable_credentials::issuer_api::{
 };
 use ic_verifiable_credentials::{
     build_credential_jwt, did_for_principal, get_verified_id_alias_from_jws, vc_jwt_to_jws,
-    vc_signing_input, vc_signing_input_hash, AliasTuple, CredentialParams, VC_SIGNING_INPUT_DOMAIN,
+    vc_signing_input, AliasTuple, CredentialParams, VC_SIGNING_INPUT_DOMAIN,
 };
 
 use asset_util::{collect_assets, CertifiedAssets};
@@ -671,14 +671,13 @@ async fn prepare_credential(
     };
     let signing_input =
         vc_signing_input(&credential_jwt, &CANISTER_SIG_PK).expect("failed getting signing_input");
-    let msg_hash = vc_signing_input_hash(&signing_input);
 
     SIGNATURES.with(|sigs| {
         let mut sigs = sigs.borrow_mut();
         let sig_inputs = CanisterSigInputs {
             domain: VC_SIGNING_INPUT_DOMAIN,
             seed: CANISTER_SIG_SEED.as_slice(),
-            message: msg_hash.as_slice(),
+            message: signing_input.as_slice(),
         };
         sigs.add_signature(&sig_inputs);
     });
@@ -726,14 +725,13 @@ fn get_credential(req: GetCredentialRequest) -> Result<IssuedCredentialData, Iss
     };
     let signing_input =
         vc_signing_input(&credential_jwt, &CANISTER_SIG_PK).expect("failed getting signing_input");
-    let message_hash = vc_signing_input_hash(&signing_input);
     let sig_result = SIGNATURES.with(|sigs| {
         let sig_map = sigs.borrow();
         let certified_assets_root_hash = ASSETS.with_borrow(|assets| assets.root_hash());
         let sig_inputs = CanisterSigInputs {
             domain: VC_SIGNING_INPUT_DOMAIN,
             seed: CANISTER_SIG_SEED.as_slice(),
-            message: message_hash.as_slice(),
+            message: signing_input.as_slice(),
         };
         sig_map.get_signature_as_cbor(
             &sig_inputs,
