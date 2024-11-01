@@ -34,6 +34,7 @@ export const validateCredentials = async ({
     credential_spec: requestParams.credentialSpec,
   });
   if ('Err' in response) {
+    console.log('Error in response: ', response.Err);
     return false;
   }
   // Then 'Ok' is in response and the credentials are valid.

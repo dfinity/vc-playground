@@ -78,11 +78,22 @@ cd "$SCRIPTS_DIR/.."
 II_VC_URL="https://identity.ic0.app/"
 # URL used by meta-issuer in the issued verifiable credentials (hard-coded in meta-issuer)
 ISSUER_VC_URL="https://metaissuer.vc/"
+# Domain of the relying party in production
+RP_PROD_URL="https://relyingparty.vc/"
 
 DFX_NETWORK="${DFX_NETWORK:-local}"
 RP_CANISTER_ID="$(dfx canister id rp --network "$DFX_NETWORK")"
 II_CANISTER_ID="${II_CANISTER_ID:-$(dfx canister id internet_identity --network "$DFX_NETWORK")}"
 ISSUER_CANISTER_ID="${ISSUER_CANISTER_ID:-$(dfx canister id meta_issuer --network "$DFX_NETWORK")}"
+
+RP_DERIVATION_ORIGIN=
+if [ "$DFX_NETWORK" = "mainnet" ]; then
+    RP_DERIVATION_ORIGIN="$RP_PROD_URL"
+    elif [ "$DFX_NETWORK" = "local" ]; then
+    RP_DERIVATION_ORIGIN="http://$RP_CANISTER_ID.localhost:4943"
+    else
+    RP_DERIVATION_ORIGIN="https://$RP_CANISTER_ID.icp0.io"
+fi
 
 echo "Using DFX network: $DFX_NETWORK" >&2
 echo "Using RP canister: $RP_CANISTER_ID" >&2
@@ -90,6 +101,7 @@ echo "Using II vc_url: $II_VC_URL" >&2
 echo "Using II canister: $II_CANISTER_ID" >&2
 echo "Using issuer vc_url: $ISSUER_VC_URL" >&2
 echo "Using issuer canister: $ISSUER_CANISTER_ID" >&2
+echo "Using derivation origin: $RP_DERIVATION_ORIGIN" >&2
 
 # At the time of writing dfx outputs incorrect JSON with dfx ping (commas between object
 # entries are missing).
@@ -117,7 +129,8 @@ if [ "$DFX_NETWORK" = "local" ]; then
   rm ./ii-alternative-origins-template
 fi
 
-dfx deploy rp --network "$DFX_NETWORK" --argument '(opt record { issuers = vec{ record{ vc_url = "'"$ISSUER_VC_URL"'"; canister_id = principal "'"$ISSUER_CANISTER_ID"'" }}; ic_root_key_der = vec '"$rootkey_did"'; ii_vc_url = "'"$II_VC_URL"'"; ii_canister_id = principal"'"$II_CANISTER_ID"'"; })'
+
+dfx deploy rp --network "$DFX_NETWORK" --argument '(opt record { issuers = vec{ record{ vc_url = "'"$ISSUER_VC_URL"'"; canister_id = principal "'"$ISSUER_CANISTER_ID"'" }}; ic_root_key_der = vec '"$rootkey_did"'; ii_vc_url = "'"$II_VC_URL"'"; ii_canister_id = principal"'"$II_CANISTER_ID"'"; derivation_origin = "'"$RP_DERIVATION_ORIGIN"'" })'
 
 # Revert changes
 git checkout ./rp/frontend/static/.well-known/ii-alternative-origins

@@ -2,13 +2,13 @@ use candid::Principal;
 use canister_tests::framework::get_wasm_path;
 use ic_cdk::api::management_canister::main::CanisterId;
 use ic_test_state_machine_client::{call_candid, call_candid_as, CallError, StateMachine};
+use ic_verifiable_credentials::issuer_api::CredentialSpec;
 use lazy_static::lazy_static;
 use relying_party::rp_api::{
     AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, ImagesList,
     ListExclusiveContentRequest, ListImagesRequest, RpInit,
 };
 use std::path::PathBuf;
-use vc_util::issuer_api::CredentialSpec;
 
 lazy_static! {
     /// Gzipped Wasm module for the current VC Playground RP build, i.e. the one we're testing

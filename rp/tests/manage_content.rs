@@ -2,10 +2,10 @@
 use assert_matches::assert_matches;
 use candid::Principal;
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
+use ic_verifiable_credentials::issuer_api::{ArgumentValue, CredentialSpec};
 use relying_party::rp_api::{ContentData, ContentError, IssuerData, RpInit, ValidateVpRequest};
 use std::collections::{HashMap, HashSet};
-use vc_util::issuer_api::{ArgumentValue, CredentialSpec};
-use vc_util::II_ISSUER_URL;
+use ic_verifiable_credentials::II_ISSUER_URL;
 
 #[allow(dead_code)]
 mod util;
@@ -207,6 +207,7 @@ fn get_validate_vp_request_and_rp_init() -> (ValidateVpRequest, RpInit) {
             vc_url: issuer_origin.to_string(),
             canister_id: issuer_canister_id,
         }],
+        derivation_origin: "http://br5f7-7uaaa-aaaaa-qaaca-cai.localhost:4943/".to_string(),
     };
     (req, rp_init)
 }

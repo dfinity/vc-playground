@@ -6,12 +6,12 @@ use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_response_verification::types::VerificationInfo;
 use ic_response_verification::verify_request_response_pair;
 use ic_test_state_machine_client::{CallError, StateMachine};
+use ic_verifiable_credentials::issuer_api::CredentialSpec;
 use internet_identity_interface::http_gateway::{HttpRequest, HttpResponse};
 
 use relying_party::rp_api::ContentData;
 use serde_bytes::ByteBuf;
 use std::time::Duration;
-use vc_util::issuer_api::CredentialSpec;
 
 #[allow(dead_code)]
 mod util;

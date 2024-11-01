@@ -1,5 +1,5 @@
 {
-  "dfx": "0.18.0",
+  "dfx": "0.24.0",
   "canisters": {
     "rp": {
       "type": "custom",
@@ -23,9 +23,9 @@
     },
     "internet_identity": {
       "type": "custom",
-      "wasm": "internet_identity_dev.wasm.gz",
-      "candid": "internet_identity.did",
-      "build": "curl --fail -sSL \"https://github.com/dfinity/internet-identity/releases/download/release-2024-04-05/internet_identity_dev.wasm.gz\" -o internet_identity_dev.wasm.gz",
+      "candid": "https://github.com/dfinity/internet-identity/releases/download/release-2024-10-25/internet_identity.did",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/download/release-2024-10-25/internet_identity_dev.wasm.gz",
+      "init_arg": "(opt record { captcha_config = opt record { max_unsolved_captchas= 50:nat64; captcha_trigger = variant {Static = variant {CaptchaDisabled}}}})",
       "url": {
         "mainnet": "https://identity.internetcomputer.org/",
         "app": "https://identity.internetcomputer.org/"
@@ -40,21 +40,15 @@
   },
   "networks": {
     "devenv_llorenc": {
-      "providers": [
-        "https://llorenc-ingress.devenv.dfinity.network"
-      ],
+      "providers": ["https://llorenc-ingress.devenv.dfinity.network"],
       "type": "persistent"
     },
     "ic_test": {
-      "providers": [
-        "https://icp0.io"
-      ],
+      "providers": ["https://icp0.io"],
       "type": "persistent"
     },
     "mainnet": {
-      "providers": [
-        "https://icp0.io"
-      ],
+      "providers": ["https://icp0.io"],
       "type": "persistent"
     }
   },

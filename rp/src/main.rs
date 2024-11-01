@@ -1,11 +1,14 @@
 /// An implementation of a relying party for demonstration purposes.
 /// See rp.did for more info about the architecture and conventions.
 use candid::{candid_method, CandidType, Deserialize, Principal};
+use ic_canister_sig_creation::extract_raw_canister_sig_pk_from_der;
 use ic_cdk::api::{caller, set_certified_data, time};
 use ic_cdk_macros::{init, query, update};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::{Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, RestrictedMemory, StableBTreeMap, StableCell};
+use ic_verifiable_credentials::issuer_api::CredentialSpec;
+use ic_verifiable_credentials::{validate_ii_presentation_and_claims, VcFlowSigners};
 use include_dir::{include_dir, Dir};
 use relying_party::rp_api::{
     AddExclusiveContentRequest, ContentData, ContentError, ExclusiveContentList, HttpRequest,
@@ -18,10 +21,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use asset_util::{collect_assets, CertifiedAssets};
-use canister_sig_util::extract_raw_root_pk_from_der;
 use ic_cdk_macros::post_upgrade;
-use vc_util::issuer_api::CredentialSpec;
-use vc_util::{validate_ii_presentation_and_claims, VcFlowSigners};
 
 /// We use restricted memory in order to ensure the separation between non-managed config memory (first page)
 /// and the managed memory for potential other data of the canister.
@@ -114,12 +114,15 @@ struct RpConfig {
     /// Issuers that are trusted by this relying party.
     /// (a map from the origin to canister id)
     issuers: BTreeMap<String, Principal>,
+
+    /// Derivation origin of the user's principal
+    derivation_origin: String,
 }
 
 impl From<RpInit> for RpConfig {
     fn from(init: RpInit) -> Self {
         Self {
-            ic_root_key_raw: extract_raw_root_pk_from_der(&init.ic_root_key_der)
+            ic_root_key_raw: extract_raw_canister_sig_pk_from_der(&init.ic_root_key_der)
                 .expect("failed to extract raw root pk from der"),
             ii_origin: init.ii_vc_url,
             ii_canister_id: init.ii_canister_id,
@@ -128,6 +131,7 @@ impl From<RpInit> for RpConfig {
                 .iter()
                 .map(|data| (data.vc_url.to_string(), data.canister_id))
                 .collect(),
+            derivation_origin: init.derivation_origin,
         }
     }
 }
@@ -149,6 +153,7 @@ impl Default for RpConfig {
             ii_origin: "".to_string(),
             ii_canister_id: Principal::anonymous(),
             issuers: BTreeMap::new(),
+            derivation_origin: "".to_string(),
         }
     }
 }
@@ -261,12 +266,12 @@ fn add_exclusive_content(req: AddExclusiveContentRequest) -> Result<ContentData,
 #[update]
 #[candid_method]
 fn validate_ii_vp(req: ValidateVpRequest) -> Result<(), ContentError> {
-    let (ic_root_key_raw, vc_flow_signers) = CONFIG.with_borrow(|config| {
+    let (ic_root_key_raw, vc_flow_signers, derivation_origin) = CONFIG.with_borrow(|config| {
         let config = config.get();
         let Some(issuer_canister_id) = config.issuers.get(&req.issuer_origin) else {
             return Err(ContentError::NotAuthorized(format!(
                 "issuer not supported: {}",
-                req.issuer_origin
+                req.issuer_origin,
             )));
         };
         if let Some(issuer_canister_id_from_req) = req.issuer_canister_id {
@@ -285,11 +290,13 @@ fn validate_ii_vp(req: ValidateVpRequest) -> Result<(), ContentError> {
                 issuer_origin: req.issuer_origin,
                 issuer_canister_id: *issuer_canister_id,
             },
+            config.derivation_origin.clone(),
         ))
     })?;
     match validate_ii_presentation_and_claims(
         &req.vp_jwt,
         req.effective_vc_subject,
+        derivation_origin,
         &vc_flow_signers,
         &req.credential_spec,
         &ic_root_key_raw,

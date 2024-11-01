@@ -103,6 +103,7 @@ type RpInit = record {
     ii_vc_url : text;
     ii_canister_id : principal;
     issuers : vec IssuerData;
+    derivation_origin : text;
 };
 
 service: (opt RpInit) -> {

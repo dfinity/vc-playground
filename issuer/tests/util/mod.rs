@@ -12,7 +12,7 @@ use meta_issuer::groups_api::{
 };
 use std::collections::HashMap;
 use std::path::PathBuf;
-use vc_util::issuer_api::{
+use ic_verifiable_credentials::issuer_api::{
     ArgumentValue, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error,
     Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
     PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias as SignedIssuerIdAlias,
