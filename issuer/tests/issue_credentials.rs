@@ -515,7 +515,6 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
     let ii_url = FrontendHostname::from(ic_verifiable_credentials::II_ISSUER_URL);
     let issuer_url = FrontendHostname::from("https://metaissuer.vc/");
     let rp_url = FrontendHostname::from("https://some-dapp.com/");
-    let rp_derivation_origin = FrontendHostname::from("http://br5f7-7uaaa-aaaaa-qaaca-cai.localhost:4943");
 
     // Setup canisters
     let ii_id = install_canister::<IssuerInit>(&env, II_WASM.clone(), None);
@@ -524,6 +523,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
         Some(IssuerInit {
             ic_root_key_der: env.root_key().to_vec(),
             idp_canister_ids: vec![ii_id],
+            derivation_origin: issuer_url.clone(),
             ..DUMMY_ISSUER_INIT.clone()
         }),
     );
@@ -538,7 +538,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
                 vc_url: issuer_url.clone(),
                 canister_id: issuer_id,
             }],
-            derivation_origin: rp_derivation_origin.clone(),
+            derivation_origin: rp_url.clone(),
         }),
     );
 
@@ -561,7 +561,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
 
     let get_id_alias_req = GetIdAliasRequest {
         identity_number,
-        relying_party: rp_url,
+        relying_party: rp_url.clone(),
         issuer: issuer_url.clone(),
         rp_id_alias_jwt: prepared_id_alias.rp_id_alias_jwt,
         issuer_id_alias_jwt: prepared_id_alias.issuer_id_alias_jwt,
@@ -576,7 +576,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
             .issuer_id_alias_credential
             .credential_jws,
         &id_alias_credentials.issuer_id_alias_credential.id_dapp,
-        &rp_derivation_origin,
+        &issuer_url.clone(),
         &canister_sig_pk.canister_id,
         &root_pk_raw,
         env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
@@ -654,15 +654,23 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
         let requested_vc_jws = get_credential_response
             .expect("failed get_credential")
             .vc_jws;
-        // let claims = verify_credential_jws_with_canister_id(
-        //     &requested_vc_jws,
-        //     &issuer_id,
-        //     &root_pk_raw,
-        //     env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
-        // )
-        // .expect("credential verification failed");
-        // let vc_claims = claims.custom().expect("missing VC claims");
-        // validate_claims_match_spec(vc_claims, &spec).expect("Clam validation failed");
+        let claims = verify_credential_jws_with_canister_id(
+            &requested_vc_jws,
+            &issuer_id,
+            &root_pk_raw,
+            env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
+        )
+        .expect("credential verification failed");
+        let vc_claims = claims
+            .custom()
+            .expect("missing custom claims in JWT claims")
+            .as_object()
+            .expect("malformed custom claims in JWT claims")
+            .get("vc")
+            .expect("missing vc claims in JWT custom claims")
+            .as_object()
+            .expect("malformed vc claims in JWT custom claims");
+        validate_claims_match_spec(vc_claims, &spec).expect("Clam validation failed");
         // Request credential validation from RP's backend.
         let vp_jwt = build_ii_verifiable_presentation_jwt(
             id_alias_credentials.rp_id_alias_credential.id_dapp,

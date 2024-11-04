@@ -635,8 +635,8 @@ fn authorize_vc_request(
 
         for idp_canister_id in &config.idp_canister_ids {
             println!(
-                "*** checking id_alias for subject {} with IDP {}",
-                expected_vc_subject, idp_canister_id
+                "*** checking id_alias for subject {} with IDP {} and derivation origin {}",
+                expected_vc_subject, idp_canister_id, config.derivation_origin,
             );
             if let Ok(alias_tuple) = get_verified_id_alias_from_jws(
                 &alias.credential_jws,
