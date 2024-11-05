@@ -5,6 +5,11 @@ use ic_cdk::api::management_canister::main::CanisterId;
 use ic_test_state_machine_client::{
     call_candid, call_candid_as, query_candid_as, CallError, StateMachine,
 };
+use ic_verifiable_credentials::issuer_api::{
+    ArgumentValue, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error,
+    Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
+    PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias as SignedIssuerIdAlias,
+};
 use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
     AddGroupRequest, FullGroupData, GetGroupRequest, GroupTypes, GroupsError, JoinGroupRequest,
@@ -13,11 +18,6 @@ use meta_issuer::groups_api::{
 };
 use std::collections::HashMap;
 use std::path::PathBuf;
-use ic_verifiable_credentials::issuer_api::{
-    ArgumentValue, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error,
-    Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
-    PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias as SignedIssuerIdAlias,
-};
 
 pub const DUMMY_II_CANISTER_ID: &str = "fgte5-ciaaa-aaaad-aaatq-cai";
 

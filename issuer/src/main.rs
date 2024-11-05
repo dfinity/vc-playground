@@ -2,13 +2,25 @@
 /// See meta_issuer.did for more info about the architecture and conventions.
 use candid::{candid_method, CandidType, Deserialize, Principal};
 use ic_canister_sig_creation::signature_map::{CanisterSigInputs, SignatureMap, LABEL_SIG};
-use ic_canister_sig_creation::{extract_raw_root_pk_from_der, CanisterSigPublicKey, IC_ROOT_PK_DER};
+use ic_canister_sig_creation::{
+    extract_raw_root_pk_from_der, CanisterSigPublicKey, IC_ROOT_PK_DER,
+};
 use ic_cdk::api::{caller, set_certified_data, time};
 use ic_cdk_macros::{init, query, update};
 use ic_certification::{fork_hash, labeled_hash, pruned, Hash};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::{Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, RestrictedMemory, StableBTreeMap, StableCell};
+use ic_verifiable_credentials::issuer_api::{
+    ArgumentValue, CredentialSpec, DerivationOriginData, DerivationOriginError,
+    DerivationOriginRequest, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error, Icrc21ErrorInfo,
+    Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
+    PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias,
+};
+use ic_verifiable_credentials::{
+    build_credential_jwt, did_for_principal, get_verified_id_alias_from_jws, vc_jwt_to_jws,
+    vc_signing_input, AliasTuple, CredentialParams, VC_SIGNING_INPUT_DOMAIN,
+};
 use include_dir::{include_dir, Dir};
 use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
@@ -21,16 +33,6 @@ use serde_bytes::ByteBuf;
 use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::cell::RefCell;
-use ic_verifiable_credentials::issuer_api::{
-    ArgumentValue, CredentialSpec, DerivationOriginData, DerivationOriginError,
-    DerivationOriginRequest, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error, Icrc21ErrorInfo,
-    Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
-    PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias,
-};
-use ic_verifiable_credentials::{
-    build_credential_jwt, did_for_principal, get_verified_id_alias_from_jws, vc_jwt_to_jws,
-    vc_signing_input, AliasTuple, CredentialParams, VC_SIGNING_INPUT_DOMAIN,
-};
 
 use asset_util::{collect_assets, CertifiedAssets};
 use ic_cdk_macros::post_upgrade;
@@ -736,10 +738,7 @@ fn get_credential(req: GetCredentialRequest) -> Result<IssuedCredentialData, Iss
             seed: CANISTER_SIG_SEED.as_slice(),
             message: signing_input.as_slice(),
         };
-        sig_map.get_signature_as_cbor(
-            &sig_inputs,
-            Some(certified_assets_root_hash),
-        )
+        sig_map.get_signature_as_cbor(&sig_inputs, Some(certified_assets_root_hash))
     });
     let sig = match sig_result {
         Ok(sig) => sig,

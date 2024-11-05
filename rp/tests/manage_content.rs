@@ -4,9 +4,9 @@ use candid::Principal;
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
 use ic_canister_sig_creation::IC_ROOT_PK_DER;
 use ic_verifiable_credentials::issuer_api::{ArgumentValue, CredentialSpec};
+use ic_verifiable_credentials::II_ISSUER_URL;
 use relying_party::rp_api::{ContentData, ContentError, IssuerData, RpInit, ValidateVpRequest};
 use std::collections::{HashMap, HashSet};
-use ic_verifiable_credentials::II_ISSUER_URL;
 
 #[allow(dead_code)]
 mod util;

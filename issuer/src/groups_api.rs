@@ -10,7 +10,9 @@ pub enum ArgumentValue {
     Int(i32),
 }
 
-impl From<crate::groups_api::CredentialSpec> for ic_verifiable_credentials::issuer_api::CredentialSpec {
+impl From<crate::groups_api::CredentialSpec>
+    for ic_verifiable_credentials::issuer_api::CredentialSpec
+{
     fn from(spec: crate::groups_api::CredentialSpec) -> Self {
         ic_verifiable_credentials::issuer_api::CredentialSpec {
             credential_type: spec.credential_type,
@@ -21,19 +23,27 @@ impl From<crate::groups_api::CredentialSpec> for ic_verifiable_credentials::issu
     }
 }
 
-impl From<crate::groups_api::ArgumentValue> for ic_verifiable_credentials::issuer_api::ArgumentValue {
+impl From<crate::groups_api::ArgumentValue>
+    for ic_verifiable_credentials::issuer_api::ArgumentValue
+{
     fn from(value: crate::groups_api::ArgumentValue) -> Self {
         match value {
-            ArgumentValue::String(s) => ic_verifiable_credentials::issuer_api::ArgumentValue::String(s),
+            ArgumentValue::String(s) => {
+                ic_verifiable_credentials::issuer_api::ArgumentValue::String(s)
+            }
             ArgumentValue::Int(i) => ic_verifiable_credentials::issuer_api::ArgumentValue::Int(i),
         }
     }
 }
 
-impl From<ic_verifiable_credentials::issuer_api::ArgumentValue> for crate::groups_api::ArgumentValue {
+impl From<ic_verifiable_credentials::issuer_api::ArgumentValue>
+    for crate::groups_api::ArgumentValue
+{
     fn from(value: ic_verifiable_credentials::issuer_api::ArgumentValue) -> Self {
         match value {
-            ic_verifiable_credentials::issuer_api::ArgumentValue::String(s) => ArgumentValue::String(s),
+            ic_verifiable_credentials::issuer_api::ArgumentValue::String(s) => {
+                ArgumentValue::String(s)
+            }
             ic_verifiable_credentials::issuer_api::ArgumentValue::Int(i) => ArgumentValue::Int(i),
         }
     }

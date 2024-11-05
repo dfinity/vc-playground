@@ -2,13 +2,22 @@
 
 use assert_matches::assert_matches;
 use candid::Principal;
-use ic_canister_sig_creation::{extract_raw_root_pk_from_der, CanisterSigPublicKey};
 use canister_tests::api::internet_identity::vc_mvp as ii_api;
 use canister_tests::flows;
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
+use ic_canister_sig_creation::{extract_raw_root_pk_from_der, CanisterSigPublicKey};
 
 use ic_cdk::api::management_canister::main::CanisterId;
 use ic_test_state_machine_client::{call_candid_as, CallError, StateMachine};
+use ic_verifiable_credentials::issuer_api::{
+    ArgumentValue, CredentialSpec, GetCredentialRequest, Icrc21ConsentPreferences, Icrc21Error,
+    Icrc21VcConsentMessageRequest, IssueCredentialError, PrepareCredentialRequest,
+    SignedIdAlias as SignedIssuerIdAlias,
+};
+use ic_verifiable_credentials::{
+    build_ii_verifiable_presentation_jwt, get_verified_id_alias_from_jws,
+    validate_claims_match_spec, verify_credential_jws_with_canister_id,
+};
 use internet_identity_interface::internet_identity::types::vc_mvp::{
     GetIdAliasRequest, PrepareIdAliasRequest,
 };
@@ -19,15 +28,6 @@ use relying_party::rp_api::{
 };
 use std::collections::HashMap;
 use std::time::UNIX_EPOCH;
-use ic_verifiable_credentials::issuer_api::{
-    ArgumentValue, CredentialSpec, GetCredentialRequest, Icrc21ConsentPreferences, Icrc21Error,
-    Icrc21VcConsentMessageRequest, IssueCredentialError, PrepareCredentialRequest,
-    SignedIdAlias as SignedIssuerIdAlias,
-};
-use ic_verifiable_credentials::{
-    build_ii_verifiable_presentation_jwt, get_verified_id_alias_from_jws,
-    validate_claims_match_spec, verify_credential_jws_with_canister_id,
-};
 
 #[allow(dead_code)]
 mod util;
