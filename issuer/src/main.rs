@@ -638,7 +638,7 @@ fn authorize_vc_request(
                 "*** checking id_alias for subject {} with IDP {} and derivation origin {}",
                 expected_vc_subject, idp_canister_id, config.derivation_origin,
             );
-            if let Ok(alias_tuple) = get_verified_id_alias_from_jws(
+            match get_verified_id_alias_from_jws(
                 &alias.credential_jws,
                 expected_vc_subject,
                 &config.derivation_origin,
@@ -646,7 +646,10 @@ fn authorize_vc_request(
                 &config.ic_root_key_raw,
                 current_time_ns,
             ) {
-                return Ok(alias_tuple);
+                Ok(alias_tuple) => return Ok(alias_tuple),
+                Err(err) => {
+                    println!("Error checking the id_alias {:?}", err);
+                }
             }
         }
         Err(IssueCredentialError::InvalidIdAlias(

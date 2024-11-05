@@ -300,10 +300,20 @@ fn should_fail_prepare_credential_for_anonymous_caller() {
 #[test]
 fn should_fail_prepare_credential_for_wrong_root_key() {
     let env = env();
+    // does not match the mainnet root key, which is used in DUMMY_ALIAS_JWS
+    let ic_root_key_der = vec![
+        48, 129, 130, 48, 29, 6, 13, 43, 6, 1, 4, 1, 130, 220, 124, 5, 3, 1, 2, 1, 6, 12, 43, 6, 1,
+        4, 1, 130, 220, 124, 5, 3, 2, 1, 3, 97, 0, 182, 178, 3, 13, 226, 142, 189, 144, 157, 71,
+        102, 110, 73, 71, 153, 170, 25, 223, 99, 208, 196, 189, 205, 27, 212, 184, 134, 206, 234,
+        96, 58, 18, 40, 241, 19, 231, 253, 110, 171, 99, 241, 114, 182, 84, 61, 111, 118, 215, 2,
+        116, 58, 193, 247, 189, 100, 124, 201, 61, 174, 66, 185, 187, 244, 5, 32, 91, 129, 66, 255,
+        1, 5, 2, 17, 218, 21, 199, 182, 31, 14, 186, 67, 85, 0, 4, 159, 116, 47, 238, 130, 221,
+        164, 216, 168, 202, 39, 176,
+    ];
     let issuer_id = install_issuer(
         &env,
         Some(IssuerInit {
-            ic_root_key_der: ic_canister_sig_creation::IC_ROOT_PK_DER.to_vec(), // does not match the DUMMY_ROOT_KEY, which is used in DUMMY_ALIAS_JWS
+            ic_root_key_der,
             ..DUMMY_ISSUER_INIT.clone()
         }),
     );
