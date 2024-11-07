@@ -2,13 +2,22 @@
 
 use assert_matches::assert_matches;
 use candid::Principal;
-use canister_sig_util::{extract_raw_root_pk_from_der, CanisterSigPublicKey};
 use canister_tests::api::internet_identity::vc_mvp as ii_api;
 use canister_tests::flows;
 use canister_tests::framework::{env, principal_1, principal_2, test_principal};
+use ic_canister_sig_creation::{extract_raw_root_pk_from_der, CanisterSigPublicKey};
 
 use ic_cdk::api::management_canister::main::CanisterId;
 use ic_test_state_machine_client::{call_candid_as, CallError, StateMachine};
+use ic_verifiable_credentials::issuer_api::{
+    ArgumentValue, CredentialSpec, GetCredentialRequest, Icrc21ConsentPreferences, Icrc21Error,
+    Icrc21VcConsentMessageRequest, IssueCredentialError, PrepareCredentialRequest,
+    SignedIdAlias as SignedIssuerIdAlias,
+};
+use ic_verifiable_credentials::{
+    build_ii_verifiable_presentation_jwt, get_verified_id_alias_from_jws,
+    validate_claims_match_spec, verify_credential_jws_with_canister_id,
+};
 use internet_identity_interface::internet_identity::types::vc_mvp::{
     GetIdAliasRequest, PrepareIdAliasRequest,
 };
@@ -19,15 +28,6 @@ use relying_party::rp_api::{
 };
 use std::collections::HashMap;
 use std::time::UNIX_EPOCH;
-use vc_util::issuer_api::{
-    ArgumentValue, CredentialSpec, GetCredentialRequest, Icrc21ConsentPreferences, Icrc21Error,
-    Icrc21VcConsentMessageRequest, IssueCredentialError, PrepareCredentialRequest,
-    SignedIdAlias as SignedIssuerIdAlias,
-};
-use vc_util::{
-    build_ii_verifiable_presentation_jwt, get_verified_id_alias_from_jws,
-    validate_claims_match_spec, verify_credential_jws_with_canister_id,
-};
 
 #[allow(dead_code)]
 mod util;
@@ -300,10 +300,20 @@ fn should_fail_prepare_credential_for_anonymous_caller() {
 #[test]
 fn should_fail_prepare_credential_for_wrong_root_key() {
     let env = env();
+    // does not match the mainnet root key, which is used in DUMMY_ALIAS_JWS
+    let ic_root_key_der = vec![
+        48, 129, 130, 48, 29, 6, 13, 43, 6, 1, 4, 1, 130, 220, 124, 5, 3, 1, 2, 1, 6, 12, 43, 6, 1,
+        4, 1, 130, 220, 124, 5, 3, 2, 1, 3, 97, 0, 182, 178, 3, 13, 226, 142, 189, 144, 157, 71,
+        102, 110, 73, 71, 153, 170, 25, 223, 99, 208, 196, 189, 205, 27, 212, 184, 134, 206, 234,
+        96, 58, 18, 40, 241, 19, 231, 253, 110, 171, 99, 241, 114, 182, 84, 61, 111, 118, 215, 2,
+        116, 58, 193, 247, 189, 100, 124, 201, 61, 174, 66, 185, 187, 244, 5, 32, 91, 129, 66, 255,
+        1, 5, 2, 17, 218, 21, 199, 182, 31, 14, 186, 67, 85, 0, 4, 159, 116, 47, 238, 130, 221,
+        164, 216, 168, 202, 39, 176,
+    ];
     let issuer_id = install_issuer(
         &env,
         Some(IssuerInit {
-            ic_root_key_der: canister_sig_util::IC_ROOT_PK_DER.to_vec(), // does not match the DUMMY_ROOT_KEY, which is used in DUMMY_ALIAS_JWS
+            ic_root_key_der,
             ..DUMMY_ISSUER_INIT.clone()
         }),
     );
@@ -512,7 +522,7 @@ fn rp_validate_ii_vp(
 #[test]
 fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
     let env = env();
-    let ii_url = FrontendHostname::from(vc_util::II_ISSUER_URL);
+    let ii_url = FrontendHostname::from(ic_verifiable_credentials::II_ISSUER_URL);
     let issuer_url = FrontendHostname::from("https://metaissuer.vc/");
     let rp_url = FrontendHostname::from("https://some-dapp.com/");
 
@@ -523,6 +533,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
         Some(IssuerInit {
             ic_root_key_der: env.root_key().to_vec(),
             idp_canister_ids: vec![ii_id],
+            derivation_origin: issuer_url.clone(),
             ..DUMMY_ISSUER_INIT.clone()
         }),
     );
@@ -537,6 +548,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
                 vc_url: issuer_url.clone(),
                 canister_id: issuer_id,
             }],
+            derivation_origin: rp_url.clone(),
         }),
     );
 
@@ -559,7 +571,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
 
     let get_id_alias_req = GetIdAliasRequest {
         identity_number,
-        relying_party: rp_url,
+        relying_party: rp_url.clone(),
         issuer: issuer_url.clone(),
         rp_id_alias_jwt: prepared_id_alias.rp_id_alias_jwt,
         issuer_id_alias_jwt: prepared_id_alias.issuer_id_alias_jwt,
@@ -574,6 +586,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
             .issuer_id_alias_credential
             .credential_jws,
         &id_alias_credentials.issuer_id_alias_credential.id_dapp,
+        &issuer_url.clone(),
         &canister_sig_pk.canister_id,
         &root_pk_raw,
         env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
@@ -658,8 +671,16 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
             env.time().duration_since(UNIX_EPOCH).unwrap().as_nanos(),
         )
         .expect("credential verification failed");
-        let vc_claims = claims.vc().expect("missing VC claims");
-        validate_claims_match_spec(vc_claims, &spec).expect("Clam validation failed");
+        let vc_claims = claims
+            .custom()
+            .expect("missing custom claims in JWT claims")
+            .as_object()
+            .expect("malformed custom claims in JWT claims")
+            .get("vc")
+            .expect("missing vc claims in JWT custom claims")
+            .as_object()
+            .expect("malformed vc claims in JWT custom claims");
+        validate_claims_match_spec(vc_claims, &spec).expect("Claims validation failed");
         // Request credential validation from RP's backend.
         let vp_jwt = build_ii_verifiable_presentation_jwt(
             id_alias_credentials.rp_id_alias_credential.id_dapp,

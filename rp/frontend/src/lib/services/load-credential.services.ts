@@ -32,6 +32,8 @@ export const loadCredential = async ({
   return new Promise<null>((resolve) => {
     requestVerifiablePresentation({
       onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
+        console.log('in da onSuccess');
+        console.log(verifiablePresentation);
         if ('Err' in verifiablePresentation) {
           console.warn(verifiablePresentation.Err);
           credentialsStore.setCredential({

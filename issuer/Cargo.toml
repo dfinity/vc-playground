@@ -7,9 +7,11 @@ edition = "2021"
 [dependencies]
 # IC/II dependencies
 asset_util.workspace = true
-canister_sig_util.workspace = true
 internet_identity_interface.workspace = true
-vc_util.workspace = true
+ic-verifiable-credentials.workspace = true
+ic-canister-sig-creation.workspace = true
+# unfortunately, there is a transitive dependency on getrandom which does _not_ compile to wasm unless we add this hacky workaround
+ic-crypto-getrandom-for-wasm = { git="https://github.com/dfinity/ic", rev="faacac31032a9b98020475eb608fd63455603556" }
 candid = "0.10"
 ic-cdk = "0.12"
 ic-cdk-macros = "0.8"

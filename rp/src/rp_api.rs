@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
+use ic_verifiable_credentials::issuer_api::CredentialSpec;
 use serde_bytes::ByteBuf;
-use vc_util::issuer_api::CredentialSpec;
 
 /// Types for requesting a list of available images.
 #[derive(Clone, Debug, CandidType, Deserialize, Eq, PartialEq)]
@@ -101,4 +101,7 @@ pub struct RpInit {
 
     /// Issuers that are trusted by this relying party.
     pub issuers: Vec<IssuerData>,
+
+    /// Derivation origin used to log in Internet Identity
+    pub derivation_origin: String,
 }

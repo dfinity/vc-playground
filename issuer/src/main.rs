@@ -1,14 +1,26 @@
 /// An implementation of a meta-issuer for demonstration purposes.
 /// See meta_issuer.did for more info about the architecture and conventions.
 use candid::{candid_method, CandidType, Deserialize, Principal};
-use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
-use canister_sig_util::{extract_raw_root_pk_from_der, CanisterSigPublicKey, IC_ROOT_PK_DER};
+use ic_canister_sig_creation::signature_map::{CanisterSigInputs, SignatureMap, LABEL_SIG};
+use ic_canister_sig_creation::{
+    extract_raw_root_pk_from_der, CanisterSigPublicKey, IC_ROOT_PK_DER,
+};
 use ic_cdk::api::{caller, set_certified_data, time};
 use ic_cdk_macros::{init, query, update};
 use ic_certification::{fork_hash, labeled_hash, pruned, Hash};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::storable::{Bound, Storable};
 use ic_stable_structures::{DefaultMemoryImpl, RestrictedMemory, StableBTreeMap, StableCell};
+use ic_verifiable_credentials::issuer_api::{
+    ArgumentValue, CredentialSpec, DerivationOriginData, DerivationOriginError,
+    DerivationOriginRequest, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error, Icrc21ErrorInfo,
+    Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
+    PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias,
+};
+use ic_verifiable_credentials::{
+    build_credential_jwt, did_for_principal, get_verified_id_alias_from_jws, vc_jwt_to_jws,
+    vc_signing_input, AliasTuple, CredentialParams, VC_SIGNING_INPUT_DOMAIN,
+};
 use include_dir::{include_dir, Dir};
 use lazy_static::lazy_static;
 use meta_issuer::groups_api::{
@@ -21,16 +33,6 @@ use serde_bytes::ByteBuf;
 use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::cell::RefCell;
-use vc_util::issuer_api::{
-    ArgumentValue, CredentialSpec, DerivationOriginData, DerivationOriginError,
-    DerivationOriginRequest, GetCredentialRequest, Icrc21ConsentInfo, Icrc21Error, Icrc21ErrorInfo,
-    Icrc21VcConsentMessageRequest, IssueCredentialError, IssuedCredentialData,
-    PrepareCredentialRequest, PreparedCredentialData, SignedIdAlias,
-};
-use vc_util::{
-    build_credential_jwt, did_for_principal, get_verified_id_alias_from_jws, vc_jwt_to_jws,
-    vc_signing_input, vc_signing_input_hash, AliasTuple, CredentialParams,
-};
 
 use asset_util::{collect_assets, CertifiedAssets};
 use ic_cdk_macros::post_upgrade;
@@ -635,17 +637,21 @@ fn authorize_vc_request(
 
         for idp_canister_id in &config.idp_canister_ids {
             println!(
-                "*** checking id_alias for subject {} with IDP {}",
-                expected_vc_subject, idp_canister_id
+                "*** checking id_alias for subject {} with IDP {} and derivation origin {}",
+                expected_vc_subject, idp_canister_id, config.derivation_origin,
             );
-            if let Ok(alias_tuple) = get_verified_id_alias_from_jws(
+            match get_verified_id_alias_from_jws(
                 &alias.credential_jws,
                 expected_vc_subject,
+                &config.derivation_origin,
                 idp_canister_id,
                 &config.ic_root_key_raw,
                 current_time_ns,
             ) {
-                return Ok(alias_tuple);
+                Ok(alias_tuple) => return Ok(alias_tuple),
+                Err(err) => {
+                    println!("Error checking the id_alias {:?}", err);
+                }
             }
         }
         Err(IssueCredentialError::InvalidIdAlias(
@@ -670,11 +676,15 @@ async fn prepare_credential(
     };
     let signing_input =
         vc_signing_input(&credential_jwt, &CANISTER_SIG_PK).expect("failed getting signing_input");
-    let msg_hash = vc_signing_input_hash(&signing_input);
 
     SIGNATURES.with(|sigs| {
         let mut sigs = sigs.borrow_mut();
-        sigs.add_signature(&CANISTER_SIG_SEED, msg_hash);
+        let sig_inputs = CanisterSigInputs {
+            domain: VC_SIGNING_INPUT_DOMAIN,
+            seed: CANISTER_SIG_SEED.as_slice(),
+            message: signing_input.as_slice(),
+        };
+        sigs.add_signature(&sig_inputs);
     });
     update_root_hash();
     Ok(PreparedCredentialData {
@@ -720,15 +730,15 @@ fn get_credential(req: GetCredentialRequest) -> Result<IssuedCredentialData, Iss
     };
     let signing_input =
         vc_signing_input(&credential_jwt, &CANISTER_SIG_PK).expect("failed getting signing_input");
-    let message_hash = vc_signing_input_hash(&signing_input);
     let sig_result = SIGNATURES.with(|sigs| {
         let sig_map = sigs.borrow();
         let certified_assets_root_hash = ASSETS.with_borrow(|assets| assets.root_hash());
-        sig_map.get_signature_as_cbor(
-            &CANISTER_SIG_SEED,
-            message_hash,
-            Some(certified_assets_root_hash),
-        )
+        let sig_inputs = CanisterSigInputs {
+            domain: VC_SIGNING_INPUT_DOMAIN,
+            seed: CANISTER_SIG_SEED.as_slice(),
+            message: signing_input.as_slice(),
+        };
+        sig_map.get_signature_as_cbor(&sig_inputs, Some(certified_assets_root_hash))
     });
     let sig = match sig_result {
         Ok(sig) => sig,
