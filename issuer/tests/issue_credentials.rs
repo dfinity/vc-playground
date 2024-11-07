@@ -680,7 +680,7 @@ fn should_issue_vc_and_validate_e2e() -> Result<(), CallError> {
             .expect("missing vc claims in JWT custom claims")
             .as_object()
             .expect("malformed vc claims in JWT custom claims");
-        validate_claims_match_spec(vc_claims, &spec).expect("Clam validation failed");
+        validate_claims_match_spec(vc_claims, &spec).expect("Claims validation failed");
         // Request credential validation from RP's backend.
         let vp_jwt = build_ii_verifiable_presentation_jwt(
             id_alias_credentials.rp_id_alias_credential.id_dapp,

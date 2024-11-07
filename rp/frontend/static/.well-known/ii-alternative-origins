@@ -1,6 +1,6 @@
 {
   "alternativeOrigins": [
-    "http://localhost:5173",
+    RP_FE_HOSTNAME_PLACEHOLDER
     "https://relyingparty.vc"
   ]
 }
