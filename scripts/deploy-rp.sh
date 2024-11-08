@@ -88,7 +88,7 @@ ISSUER_CANISTER_ID="${ISSUER_CANISTER_ID:-$(dfx canister id meta_issuer --networ
 
 RP_DERIVATION_ORIGIN=
 if [ "$DFX_NETWORK" = "mainnet" ]; then
-    RP_DERIVATION_ORIGIN="$RP_PROD_URL"
+    RP_DERIVATION_ORIGIN="https://relyingparty.vc"
     elif [ "$DFX_NETWORK" = "local" ]; then
     RP_DERIVATION_ORIGIN="http://$RP_CANISTER_ID.localhost:4943"
     else
