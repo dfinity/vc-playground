@@ -79,7 +79,7 @@ II_VC_URL="https://identity.ic0.app/"
 # URL used by meta-issuer in the issued verifiable credentials (hard-coded in meta-issuer)
 ISSUER_VC_URL="https://metaissuer.vc/"
 # Domain of the relying party in production
-RP_PROD_URL="https://relyingparty.vc/"
+RP_PROD_URL="https://relyingparty.vc"
 
 DFX_NETWORK="${DFX_NETWORK:-local}"
 RP_CANISTER_ID="$(dfx canister id rp --network "$DFX_NETWORK")"
@@ -88,7 +88,7 @@ ISSUER_CANISTER_ID="${ISSUER_CANISTER_ID:-$(dfx canister id meta_issuer --networ
 
 RP_DERIVATION_ORIGIN=
 if [ "$DFX_NETWORK" = "mainnet" ]; then
-    RP_DERIVATION_ORIGIN="https://relyingparty.vc"
+    RP_DERIVATION_ORIGIN="$RP_PROD_URL"
     elif [ "$DFX_NETWORK" = "local" ]; then
     RP_DERIVATION_ORIGIN="http://$RP_CANISTER_ID.localhost:4943"
     else
