@@ -9,8 +9,8 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
         node-version: 20
     - name: Install dependencies
@@ -24,7 +24,7 @@ jobs:
         npm install
         npx playwright install --with-deps
     - name: Install dfx
-      uses: dfinity/setup-dfx@main
+      uses: dfinity/setup-dfx@e50c04f104ee4285ec010f10609483cf41e4d365 # main
     - name: Start local replica
       run: dfx start --background
     - name: Create canistres
@@ -46,7 +46,7 @@ jobs:
         export ISSUER_URL_TEMP="http://$(dfx canister id meta_issuer --network local).localhost:${REPLICA_SERVER_PORT}"
         export RP_URL_TEMP="http://$(dfx canister id rp --network local).localhost:${REPLICA_SERVER_PORT}"
         ISSUER_URL=$ISSUER_URL_TEMP RP_URL=$RP_URL_TEMP npm run test:e2e
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: failure()
       with:
         name: playwright-report
